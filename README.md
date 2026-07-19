@@ -8,20 +8,26 @@ This is a 100-day challenge to master CUDA:
 
 ### Day 1
 
-- learned that CUDA stands for **C**ompute **U**nified **D**evice **A**rchitecture.
+> learned that:
+  - CUDA stands for Compute Unified Device Architecture.
+  - the CUDA compiler is called NVCC (NVIDIA CUDA Compiler).
+  - CUDA is a platform with different levels of abstraction, either by language (e.g. python, c++, ptx) or by libraries. NVIDIA has put a ton of work into developing libraries to make developers' lives easier, for example:
+    - cuBLAS linear algebra
+    - cuFFT fast fourier transform
+    - cuDNN neural networks
+    - cuRAND random numbers
 
-- learned the CUDA compiler is called NVCC (**N**VIDIA **C**UDA **C**ompiler).
+> found the NVIDIA accelerated-computing-hub resource, plenty of courses to choose from, thinking of doing the Python ones.
 
-- learned that CUDA is a platform with different levels of abstraction, either by language (e.g. python, c++, ptx) or by libraries. NVIDIA has put a ton of work into developing libraries to make developers' lives easier, for example:
-  - **cuBLAS** linear algebra
-  - **cuFFT** fast fourier transform
-  - **cuDNN** neural networks
-  - **cuRAND** random numbers
+> watched the video What's CUDA All About Anyway, a really great introduction to CUDA.
 
-- found the NVIDIA [accelerated-computing-hub](https://github.com/NVIDIA/accelerated-computing-hub/tree/main) resource, plenty of courses to choose from, thinking of doing the Python ones.
+> created my first two CUDA kernels.
 
-- watched the video [What's CUDA All About Anyway?](https://www.nvidia.com/en-us/on-demand/session/gtc25-S72571/), a really great introduction to CUDA.
+reply 1:
+https://github.com/NVIDIA/accelerated-computing-hub/tree/main
 
-- created my first two CUDA kernels:
-  - [hello_cuda.cu](https://github.com/pavelsimo/100-days-of-cuda/blob/main/day01/hello_cuda.cu)
-  - [vector_addition.cu](https://github.com/pavelsimo/100-days-of-cuda/blob/main/day01/vector_addition.cu)
+reply 2:
+https://www.nvidia.com/en-us/on-demand/session/gtc25-S72571/
+
+reply 3:
+https://github.com/pavelsimo/100-days-of-cuda
