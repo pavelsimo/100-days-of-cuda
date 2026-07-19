@@ -23,5 +23,5 @@ This is a 100-day challenge to master CUDA:
 - Watched the video [What's CUDA All About Anyway?](https://www.nvidia.com/en-us/on-demand/session/gtc25-S72571/), a really great introduction to CUDA.
 
 - Created my first two CUDA kernels:
-  - hello_cuda.cu
-  - vector_addition.cu
+  - [hello_cuda.cu](https://github.com/pavelsimo/100-days-of-cuda/blob/main/day01/hello_cuda.cu)
+  - [vector_addition.cu](https://github.com/pavelsimo/100-days-of-cuda/blob/main/day01/vector_addition.cu)
