@@ -59,4 +59,4 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 ![alt text](images/cuda-compilation.png)
 
 - solved my first easy problem on LeetGPU, a matrix transpose kernel, hmm starting to understand the indices joggling of CUDA:
-  - [vector_addition.cu](day01/matrix_transpose.cu)
+  - [matrix_transpose.cu](day01/matrix_transpose.cu)
