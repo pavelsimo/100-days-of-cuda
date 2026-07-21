@@ -77,7 +77,8 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - since my matmul implementation is quite naive, i got curious about how this is done efficiently.  i found this great article, more fun for later :) 
   - https://siboehm.com/articles/22/CUDA-MMM
 
-- ran across Flynn's taxonomy, nice for perspective, i knew SIMD from CPU land but never the full taxonomy: https://en.wikipedia.org/wiki/Flynn%27s_taxonomy
+- ran across Flynn's taxonomy, nice for perspective, i knew SIMD from CPU land but never the full taxonomy: 
+  - https://en.wikipedia.org/wiki/Flynn%27s_taxonomy
 
 - also learned how the CUDA software model maps onto the actual hardware, nice mental model to keep in mind:
 
