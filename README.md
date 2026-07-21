@@ -60,3 +60,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved my first easy problem on LeetGPU, a matrix transpose kernel, hmm starting to understand the indices joggling of CUDA:
   - [matrix_transpose.cu](day01/matrix_transpose.cu)
+
+
+### Day 3
+
+- solved another "easy" LeetGPU problem, puff... this took longer than expected, in the sequential matrix multiplication there are three nested loops, it's actually a straightforward task, but in CUDA the two outer loops are handed over to the threads, leaving only the inner dot-product loop, another thing that makes the implementation challenging is the array flattening thing, it's really easy to mess that up, i guess it gets better with practice.
+
+  ![matrix multiplication](images/matmul.gif)
+
+  *Matrix multiplication: row of A · column of B.*
+
+  ![matrix multiplication with flattened arrays](images/matmul_flat_index.gif)
+
+  *Same thing with flattened arrays.*
+
