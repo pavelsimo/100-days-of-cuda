@@ -64,7 +64,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 3
 
-- solved another "easy" LeetGPU problem, puff... this took longer than expected, in the sequential matrix multiplication there are three nested loops, it's actually a straightforward task, but in CUDA the two outer loops are handed over to the threads, leaving only the inner dot-product loop, another thing that makes the implementation challenging is the array flattening thing, it's really easy to mess that up, i guess it gets better with practice.
+- solved another easy LeetGPU problem, matmul, this one took longer than expected. the sequential version has three nested loops, in CUDA the two outer loops go to the threads, leaving only the inner dot-product loop. the tricky part is the array flattening part, really easy to mess up, i guess it gets better with practice.
 
   ![matrix multiplication](images/matmul.gif)
 
@@ -74,6 +74,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
   *Same thing with flattened arrays.*
 
-- since my implementation is quite naive, so i got curious about how matmul is done efficiently and found this great article: https://siboehm.com/articles/22/CUDA-MMM, more fun for later :) 
+- since my matmul implementation is quite naive, i got curious about how this is done efficiently.  i found this great article, more fun for later :) 
+  - https://siboehm.com/articles/22/CUDA-MMM
 
+- ran across Flynn's taxonomy, nice for perspective, i knew SIMD from CPU land but never the full taxonomy: https://en.wikipedia.org/wiki/Flynn%27s_taxonomy
 
+- also learned how the CUDA software model maps onto the actual hardware, nice mental model to keep in mind:
+
+![alt text](images/cuda-exec-model.png)
