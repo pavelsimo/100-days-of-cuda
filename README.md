@@ -74,3 +74,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
   *Same thing with flattened arrays.*
 
+- since my implementation is quite naive, so i got curious about how matmul is done efficiently and found this great article: https://siboehm.com/articles/22/CUDA-MMM, more fun for later :) 
+
+
