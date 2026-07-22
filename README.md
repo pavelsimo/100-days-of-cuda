@@ -83,3 +83,39 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - also learned how the CUDA software model maps onto the actual hardware, nice mental model to keep in mind:
 
 ![alt text](images/cuda-exec-model.png)
+
+### Day 4
+
+- learned about warps:
+  - the hardware splits each block into warps of 32 threads.
+  - a warp is always (at least until now) 32 threads, even a block with a single thread takes up a full warp.
+  - resources like shared memory are allocated per warp, not per thread.
+  - all 32 threads execute the same instruction together at the same time, so if a conditional (like `if`) splits them into different paths, each path runs one after the other, that's warp divergence, and it's slow and not cool...
+
+- solved three LeetGPU problems:
+  - [invert_rgb.cu](day04/invert_rgb.cu)
+  - [rgb_to_grayscale.cu](day04/rgb_to_grayscale.cu)
+  - [reverse_array.cu](day04/reverse_array.cu)
+
+- the problems were mostly image transformations. the images come as a flattened array, so to transform the channels we have to first compute their indexes as follow:
+
+```
+  int channels = 4;
+  int pixel = blockDim.x * blockIdx.x + threadIdx.x;
+  if (pixel < width * height) {
+      int idx = pixel * channels;
+      ...
+  }
+```
+
+- watched this video about cuTile:
+https://www.youtube.com/watch?v=uiIdk61UxEs
+
+
+- highly recommended, really insightful Q&A session.
+
+- in short with cuTile we can program on tiles of data, the compiler handles the threads for you.
+
+- this is different than traditional SIMT, where the developer is in charge of the threads.
+
+- link to the source code below
