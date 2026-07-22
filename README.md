@@ -96,18 +96,18 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - the problems were mostly image transformations tasks. the images were given as a flatten array, for both problems once you extract the indices as follow, the calculations were easy.
 
-```
-int channels = 4;
-int pixel = blockDim.x * blockIdx.x + threadIdx.x;
-if (pixel < width * height) {
-  int idx = pixel * channels;
-  ...
-}
-```
+  ```
+  int channels = 4;
+  int pixel = blockDim.x * blockIdx.x + threadIdx.x;
+  if (pixel < width * height) {
+    int idx = pixel * channels;
+    ...
+  }
+  ```
 
 - watched the video Unlocking GPU Performance with CUDA Tile:
   - highly recommended, really insightful Q&A session.
   - in short with cuTile we can program on tiles of data, the compiler handles the threads for you.
   - this is different than traditional SIMT, where the developer is in charge of the threads.
-
-https://www.youtube.com/watch?v=uiIdk61UxEs
+  - https://www.youtube.com/watch?v=uiIdk61UxEs
+ 
