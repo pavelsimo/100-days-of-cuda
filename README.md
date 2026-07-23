@@ -117,6 +117,8 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - optimized the LeetGPU problem matrix add with `float4` each thread now reads and writes 4 floats at once, so 4x fewer memory instructions 
   - [matrix_add_vec4.cu](day05/matrix_add_vec4.cu)
 
+- solved the LeetGPU problems [1D Convolution](day05/convolution_1d.cu), [ReLU](day05/relu.cu) and [Leaky ReLU](day05/leaky_relu.cu).
+
 - continued learning about warps:
 
 - learned about branch efficiency, a simple metric for measuring warp divergence:
