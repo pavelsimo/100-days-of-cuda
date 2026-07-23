@@ -111,3 +111,29 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   - this is different than traditional SIMT, where the developer is in charge of the threads.
   - https://www.youtube.com/watch?v=uiIdk61UxEs
  
+
+### Day 5
+
+- optimized the LeetGPU problem matrix add with `float4` each thread now reads and writes 4 floats at once, so 4x fewer memory instructions 
+  - [matrix_add_vec4.cu](day05/matrix_add_vec4.cu)
+
+- continued learning about warps:
+
+- learned about branch efficiency, a simple metric for measuring warp divergence:
+
+  ```
+  branch efficiency = (num. branches - num. divergent branches) / (num. branches)
+  ```
+- during execution, warps pass through different states in the SM:
+  - **active**: assigned to the SM, registers and memory allocated
+  - **selected**: actively executing instructions
+  - **stalled**: not ready to execute, waiting on something (memory load, barrier, etc.)
+  - **eligible**: ready to execute, waiting for the scheduler
+
+- here is the SM warp scheduler in action:
+
+  <video src="images/sm_warp_scheduler.mp4" controls muted></video>
+
+- read a bit about latency:
+
+  ![diagram illustrating latency as the time elapsed between issuing an instruction and its completion](images/latency.png)
