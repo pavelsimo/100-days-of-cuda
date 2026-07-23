@@ -132,7 +132,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - here is the SM warp scheduler in action:
 
-  <video src="images/sm_warp_scheduler.mp4" controls muted></video>
+  ![sm warp scheduler](images/sm_warp_scheduler.gif)
 
 - read a bit about latency:
 
