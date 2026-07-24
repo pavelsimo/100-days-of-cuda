@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define N_DIM 5
+
 __global__ void copy_matrix_kernel(const float* A, float* B, int total) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int base = idx * 4;
@@ -24,8 +26,6 @@ extern "C" void solve(const float* A, float* B, int N) {
     copy_matrix_kernel<<<blocksPerGrid, threadsPerBlock>>>(A, B, total);
     cudaDeviceSynchronize();
 }
-
-#define N_DIM 5
 
 static void print_matrix(const char *title, const float *m, int n)
 {

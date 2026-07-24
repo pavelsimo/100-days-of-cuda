@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define N_DIM 10
+
 __global__ void swiglu_kernel(const float* input, float* output, int halfN) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < halfN) {
@@ -23,8 +25,6 @@ extern "C" void solve(const float* input, float* output, int N) {
     swiglu_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, halfN);
     cudaDeviceSynchronize();
 }
-
-#define N_DIM 10
 
 static void print_array(const char *title, const float *a, int n)
 {

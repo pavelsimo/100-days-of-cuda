@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define N_DIM 8
+#define ROUNDS 3
+
 __device__ unsigned int fnv1a_hash(unsigned int input) {
     const unsigned int FNV_PRIME = 16777619;
     const unsigned int OFFSET_BASIS = 2166136261;
@@ -35,9 +38,6 @@ extern "C" void solve(const int* input, unsigned int* output, int N, int R) {
     fnv1a_hash_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, N, R);
     cudaDeviceSynchronize();
 }
-
-#define N_DIM 8
-#define ROUNDS 3
 
 int main(void)
 {

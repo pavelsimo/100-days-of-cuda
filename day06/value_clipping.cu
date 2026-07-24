@@ -5,6 +5,10 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+#define N_DIM 10
+#define CLIP_LO -2.0f
+#define CLIP_HI 2.0f
+
 __global__ void clip_kernel(const float* input, float* output, float lo, float hi, int N) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx < N) {
@@ -20,10 +24,6 @@ extern "C" void solve(const float* input, float* output, float lo, float hi, int
     clip_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, lo, hi, N);
     cudaDeviceSynchronize();
 }
-
-#define N_DIM 10
-#define CLIP_LO -2.0f
-#define CLIP_HI 2.0f
 
 static void print_array(const char *title, const float *a, int n)
 {

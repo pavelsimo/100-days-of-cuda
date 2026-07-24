@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define N_DIM 5
+
 __global__ void interleave_kernel(const float* A, const float* B, float* output, int N) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     const float* __restrict__ a = A;
@@ -20,8 +22,6 @@ extern "C" void solve(const float* A, const float* B, float* output, int N) {
     interleave_kernel<<<blocksPerGrid, threadsPerBlock>>>(A, B, output, N);
     cudaDeviceSynchronize();
 }
-
-#define N_DIM 5
 
 static void print_array(const char *title, const float *a, int n)
 {

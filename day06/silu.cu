@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define N_DIM 10
+
 __global__ void silu_kernel(const float* input, float* output, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < N) {
@@ -20,8 +22,6 @@ extern "C" void solve(const float* input, float* output, int N) {
     silu_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, N);
     cudaDeviceSynchronize();
 }
-
-#define N_DIM 10
 
 static void print_array(const char *title, const float *a, int n)
 {
