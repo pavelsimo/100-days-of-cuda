@@ -154,4 +154,4 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - watched the video "Interview with NVIDIA CUDA Architect Stephen Jones", thanks to the youtube algorithm for this one. it's an informal discussion about CUDA, really helpful!
 
-https://www.youtube.com/watch?v=dNUMNifgExs
+  - https://www.youtube.com/watch?v=dNUMNifgExs
