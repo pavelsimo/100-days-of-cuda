@@ -148,10 +148,14 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - learned about the GPU memory hierarchy and the relative latency of each level. here is what it looks like on an H100:
 
-![alt text](images/memory-access.png)
+  ![alt text](images/memory-access.png)
 
-![alt text](images/memory-access-2.png)
+  ![alt text](images/memory-access-2.png)
 
 - watched the video "Interview with NVIDIA CUDA Architect Stephen Jones", thanks to the youtube algorithm for this one. it's an informal discussion about CUDA, really helpful!
 
   - https://www.youtube.com/watch?v=dNUMNifgExs
+
+- finally got the 5th Edition of Programming Massively Parallel Processors! took some time to deliver since it was not available on amazon.de and had to be ordered from the US. in the coming days i will go through the chapters and share my learnings:
+
+  ![alt text](images/programming-massively-parallel-processors-5th-edition.png)
