@@ -139,3 +139,19 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - read a bit about latency:
 
   ![latency](images/latency.png)
+
+### Day 06
+
+- solved the LeetGPU problems: [Rainbow Table](day06/rainbow_table.cu), [Copy Matrix](day06/copy_matrix.cu), [SiLU](day06/silu.cu), [SwiGLU](day06/swiglu.cu), [Value Clipping](day06/value_clipping.cu) and [Interleave Arrays](day06/interleave.cu). nearly done with all the easy problems. 
+
+- did a few variants of [Copy Matrix](day06/copy_matrix_2.cu) and [Interleave Arrays](day06/interleave_2.cu) with vectorized loads/stores (`float4`, `float2`) to reduce the number of memory instructions.
+
+- learned about the GPU memory hierarchy and the relative latency of each level. here is what it looks like on an H100:
+
+![alt text](images/memory-access.png)
+
+![alt text](images/memory-access-2.png)
+
+- watched the video "Interview with NVIDIA CUDA Architect Stephen Jones", thanks to the youtube algorithm for this one. it's an informal discussion about CUDA, really helpful!
+
+https://www.youtube.com/watch?v=dNUMNifgExs

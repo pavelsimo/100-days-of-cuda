@@ -18,7 +18,7 @@ __global__ void matrix_add(const float* A, const float* B, float* C, int N) {
         reinterpret_cast<float4*>(C)[i] = c;
     }
     
-    // partial chunk: scalar tail
+    // handle remaining elements
     int remaining = N * N - i * 4;
     if (remaining > 0 && remaining < 4) {
         for (int j = 0; j < remaining; ++j) {
