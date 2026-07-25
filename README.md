@@ -164,8 +164,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU problems: [GEGLU](day07/geglu.cu) and [Sigmoid](day07/sigmoid.cu). with this, all the LeetGPU easy problems are done! :)
 
-- did a variant of [Sigmoid](day07/sigmoid_2.cu) with vectorized loads/stores (`float4`).
-
 - half way through the first chapter of Programming Massively Parallel Processors, taking notes along the way and will post them once i'm done. the book also has a youtube channel, worth a look:
 
   - https://www.youtube.com/@pmpp-book
