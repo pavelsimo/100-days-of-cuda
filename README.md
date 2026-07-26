@@ -173,4 +173,15 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   - https://www.youtube.com/watch?v=kZy4JD8Z6KA&list=PLzn6LN6WhlN06hIOA_ge6SrgdeSiuf9Tb&index=1
 
 
+### Day 08
+
+- solved my first LeetGPU medium problem: [Reduction](day08/reduce.cu). this was a nice one, until now i was only doing transformations, where the output has the same number of elements as the input. reductions are a bit more tricky, all the threads have to cooperate to produce a single value. first time i actually needed `__shared__`, `__syncthreads()` and `atomicAdd`, here is an animation how the process actually looks:
+
+![alt text](images/problem_reduction.gif)
+
+- finished chapter 1 of Programming Massively Parallel Processors, my notes are here: [chapter 1](docs/programming-massively-parallel-processors/chapter-1.md)
+
+- found another really nice CUDA course by Bob Crovella from NVIDIA, the explanations are excellent:
+
+  - https://www.youtube.com/watch?v=OsK8YFHTtNs&list=PL6RdenZrxrw-zNX7uuGppWETdxt_JxdMj&index=1
 
