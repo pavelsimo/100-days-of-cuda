@@ -87,9 +87,11 @@ They are ideal for compute-intensive tasks such as deep learning, scientific com
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | A large installed base makes software development economically worthwhile. | GPUs were difficult to program using graphics APIs like OpenGL and Direct3D. | CUDA enabled general-purpose GPU programming with a simple programming model.        |
 | Most PCs already include GPUs, making them widely accessible.              | Computations had to be expressed as graphics operations.                     | Developers could write compute kernels directly, greatly expanding GPU applications. |
+
 - **CUDA (2007):** NVIDIA introduced CUDA, making GPUs easy to program for general-purpose computing using familiar C/C++ instead of graphics APIs like OpenGL. This made GPU computing mainstream.
 
 - **FPGAs (Field-Programmable Gate Arrays):** Reconfigurable hardware chips that can be programmed to implement custom digital circuits, providing high performance and low latency for specialized tasks such as networking, signal processing, and AI inference.
+
 The book argues that **future applications will need much more computing power**, even if today's software already seems fast.
 
 - Future "super-applications" (e.g., molecular biology simulations, AI, climate modeling) require enormous computation.
@@ -114,15 +116,16 @@ The book argues that **future applications will need much more computing power**
 ### Formula
 
 $$
-S=\frac{1}{(1-P)+\frac{P}{N}}
+S = \frac{1}{(1 - P) + \frac{P}{N}}
 $$
+
 where:
 
-- (S) = overall speedup
+- $S$ = overall speedup
 
-- (P) = parallelizable fraction
+- $P$ = parallelizable fraction
 
-- (N) = speedup of the parallel part
+- $N$ = speedup of the parallel part
 
 
 ---
@@ -132,25 +135,29 @@ where:
 Parallel execution time:
 
 $$
-\frac{0.30}{100}=0.003
+\frac{0.30}{100} = 0.003
 $$
+
 Total execution time:
 
 $$
-0.70+0.003=0.703
+0.70 + 0.003 = 0.703
 $$
+
 Overall speedup:
 
 $$
-S=\frac{1}{0.703}\approx1.42\times
+S = \frac{1}{0.703} \approx 1.42\times
 $$
+
 ---
 
 ### Example 2 (30% parallelizable, infinite speedup)
 
 $$
-S=\frac{1}{0.70+0}=\frac{1}{0.70}\approx1.43\times
+S = \frac{1}{0.70 + 0} = \frac{1}{0.70} \approx 1.43\times
 $$
+
 ---
 
 ### Example 3 (99% parallelizable, 100× faster)
@@ -158,18 +165,21 @@ $$
 Parallel execution time:
 
 $$
-\frac{0.99}{100}=0.0099
+\frac{0.99}{100} = 0.0099
 $$
+
 Total execution time:
 
 $$
-0.01+0.0099=0.0199
+0.01 + 0.0099 = 0.0199
 $$
+
 Overall speedup:
 
 $$
-S=\frac{1}{0.0199}\approx50\times
+S = \frac{1}{0.0199} \approx 50\times
 $$
+
 **Key takeaway:** Even extremely fast parallel hardware provides limited benefit unless **most of the application is parallelizable**.
 
 
