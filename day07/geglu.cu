@@ -49,32 +49,24 @@ int main(void)
     int sz_in = N_DIM * sizeof(float);
     int sz_out = halfN * sizeof(float);
 
-    /* Step 1: Allocate host memory */
     h_input = (float *)malloc(sz_in);
     h_output = (float *)malloc(sz_out);
 
-    /* Step 2: Allocate device memory */
     cudaMalloc((void **)&d_input, sz_in);
     cudaMalloc((void **)&d_output, sz_out);
 
-    /* Step 3: Initialize host input array (first half x1, second half x2) */
     for (int i = 0; i < N_DIM; i++) {
         h_input[i] = (float)(i - N_DIM / 2);
     }
 
-    /* Step 4: Copy input array to device */
     cudaMemcpy(d_input, h_input, sz_in, cudaMemcpyHostToDevice);
 
-    /* Step 5: Print input array */
     print_array("Input", h_input, N_DIM);
 
-    /* Step 6: Launch kernel via solve() */
     solve(d_input, d_output, N_DIM);
 
-    /* Step 7: Copy result back to host */
     cudaMemcpy(h_output, d_output, sz_out, cudaMemcpyDeviceToHost);
 
-    /* Step 8: Print result */
     print_array("Output", h_output, halfN);
 
     cudaFree(d_input);

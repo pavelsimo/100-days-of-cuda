@@ -47,17 +47,14 @@ int main(void)
     int sz_B = N_DIM * K_DIM * sizeof(float);
     int sz_C = M_DIM * K_DIM * sizeof(float);
 
-    /* Step 1: Allocate host memory */
     h_A = (float *)malloc(sz_A);
     h_B = (float *)malloc(sz_B);
     h_C = (float *)malloc(sz_C);
 
-    /* Step 2: Allocate device memory */
     cudaMalloc((void **)&d_A, sz_A);
     cudaMalloc((void **)&d_B, sz_B);
     cudaMalloc((void **)&d_C, sz_C);
 
-    /* Step 3: Initialize host input matrices */
     for (int i = 0; i < M_DIM * N_DIM; i++) {
         h_A[i] = (float)i;
     }
@@ -65,17 +62,13 @@ int main(void)
         h_B[i] = (float)(i % 3);
     }
 
-    /* Step 4: Copy input matrices to device */
     cudaMemcpy(d_A, h_A, sz_A, cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, h_B, sz_B, cudaMemcpyHostToDevice);
 
-    /* Step 5: Launch kernel via solve() */
     solve(d_A, d_B, d_C, M_DIM, N_DIM, K_DIM);
 
-    /* Step 6: Copy result back to host */
     cudaMemcpy(h_C, d_C, sz_C, cudaMemcpyDeviceToHost);
 
-    /* Step 7: Print result */
     print_matrix("A", h_A, M_DIM, N_DIM);
     print_matrix("B", h_B, N_DIM, K_DIM);
     print_matrix("C = A x B", h_C, M_DIM, K_DIM);

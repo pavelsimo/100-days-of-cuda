@@ -58,34 +58,26 @@ int main(void)
     int sz_input = WIDTH * HEIGHT * 3 * sizeof(float);
     int sz_output = WIDTH * HEIGHT * sizeof(float);
 
-    /* Step 1: Allocate host memory */
     h_input = (float *)malloc(sz_input);
     h_output = (float *)malloc(sz_output);
 
-    /* Step 2: Allocate device memory */
     cudaMalloc((void **)&d_input, sz_input);
     cudaMalloc((void **)&d_output, sz_output);
 
-    /* Step 3: Initialize host input image (RGB) */
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
         h_input[i * 3 + 0] = (float)(i * 10 % 256); // R
         h_input[i * 3 + 1] = (float)(i * 20 % 256); // G
         h_input[i * 3 + 2] = (float)(i * 30 % 256); // B
     }
 
-    /* Step 4: Copy input image to device */
     cudaMemcpy(d_input, h_input, sz_input, cudaMemcpyHostToDevice);
 
-    /* Step 5: Print input image */
     print_rgb_image("Input", h_input, WIDTH, HEIGHT);
 
-    /* Step 6: Launch kernel via solve() */
     solve(d_input, d_output, WIDTH, HEIGHT);
 
-    /* Step 7: Copy result back to host */
     cudaMemcpy(h_output, d_output, sz_output, cudaMemcpyDeviceToHost);
 
-    /* Step 8: Print result */
     print_grayscale_image("Grayscale", h_output, WIDTH, HEIGHT);
 
     cudaFree(d_input);

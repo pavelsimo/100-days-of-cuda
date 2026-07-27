@@ -1,4 +1,4 @@
-#include <cuda_runtime.h>
+ #include <cuda_runtime.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -46,32 +46,24 @@ int main(void)
     float *d_input, *d_output;
     int sz = N_DIM * sizeof(float);
 
-    /* Step 1: Allocate host memory */
     h_input = (float *)malloc(sz);
 
-    /* Step 2: Allocate device memory */
     cudaMalloc((void **)&d_input, sz);
     cudaMalloc((void **)&d_output, sizeof(float));
 
-    /* Step 3: Initialize host input array */
     for (int i = 0; i < N_DIM; i++) {
         h_input[i] = (float)(i + 1);
     }
 
-    /* Step 4: Copy input array to device, zero the accumulator */
     cudaMemcpy(d_input, h_input, sz, cudaMemcpyHostToDevice);
     cudaMemset(d_output, 0, sizeof(float));
 
-    /* Step 5: Print input array */
     print_array("Input", h_input, N_DIM);
 
-    /* Step 6: Launch kernel via solve() */
     solve(d_input, d_output, N_DIM);
 
-    /* Step 7: Copy result back to host */
     cudaMemcpy(&h_output, d_output, sizeof(float), cudaMemcpyDeviceToHost);
 
-    /* Step 8: Print result */
     printf("Sum: %6.1f\n\n", h_output);
 
     cudaFree(d_input);

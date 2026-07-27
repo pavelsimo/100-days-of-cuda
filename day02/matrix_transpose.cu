@@ -43,29 +43,22 @@ int main(void)
     float *d_input, *d_output;
     int sz = ROWS * COLS * sizeof(float);
 
-    /* Step 1: Allocate host memory */
     h_input = (float *)malloc(sz);
     h_output = (float *)malloc(sz);
 
-    /* Step 2: Allocate device memory */
     cudaMalloc((void **)&d_input, sz);
     cudaMalloc((void **)&d_output, sz);
 
-    /* Step 3: Initialize host input matrix */
     for (int i = 0; i < ROWS * COLS; i++) {
         h_input[i] = (float)i;
     }
 
-    /* Step 4: Copy input matrix to device */
     cudaMemcpy(d_input, h_input, sz, cudaMemcpyHostToDevice);
 
-    /* Step 5: Launch kernel via solve() */
     solve(d_input, d_output, ROWS, COLS);
 
-    /* Step 6: Copy result back to host */
     cudaMemcpy(h_output, d_output, sz, cudaMemcpyDeviceToHost);
 
-    /* Step 7: Print result */
     print_matrix("Input", h_input, ROWS, COLS);
     print_matrix("Transposed", h_output, COLS, ROWS);
 

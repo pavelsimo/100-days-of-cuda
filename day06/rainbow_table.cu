@@ -48,29 +48,22 @@ int main(void)
     int sz_in = N_DIM * sizeof(int);
     int sz_out = N_DIM * sizeof(unsigned int);
 
-    /* Step 1: Allocate host memory */
     h_input = (int *)malloc(sz_in);
     h_output = (unsigned int *)malloc(sz_out);
 
-    /* Step 2: Allocate device memory */
     cudaMalloc((void **)&d_input, sz_in);
     cudaMalloc((void **)&d_output, sz_out);
 
-    /* Step 3: Initialize host input array */
     for (int i = 0; i < N_DIM; i++) {
         h_input[i] = i;
     }
 
-    /* Step 4: Copy input array to device */
     cudaMemcpy(d_input, h_input, sz_in, cudaMemcpyHostToDevice);
 
-    /* Step 5: Launch kernel via solve() */
     solve(d_input, d_output, N_DIM, ROUNDS);
 
-    /* Step 6: Copy result back to host */
     cudaMemcpy(h_output, d_output, sz_out, cudaMemcpyDeviceToHost);
 
-    /* Step 7: Print input and hashed output */
     printf("FNV-1a hash, %d rounds:\n", ROUNDS);
     for (int i = 0; i < N_DIM; i++) {
         printf("%4d -> %10u\n", h_input[i], h_output[i]);

@@ -37,30 +37,22 @@ int main(void)
     float *d_input;
     int sz_input = N_DIM * sizeof(float);
 
-    /* Step 1: Allocate host memory */
     h_input = (float *)malloc(sz_input);
 
-    /* Step 2: Allocate device memory */
     cudaMalloc((void **)&d_input, sz_input);
 
-    /* Step 3: Initialize host input array */
     for (int i = 0; i < N_DIM; i++) {
         h_input[i] = (float)i;
     }
 
-    /* Step 4: Copy input array to device */
     cudaMemcpy(d_input, h_input, sz_input, cudaMemcpyHostToDevice);
 
-    /* Step 5: Print input array */
     print_array("Input", h_input, N_DIM);
 
-    /* Step 6: Launch kernel via solve() */
     solve(d_input, N_DIM);
 
-    /* Step 7: Copy result back to host */
     cudaMemcpy(h_input, d_input, sz_input, cudaMemcpyDeviceToHost);
 
-    /* Step 8: Print result */
     print_array("Reversed", h_input, N_DIM);
 
     cudaFree(d_input);

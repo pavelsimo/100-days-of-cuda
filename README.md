@@ -197,3 +197,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - started chapter 2 of Programming Massively Parallel Processors, should finish it tomorrow.
 
+### Day 10
+
+- read the article: https://philipfabianek.com/posts/cuda-ptx-introduction

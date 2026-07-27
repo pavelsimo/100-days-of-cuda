@@ -49,17 +49,14 @@ int main(void)
     int sz_kernel = KERNEL_SIZE * sizeof(float);
     int sz_output = output_size * sizeof(float);
 
-    /* Step 1: Allocate host memory */
     h_input = (float *)malloc(sz_input);
     h_kernel = (float *)malloc(sz_kernel);
     h_output = (float *)malloc(sz_output);
 
-    /* Step 2: Allocate device memory */
     cudaMalloc((void **)&d_input, sz_input);
     cudaMalloc((void **)&d_kernel, sz_kernel);
     cudaMalloc((void **)&d_output, sz_output);
 
-    /* Step 3: Initialize host arrays */
     for (int i = 0; i < INPUT_SIZE; i++) {
         h_input[i] = (float)i;
     }
@@ -67,21 +64,16 @@ int main(void)
         h_kernel[i] = 1.0f / KERNEL_SIZE;
     }
 
-    /* Step 4: Copy input and kernel to device */
     cudaMemcpy(d_input, h_input, sz_input, cudaMemcpyHostToDevice);
     cudaMemcpy(d_kernel, h_kernel, sz_kernel, cudaMemcpyHostToDevice);
 
-    /* Step 5: Print input arrays */
     print_array("Input", h_input, INPUT_SIZE);
     print_array("Kernel", h_kernel, KERNEL_SIZE);
 
-    /* Step 6: Launch kernel via solve() */
     solve(d_input, d_kernel, d_output, INPUT_SIZE, KERNEL_SIZE);
 
-    /* Step 7: Copy result back to host */
     cudaMemcpy(h_output, d_output, sz_output, cudaMemcpyDeviceToHost);
 
-    /* Step 8: Print result */
     print_array("Output", h_output, output_size);
 
     cudaFree(d_input);
