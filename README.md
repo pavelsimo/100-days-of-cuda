@@ -193,10 +193,8 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - the softmax one was more interesting, i ended up using three kernels: global max (for avoiding overflow), sum of `exp(x - max)`, then the final calculation. 
 
+  ![alt text](images/softmax_trick_dark.gif)
+
 - til: there's no `atomicMax` for floats, had to hack around it with `atomicCAS`, pretty ugly stuff... need to re-do the softmax at some point.
 
 - started chapter 2 of Programming Massively Parallel Processors, should finish it tomorrow.
-
-### Day 10
-
-- read the article: https://philipfabianek.com/posts/cuda-ptx-introduction
