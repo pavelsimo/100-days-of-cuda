@@ -1,52 +1,58 @@
-# Programming Massively Parallel Processors - Chapter 1
+# Programming Massively Parallel Processors — Chapter 1: Introduction
+
+## Index
+
+1. [The End of Frequency Scaling (2003)](#1-the-end-of-frequency-scaling-2003)
+2. [Two Processor Design Philosophies](#2-two-processor-design-philosophies)
+   - [Multi-core (CPU)](#multi-core-cpu)
+   - [Many-thread (GPU)](#many-thread-gpu)
+   - [CPU vs. GPU Comparison](#cpu-vs-gpu-comparison)
+3. [Latency vs. Throughput](#3-latency-vs-throughput)
+4. [Why GPU Computing Became Mainstream](#4-why-gpu-computing-became-mainstream)
+5. [Why Applications Need More Speed](#5-why-applications-need-more-speed)
+6. [Amdahl's Law](#6-amdahls-law)
+   - [Formula](#formula)
+   - [Worked Examples](#worked-examples)
+7. [Memory Bandwidth: The Hidden Bottleneck](#7-memory-bandwidth-the-hidden-bottleneck)
+8. [Challenges of Parallel Programming](#8-challenges-of-parallel-programming)
+9. [Related Parallel Programming APIs](#9-related-parallel-programming-apis)
+   - [OpenMP](#openmp)
+   - [MPI (Message Passing Interface)](#mpi-message-passing-interface)
+   - [OpenCL (Open Computing Language)](#opencl-open-computing-language)
+
+---
+
+## 1. The End of Frequency Scaling (2003)
 
 The key idea is that **CPU clock speeds stopped increasing significantly around 2003** because of **power consumption and heat dissipation**. This forced a major change in both hardware and software.
 
-### What happened?
-
 1. **Clock speed hit a wall**
-
     - Before 2003, CPUs became faster mainly by increasing their clock frequency (GHz).
-
     - Higher frequencies produced too much heat and consumed too much power.
-
     - Manufacturers could no longer keep boosting performance this way.
 
 2. **CPU manufacturers switched to multi-core processors**
-
     - Instead of making **one core faster**, they started putting **multiple cores** on a single chip.
-
     - A modern CPU can be thought of as several CPUs working together.
 
 3. **Software had to change**
-
-    - Old programs were mostly **sequential**:
-
-        - One instruction after another.
-
-        - One **thread of execution**.
-
+    - Old programs were mostly **sequential**: one instruction after another, one **thread of execution**.
     - A sequential program can only use **one CPU core** effectively.
 
 4. **Programs needed to become parallel**
-
     - Developers began dividing applications into **multiple threads**.
-
     - Different threads can run **simultaneously on different CPU cores**.
-
     - This is called **parallel programming** (or concurrent programming in a broader sense).
 
 5. **Performance improvements now depend on parallelism**
-
     - Sequential programs no longer automatically become much faster with each new CPU generation.
-
     - To benefit from modern hardware, applications must perform work in parallel.
 
+**Summary:** After clock speeds reached their limit due to power and heat, CPU manufacturers began adding multiple cores instead of increasing frequency. This allowed several instructions or threads to run at the same time. As a result, software had to be redesigned to use parallel programming and multiple threads. Since then, performance gains have depended more on parallelism than on higher clock speeds.
 
-After clock speeds reached their limit due to power and heat, CPU manufacturers began adding multiple cores instead of increasing frequency.
-This allowed several instructions or threads to run at the same time.
-As a result, software had to be redesigned to use parallel programming and multiple threads.
-Since then, performance gains have depended more on parallelism than on higher clock speeds.
+---
+
+## 2. Two Processor Design Philosophies
 
 ### Multi-core (CPU)
 
@@ -62,12 +68,18 @@ They execute many simple operations in parallel instead of optimizing a single t
 GPUs provide much higher floating-point performance than CPUs for parallel workloads.
 They are ideal for compute-intensive tasks such as deep learning, scientific computing, and graphics.
 
+### CPU vs. GPU Comparison
+
 | Multi-core (CPU)                                      | Many-thread (GPU)                                               |
 | ----------------------------------------------------- | --------------------------------------------------------------- |
 | Uses a small number of powerful cores.                | Uses thousands of lightweight threads.                          |
 | Optimized for low latency and sequential performance. | Optimized for high throughput and parallel workloads.           |
 | Best for complex, general-purpose tasks.              | Best for compute-intensive parallel tasks (e.g., AI, graphics). |
 | Focuses on fast individual threads.                   | Focuses on executing many threads simultaneously.               |
+
+---
+
+## 3. Latency vs. Throughput
 
 | CPU (Latency-oriented)                                     | GPU (Throughput-oriented)                                           |
 | ---------------------------------------------------------- | ------------------------------------------------------------------- |
@@ -76,12 +88,16 @@ They are ideal for compute-intensive tasks such as deep learning, scientific com
 | Best for sequential and branch-heavy workloads.            | Best for highly parallel, compute-intensive workloads.              |
 | **Tradeoff:** Faster per thread, fewer parallel units.     | **Tradeoff:** Slower per thread, much higher overall throughput.    |
 
-|Reducing Latency|Increasing Throughput|
-|---|---|
-|Requires complex hardware, larger chip area, and much higher power.|Achieved by adding more arithmetic units with proportional cost.|
-|Benefits a single thread by making it execute faster.|Benefits many threads by increasing total work completed.|
-|Expensive and scales poorly.|More cost-effective and scales well.|
-|**Tradeoff:** Faster individual execution.|**Tradeoff:** Higher overall performance for parallel workloads.|
+| Reducing Latency                                                    | Increasing Throughput                                            |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Requires complex hardware, larger chip area, and much higher power. | Achieved by adding more arithmetic units with proportional cost. |
+| Benefits a single thread by making it execute faster.               | Benefits many threads by increasing total work completed.        |
+| Expensive and scales poorly.                                        | More cost-effective and scales well.                             |
+| **Tradeoff:** Faster individual execution.                          | **Tradeoff:** Higher overall performance for parallel workloads. |
+
+---
+
+## 4. Why GPU Computing Became Mainstream
 
 | Installed Base                                                             | GPGPU (Before CUDA)                                                          | CUDA (After 2007)                                                                    |
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -91,6 +107,10 @@ They are ideal for compute-intensive tasks such as deep learning, scientific com
 - **CUDA (2007):** NVIDIA introduced CUDA, making GPUs easy to program for general-purpose computing using familiar C/C++ instead of graphics APIs like OpenGL. This made GPU computing mainstream.
 
 - **FPGAs (Field-Programmable Gate Arrays):** Reconfigurable hardware chips that can be programmed to implement custom digital circuits, providing high performance and low latency for specialized tasks such as networking, signal processing, and AI inference.
+
+---
+
+## 5. Why Applications Need More Speed
 
 The book argues that **future applications will need much more computing power**, even if today's software already seems fast.
 
@@ -102,7 +122,9 @@ The book argues that **future applications will need much more computing power**
 
 - Therefore, continued performance growth depends on exploiting **parallelism**, not higher CPU clock speeds.
 
-### Amdahl's Law (short summary)
+---
+
+## 6. Amdahl's Law
 
 - **Amdahl's Law:** The maximum speedup is limited by the fraction of a program that **cannot be parallelized**.
 
@@ -111,7 +133,6 @@ The book argues that **future applications will need much more computing power**
 - Even an infinitely fast GPU cannot accelerate the sequential part.
 
 - Therefore, maximizing the parallel fraction is essential for high performance.
-
 
 ### Formula
 
@@ -127,10 +148,9 @@ where:
 
 - $N$ = speedup of the parallel part
 
+### Worked Examples
 
----
-
-### Example 1 (30% parallelizable, 100× faster)
+**Example 1 — 30% parallelizable, 100× faster**
 
 Parallel execution time:
 
@@ -150,17 +170,13 @@ $$
 S = \frac{1}{0.703} \approx 1.42\times
 $$
 
----
-
-### Example 2 (30% parallelizable, infinite speedup)
+**Example 2 — 30% parallelizable, infinite speedup**
 
 $$
 S = \frac{1}{0.70 + 0} = \frac{1}{0.70} \approx 1.43\times
 $$
 
----
-
-### Example 3 (99% parallelizable, 100× faster)
+**Example 3 — 99% parallelizable, 100× faster**
 
 Parallel execution time:
 
@@ -182,6 +198,9 @@ $$
 
 **Key takeaway:** Even extremely fast parallel hardware provides limited benefit unless **most of the application is parallelizable**.
 
+---
+
+## 7. Memory Bandwidth: The Hidden Bottleneck
 
 - **Memory bandwidth often limits speedup**, even when computation can be parallelized.
 
@@ -191,8 +210,11 @@ $$
 
 - Achieving high speedups requires **optimizing memory access patterns**, not just adding more parallel threads.
 
+---
 
-### Challenges of Parallel Programming
+## 8. Challenges of Parallel Programming
+
+**Algorithm and work efficiency:**
 
 - **Design efficient parallel algorithms** without increasing total work.
 
@@ -200,30 +222,25 @@ $$
 
 - **Manage memory bottlenecks**, since many applications are memory-bound rather than compute-bound.
 
-- **Balance work across threads** to fully utilize parallel hardware.
+**Load balance and synchronization:**
 
-This page adds two more key challenges:
-
-- **Input sensitivity / load imbalance:** Uneven or unpredictable input data can distribute work unevenly across threads, reducing parallel efficiency.
+- **Load imbalance / input sensitivity:** Uneven or unpredictable input data can distribute work unevenly across threads, leaving some threads idle while others do more work.
 
 - **Synchronization overhead:** Threads often need barriers, locks, or atomic operations, causing some threads to wait for others instead of doing useful work.
 
+- **Communication:** Some applications require frequent thread collaboration, making parallelization harder.
+
 - **Embarrassingly parallel vs. synchronized tasks:** Some problems require almost no communication between threads (easy to parallelize), while others require frequent synchronization (harder and slower).
+
+**The good news:**
 
 - **Reuse of parallel patterns:** Many of these challenges can be addressed using well-known parallel programming patterns and techniques.
 
-### Additional Challenges
+---
 
-- **Load imbalance:** Uneven input data can leave some threads idle while others do more work.
+## 9. Related Parallel Programming APIs
 
-- **Synchronization overhead:** Barriers, locks, and atomic operations force threads to wait, reducing performance.
-
-- **Communication:** Some applications require frequent thread collaboration, making parallelization harder.
-
-- **Parallel patterns:** Common patterns and algorithms help address these challenges efficiently.
-
-
-### OpenMP (brief)
+### OpenMP
 
 - **OpenMP** is a compiler-based API for parallel programming on **shared-memory CPUs**.
 
@@ -240,7 +257,6 @@ This page adds two more key challenges:
 - Standard for **high-performance computing (HPC)** and large supercomputers.
 
 - Often combined with **CUDA** for multi-GPU clusters.
-
 
 ### OpenCL (Open Computing Language)
 
