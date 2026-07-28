@@ -198,3 +198,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - til: there's no `atomicMax` for floats, had to hack around it with `atomicCAS`, pretty ugly stuff... need to re-do the softmax at some point.
 
 - started chapter 2 of Programming Massively Parallel Processors, should finish it tomorrow.
+
+### Day 10
+
+- solved two more LeetGPU medium problems: [Count Array Element](day10/count_array_element.cu) and [Mean Squared Error](day10/mse.cu). both are variations of the Reduction problem from day 8, this pattern is used in many problems. 
+
+- finished chapter 2 of Programming Massively Parallel Processors.
