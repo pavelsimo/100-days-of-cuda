@@ -213,4 +213,4 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - read the article [A Gentle Introduction to CUDA PTX](https://philipfabianek.com/posts/cuda-ptx-introduction), indeed a really "gentle" introduction to PTX: it covers the basic instructions, where PTX fits in the CUDA compilation pipeline, and the cli commands to inspect and work with it. highly recommended. it also links to the [Inline PTX Assembly](https://docs.nvidia.com/cuda/inline-ptx-assembly/index.html) docs, which teach you how to inline PTX in your kernels. i'm not at that level of ninja yet, but soon ;)
 
-- started chapter 3 of Programming Massively Parallel Processors.
+- started chapter 3 of Programming Massively Parallel Processors. i've already picked up some of the chapter concepts by doing LeetGPU problems, but it's good to take a step back and revisit them properly.
