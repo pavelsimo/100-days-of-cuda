@@ -20,6 +20,7 @@
    - [Why No `for` Loop in a Kernel?](#why-no-for-loop-in-a-kernel)
    - [Choosing the Number of Blocks](#choosing-the-number-of-blocks)
 8. [CUDA Compilation](#8-cuda-compilation)
+9. [Exercises](#9-exercises)
 
 ---
 
@@ -277,3 +278,113 @@ C/C++ Compiler   JIT Compiler
 - At runtime, PTX is **Just-In-Time (JIT) compiled** into machine code for whatever GPU is actually in the machine. This is what lets the same binary run on GPUs that did not even exist when you compiled it.
 
 **Summary:** NVCC splits a CUDA program in two. The CPU part is compiled normally, and the GPU part becomes PTX, a virtual assembly that gets JIT-compiled for the target GPU right before execution.
+
+---
+
+## 9. Exercises
+
+### Question 1
+
+If we want to use each thread in a grid to calculate one output element of a vector addition, what would be the expression for mapping the thread/block indices to the data index (`i`) in the kernel function?
+
+a. `i = threadIdx.x + threadIdx.y`  
+b. `i = blockIdx.x + threadIdx.x`  
+c. `i = blockIdx.x * blockDim.x + threadIdx.x` ✅  
+d. `i = blockIdx.x * threadIdx.x`
+
+**Why:** This is the classic global index formula. `blockIdx.x * blockDim.x` skips over all the threads in the preceding blocks, and `threadIdx.x` adds the position within the current block. One thread, one element.
+
+### Question 2
+
+Assume that we want to use each thread to calculate two adjacent elements of a vector addition. What would be the expression for mapping the thread/block indices to the data index (`i`) of the first element to be processed by a thread?
+
+a. `i = blockIdx.x * blockDim.x + threadIdx.x + 2`  
+b. `i = blockIdx.x * threadIdx.x * 2`  
+c. `i = (blockIdx.x * blockDim.x + threadIdx.x) * 2` ✅  
+d. `i = blockIdx.x * blockDim.x * 2 + threadIdx.x`
+
+**Why:** Each thread owns a *pair* of adjacent elements, so we take the usual global thread index and multiply it by 2. Thread 0 handles elements 0–1, thread 1 handles 2–3, and so on, with each thread processing `i` and `i + 1`.
+
+### Question 3
+
+We want to use each thread to calculate two elements of a vector addition. Each thread block processes `2 * blockDim.x` consecutive elements that form two sections. All threads first process one section and then move to the second section. Assume `i` is the index of the first element processed by a thread.
+
+a. `i = blockIdx.x * blockDim.x + threadIdx.x + 2`  
+b. `i = blockIdx.x * threadIdx.x * 2`  
+c. `i = (blockIdx.x * blockDim.x + threadIdx.x) * 2`  
+d. `i = blockIdx.x * blockDim.x * 2 + threadIdx.x` ✅
+
+**Why:** Here the two elements are *not* adjacent. Each block owns a chunk of `2 * blockDim.x` elements starting at `blockIdx.x * blockDim.x * 2`, and each thread processes `i` from the first section and `i + blockDim.x` from the second. Compare with Question 2: same "two elements per thread," completely different memory layout.
+
+### Question 4
+
+For a vector addition, assume the vector length is 8000, each thread calculates one output element, and the thread block size is 1024 threads. The programmer configures the kernel launch to have the minimal number of thread blocks to cover all output elements. How many threads will be in the grid?
+
+a. 8000  
+b. 8196  
+c. 8192 ✅  
+d. 8200
+
+**Why:** We need `ceil(8000 / 1024) = 8` blocks, and 8 blocks × 1024 threads = 8192 threads. The 192 extra threads are exactly why the kernel needs its `if (i < n)` boundary check.
+
+### Question 5
+
+If we want to allocate an array of `v` integer elements in CUDA device global memory, what would be an appropriate expression for the second argument of the call to `cudaMalloc()`?
+
+a. `n`  
+b. `v`  
+c. `n * sizeof(int)`  
+d. `v * sizeof(int)` ✅
+
+**Why:** The second argument of `cudaMalloc()` is the size in **bytes**, not in elements. So we multiply the element count `v` by `sizeof(int)`. Option `b` would allocate `v` bytes, which is 4× too small.
+
+### Question 6
+
+If we want to allocate an array of `n` floating-point elements and have a floating-point pointer variable `A_d` point to the allocated memory, what would be an appropriate expression for the first argument of the `cudaMalloc()` call?
+
+a. `n`  
+b. `(void *) A_d`  
+c. `*A_d`  
+d. `(void **) &A_d` ✅
+
+**Why:** `cudaMalloc()` does not *return* the pointer; it *writes* the allocated device address into the pointer you pass in. That means it needs the **address of your pointer**, cast to the generic `void **` type. Passing `A_d` by value would give it a copy it cannot modify.
+
+### Question 7
+
+If we want to copy 3000 bytes of data from host array `A_h` to device array `A_d`, what would be an appropriate CUDA API call?
+
+a. `cudaMemcpy(3000, A_h, A_d, cudaMemcpyHostToDevice);`  
+b. `cudaMemcpy(A_h, A_d, 3000, cudaMemcpyDeviceToHost);`  
+c. `cudaMemcpy(A_d, A_h, 3000, cudaMemcpyHostToDevice);` ✅  
+d. `cudaMemcpy(3000, A_d, A_h, cudaMemcpyHostToDevice);`
+
+**Why:** The parameter order is **destination, source, size, direction** — same destination-first convention as C's `memcpy()`. We are copying *to* the device, so `A_d` comes first and the direction is `cudaMemcpyHostToDevice`.
+
+### Question 8
+
+How would one declare a variable `err` that can appropriately receive the returned value of a CUDA API call?
+
+a. `int err;`  
+b. `cudaError err;`  
+c. `cudaError_t err;` ✅  
+d. `cudaSuccess_t err;`
+
+**Why:** Every CUDA API call returns a status code of type `cudaError_t`. `cudaSuccess` is one of the possible *values* of that type, not a type itself, and there is no `cudaSuccess_t`.
+
+### Question 9
+
+Consider the CUDA kernel and the corresponding host function shown in Figure 2.15.
+
+- **a. What is the number of threads per block?** 128
+- **b. What is the number of threads in the grid?** 200064
+- **c. What is the number of blocks in the grid?** 1563
+- **d. What is the number of threads that execute the code on line 02?** 200064
+- **e. What is the number of threads that execute the code on line 04?** 200000
+
+**Why:** The kernel is launched for `n = 200000` elements with 128 threads per block, so we need `ceil(200000 / 128) = 1563` blocks, which is `1563 * 128 = 200064` threads. Every one of those threads executes line 02 (computing its index `i`), but line 04 sits inside the `if (i < n)` guard, so only the 200000 threads with a valid index run it — the 64 extras do nothing.
+
+### Question 10
+
+A new CUDA programmer is frustrated because functions that should execute on both the host and the device appear to need two separate definitions. How would you help this programmer?
+
+**Answer:** Declare the function with both `__host__` and `__device__` qualifiers so the compiler generates both a host version and a device version of the function.
