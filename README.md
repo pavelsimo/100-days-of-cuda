@@ -237,4 +237,3 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - til the prefix sum is part of a problem family called "Scan". the name comes from the scan operator in Ken Iverson's APL (1962): https://en.wikipedia.org/wiki/APL_(programming_language)
 
-- finished chapter 3 of Programming Massively Parallel Processors. 
