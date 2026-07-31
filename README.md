@@ -235,5 +235,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ![alt text](images/prefix_sum_scan.png)
   ![alt text](images/prefix_sum_scan-2.png)
 
-- til the prefix sum is part of a problem family called "Scan". the name comes from the scan operator in Ken Iverson's APL (1962): https://en.wikipedia.org/wiki/APL_(programming_language)
+- til: 
+  
+  - the prefix sum is part of a problem family called "Scan". the name comes from the scan operator in Ken Iverson's APL (1962): https://en.wikipedia.org/wiki/APL_(programming_language)
+
+  - many libraries implement scan operations: CUB -> `BlockScan` and `DeviceScan`, Thrust -> `inclusive_scan`, C++17 -> `std::inclusive_scan`, and MPI -> `MPI_Scan`.
 
