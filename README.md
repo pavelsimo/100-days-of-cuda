@@ -243,4 +243,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 14
 
+- solved another LeetGPU medium problem: [Softmax Attention](day14/softmax_attention.cu).
+
 - finished chapter 3 of Programming Massively Parallel Processors, notes are here: [chapter 3](docs/programming-massively-parallel-processors/chapter-3.md)
