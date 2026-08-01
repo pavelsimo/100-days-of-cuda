@@ -56,7 +56,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - also block size limits in all three dimensions is as follow: x <= 1024, y <= 1024, z <= 64. important that x * y * z <= 1024, so the max number of threads per block is cap to 1024.
 
 - looked into how CUDA compilation works: it separates the program into host and device paths.
-![alt text](images/cuda-compilation.png)
+![CUDA compilation pipeline: host and device code paths](images/cuda-compilation.png)
 
 - solved my first easy problem on LeetGPU, a matrix transpose kernel, hmm starting to understand the indices joggling of CUDA:
   - [matrix_transpose.cu](day01/matrix_transpose.cu)
@@ -82,7 +82,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - also learned how the CUDA software model maps onto the actual hardware, nice mental model to keep in mind:
 
-![alt text](images/cuda-exec-model.png)
+![CUDA execution model: software to hardware mapping](images/cuda-exec-model.png)
 
 ### Day 4
 
@@ -148,9 +148,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - learned about the GPU memory hierarchy and the relative latency of each level. here is what it looks like on an H100:
 
-  ![alt text](images/memory-access.png)
+  ![GPU memory hierarchy](images/memory-access.png)
 
-  ![alt text](images/memory-access-2.png)
+  ![memory access latency on an H100](images/memory-access-2.png)
 
 - watched the video "Interview with NVIDIA CUDA Architect Stephen Jones", thanks to the youtube algorithm for this one. it's an informal discussion about CUDA, really helpful!
 
@@ -158,7 +158,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - finally got the 5th Edition of Programming Massively Parallel Processors! took some time to deliver since it was not available on amazon.de and had to be ordered from the US. in the coming days i will go through the chapters and share my learnings:
 
-  ![alt text](images/programming-massively-parallel-processors-5th-edition.png)
+  ![Programming Massively Parallel Processors, 5th Edition book cover](images/programming-massively-parallel-processors-5th-edition.png)
 
 ### Day 07
 
@@ -177,7 +177,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved my first LeetGPU medium problem: [Reduction](day08/reduce.cu). this was a nice one, until now i was only doing transformations, where the output has the same number of elements as the input. reductions are a bit more tricky, all the threads have to cooperate to produce a single value. first time i actually needed `__shared__`, `__syncthreads()` and `atomicAdd`, here is an animation how the process actually looks:
 
-  ![alt text](images/problem_reduction.gif)
+  ![parallel reduction animation](images/problem_reduction.gif)
 
 - finished chapter 1 of Programming Massively Parallel Processors, my notes are here: [chapter 1](docs/programming-massively-parallel-processors/chapter-1.md)
 
@@ -193,7 +193,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - the softmax one was more interesting, i ended up using three kernels: global max (for avoiding overflow), sum of `exp(x - max)`, then the final calculation. 
 
-  ![alt text](images/softmax_trick_dark.gif)
+  ![numerically stable softmax with the max-subtraction trick](images/softmax_trick_dark.gif)
 
 - til: there's no `atomicMax` for floats, had to hack around it with `atomicCAS`, pretty ugly stuff... need to re-do the softmax at some point.
 
@@ -209,7 +209,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved three more LeetGPU medium problems: [2D Convolution](day11/conv_2d.cu), [Gaussian Blur](day11/gaussian_blur.cu) and [Jacobi Stencil](day11/jacobi_stencil.cu). nothing super special about these, but they demand being extremely careful with the indices and boundary conditions. i'm starting to feel comfortable with row-major indexing. would like to try optimized versions of these later, currently my solutions are not optimized at all.
 
-  ![alt text](images/convolution_animation.gif)
+  ![2D convolution animation](images/convolution_animation.gif)
 
 - read the article [A Gentle Introduction to CUDA PTX](https://philipfabianek.com/posts/cuda-ptx-introduction), indeed a really "gentle" introduction to PTX: it covers the basic instructions, where PTX fits in the CUDA compilation pipeline, and the cli commands to inspect and work with it. highly recommended. it also links to the [Inline PTX Assembly](https://docs.nvidia.com/cuda/inline-ptx-assembly/index.html) docs, which teach you how to inline PTX in your kernels. i'm not at that level of ninja yet, but soon ;)
 
@@ -225,15 +225,15 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - learned about shared memory bank conflicts: shared memory `__shared__` is split into 32 banks, and when threads in a warp hit different words in the same bank the access becomes sequential, one thread at a time.
 
-  ![alt text](images/coalescing-dark.gif)
+  ![memory coalescing animation](images/coalescing-dark.gif)
 
 
 ### Day 13
 
 - solved another LeetGPU medium problem: [Prefix Sum](day13/prefix_sum.cu). the trickiest one so far... i was not able to solve it on my own, i watched the lectures Prefix Sum Scan [Part 1](https://www.youtube.com/watch?v=9CWDuPjUNHU&list=PLRRuQYjFhpmsjILcovwB7t1N_MmaU7sls) & [Part 2](https://www.youtube.com/watch?v=uARpJyWDcyY&list=PLRRuQYjFhpmsjILcovwB7t1N_MmaU7sls&index=2).
 
-  ![alt text](images/prefix_sum_scan.png)
-  ![alt text](images/prefix_sum_scan-2.png)
+  ![prefix sum scan](images/prefix_sum_scan.png)
+  ![prefix sum scan, upsweep and downsweep phases](images/prefix_sum_scan-2.png)
 
 - til: 
   
@@ -245,10 +245,12 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved two more LeetGPU medium problems: [Softmax Attention](day14/softmax_attention.cu) and [GEMM (FP16)](day14/gemm.cu). 
 
-- the softmax attention solution is 3 kernels: the first part of the equation that operates on the queries (Q) and keys (K), a row-wise softmax, and a final matmul with the values (V).
+- the GEMM (General matrix multiply) one is a naive implementation of matmul (for now), the problem requires to use `half` precision, but you need to make sure all calculations are done in `float` to avoid rounding errors.
 
-- the GEMM one is a naive implementation of matmul (for now), values are stored in `half` but accumulated in `float` to avoid precision loss.
+- the softmax attention solution i came up with is 3 kernels: (1) the portion that multiplies the queries (Q) by the keys transpose (K^T), (2) the softmax part, and (3) finally a matmul with the values (V). technically i could have used the same matrix multiplication kernel for both 1 and 3, but then a memory allocation would be needed for K^T, so i decided to just keep those two separated.
+
+  ![softmax attention animation](images/softmax_attention.gif)
 
 - finished chapter 3 of Programming Massively Parallel Processors, link to my notes: [chapter 3](docs/programming-massively-parallel-processors/chapter-3.md)
 
-- starting chapter 4 today. in the next few days i'll revisit some of my LeetGPU solutions and optimize them with what i've learned from the book.
+- started chapter 4. in the next few days i'll revisit some of my LeetGPU solutions and optimize them with what i've learned from the book.
