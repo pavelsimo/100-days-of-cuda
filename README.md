@@ -241,3 +241,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
   - many libraries implement scan operations: CUB -> `BlockScan` and `DeviceScan`, Thrust -> `inclusive_scan`, C++17 -> `std::inclusive_scan`, and MPI -> `MPI_Scan`.
 
+### Day 14
+
+- finished chapter 3 of Programming Massively Parallel Processors, notes are here: [chapter 3](docs/programming-massively-parallel-processors/chapter-3.md)
