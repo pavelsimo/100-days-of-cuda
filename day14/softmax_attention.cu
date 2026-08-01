@@ -1,5 +1,11 @@
 #include <cuda_runtime.h>
 #include <cfloat>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define M_DIM 4
+#define N_DIM 4
+#define D_DIM 8
 
 __global__ void row_softmax(float* scores, int M, int N) {
     int row = blockIdx.x * blockDim.x + threadIdx.x;
@@ -74,4 +80,69 @@ extern "C" void solve(const float* Q,
 
     cudaDeviceSynchronize();
     cudaFree(scores);
+}
+
+static void print_matrix(const char *title, const float *a, int rows, int cols)
+{
+    printf("%s (%dx%d):\n", title, rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            printf("%8.4f ", a[i * cols + j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+int main(void)
+{
+    float *h_Q, *h_K, *h_V, *h_output;
+    float *d_Q, *d_K, *d_V, *d_output;
+    int szQ = M_DIM * D_DIM * sizeof(float);
+    int szK = N_DIM * D_DIM * sizeof(float);
+    int szV = N_DIM * D_DIM * sizeof(float);
+    int szO = M_DIM * D_DIM * sizeof(float);
+
+    h_Q      = (float *)malloc(szQ);
+    h_K      = (float *)malloc(szK);
+    h_V      = (float *)malloc(szV);
+    h_output = (float *)malloc(szO);
+
+    cudaMalloc((void **)&d_Q, szQ);
+    cudaMalloc((void **)&d_K, szK);
+    cudaMalloc((void **)&d_V, szV);
+    cudaMalloc((void **)&d_output, szO);
+
+    for (int i = 0; i < M_DIM * D_DIM; i++) {
+        h_Q[i] = (float)(i % 7) * 0.1f;
+    }
+    for (int i = 0; i < N_DIM * D_DIM; i++) {
+        h_K[i] = (float)(i % 5) * 0.1f;
+        h_V[i] = (float)(i % 3) * 0.5f;
+    }
+
+    cudaMemcpy(d_Q, h_Q, szQ, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_K, h_K, szK, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_V, h_V, szV, cudaMemcpyHostToDevice);
+
+    print_matrix("Q", h_Q, M_DIM, D_DIM);
+    print_matrix("K", h_K, N_DIM, D_DIM);
+    print_matrix("V", h_V, N_DIM, D_DIM);
+
+    solve(d_Q, d_K, d_V, d_output, M_DIM, N_DIM, D_DIM);
+
+    cudaMemcpy(h_output, d_output, szO, cudaMemcpyDeviceToHost);
+
+    print_matrix("Attention Output", h_output, M_DIM, D_DIM);
+
+    cudaFree(d_Q);
+    cudaFree(d_K);
+    cudaFree(d_V);
+    cudaFree(d_output);
+    free(h_Q);
+    free(h_K);
+    free(h_V);
+    free(h_output);
+
+    return 0;
 }

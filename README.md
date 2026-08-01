@@ -243,6 +243,12 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 14
 
-- solved two more LeetGPU medium problems: [Softmax Attention](day14/softmax_attention.cu) and [GEMM (FP16)](day14/gemm.cu). the GEMM one is a naive one-thread-per-output-element kernel, values are stored in `half` but accumulated in `float` to avoid precision loss.
+- solved two more LeetGPU medium problems: [Softmax Attention](day14/softmax_attention.cu) and [GEMM (FP16)](day14/gemm.cu). 
 
-- finished chapter 3 of Programming Massively Parallel Processors, notes are here: [chapter 3](docs/programming-massively-parallel-processors/chapter-3.md)
+- the softmax attention solution is 3 kernels: the first part of the equation that operates on the queries (Q) and keys (K), a row-wise softmax, and a final matmul with the values (V).
+
+- the GEMM one is a naive implementation of matmul (for now), values are stored in `half` but accumulated in `float` to avoid precision loss.
+
+- finished chapter 3 of Programming Massively Parallel Processors, link to my notes: [chapter 3](docs/programming-massively-parallel-processors/chapter-3.md)
+
+- starting chapter 4 today. in the next few days i'll revisit some of my LeetGPU solutions and optimize them with what i've learned from the book.
