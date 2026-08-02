@@ -257,9 +257,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 15
 
-- no new problems today, i revisited the LeetGPU GEMM problem. i wanted to improve the naive implementation from yesterday, and i found this blog post by Simon Boehm: [How to Optimize a CUDA Matmul Kernel for cuBLAS-like Performance: a Worklog](https://siboehm.com/articles/22/CUDA-MMM). it is an excellent explanation of how to optimize GEMM. it's a step-by-step guide that teaches you everything from the naive solution (see Day 14) all the way up to something close to cuBLAS. highly optimized CUDA code can feel like dark magic at times, especially if you don't understand the thinking behind the optimizations.
+- no new problems today, i revisited the LeetGPU GEMM problem. i wanted to improve the naive implementation from yesterday, and i found this blog post by Simon Boehm: [How to Optimize a CUDA Matmul Kernel for cuBLAS-like Performance: a Worklog](https://siboehm.com/articles/22/CUDA-MMM). 
 
-- i had the time to apply the first two optimizations from the article: [Global Memory Coalescing](day15/gemm_2.cu) and [Shared Memory Caching](day15/gemm_3.cu), which took the naive solution from 26 ms to 6.85 ms. still a long way to go... the top solutions in LeetGPU are in the 0.15 - 0.60 ms range.
+- it's an excellent step-by-step guide, going from a naive GEMM kernel to something close to cuBLAS, explaining the decisions behind each optimization, highly recommended!
+
+- i had the time to apply the first two optimizations from the article: [GEMM - Global Memory Coalescing](day15/gemm_2.cu) and [GEMM - Shared Memory Caching](day15/gemm_3.cu), which took the naive solution from 26 ms to 6.85 ms. still a long way to go... the top solutions in LeetGPU are in the 0.15 - 0.60 ms range.
 
 - [GEMM - Naive](day14/gemm.cu):
 
