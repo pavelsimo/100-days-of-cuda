@@ -270,3 +270,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - [GEMM - Global Memory Coalescing](day15/gemm_2.cu):
 
   ![global memory coalescing GEMM kernel](images/gemm_global_memory_coalescing.gif)
+
+
+### Day 16
+
+- solved another LeetGPU problem: [Subarray Sum](day16/subarray_sum.cu), the problem is interesting enough so i ended up implementing it in three different ways. the first approach calculates the prefix sum and uses the generated array to compute the answer. it is a bit of overkill, but it gives O(1) queries once the prefix sum array is pre-calculated with a kernel. the other two approaches are classical reductions, we just need to make sure any value we consider is within the range [S, E], otherwise we assign a 0 to the new input array.
+
+
+- read a few more pages of Programming Massively Parallel Processors, almost done with chapter 4.
