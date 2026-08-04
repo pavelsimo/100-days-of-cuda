@@ -278,3 +278,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 
 - read a few more pages of Programming Massively Parallel Processors, almost done with chapter 4.
+
+### Day 17
+
+- solved the 2D version of yesterday's problem: 2D Subarray Sum, again with three implementations at different levels of optimization: [subarray_sum_2d](day17/subarray_sum_2d.cu), [subarray_sum_2d_2](day17/subarray_sum_2d_2.cu) and [subarray_sum_2d_3](day17/subarray_sum_2d_3.cu).
+
+- finished chapter 4 of Programming Massively Parallel Processors, link to my notes: [chapter 4](docs/programming-massively-parallel-processors/chapter-4.md)
