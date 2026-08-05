@@ -13,7 +13,7 @@ __global__ void dot_product(const half* A, const half* B, half* result, int N) {
     __shared__ float t[32];
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     int tid = threadIdx.x;
-    float val = 0;
+    float sum = 0;
     unsigned mask = 0xFFFFFFFFU;
     int lane = threadIdx.x & (warpSize - 1);
     int warpId = threadIdx.x >> 5;
@@ -21,28 +21,29 @@ __global__ void dot_product(const half* A, const half* B, half* result, int N) {
     while (i + 7 * stride < N) {
         #pragma unroll 
         for (int k = 0; k < 8; ++k) {
-            val += __half2float(A[i + k * stride]) * __half2float(B[i + k * stride]);
+            sum += __half2float(A[i + k * stride]) * __half2float(B[i + k * stride]);
         }
         i += 8 * stride;
     }
 
     while (i < N) {
-        val += __half2float(A[i]) * __half2float(B[i]);
+        sum += __half2float(A[i]) * __half2float(B[i]);
         i += stride;
     }
 
-    val = warp_reduce(val);
+    sum = warp_reduce(sum);
     if (lane == 0) {
-        t[warpId] = val;
+        t[warpId] = sum;
     }
     __syncthreads();
 
     if (warpId == 0) {
-        val = (tid < blockDim.x / warpSize) ? t[lane]: 0.0f;
-        val = warp_reduce(val);
-
+        int numWarps = (blockDim.x / warpSize);
+        sum = (lane < numWarps) ? t[lane] : 0.0f;
+        sum = warp_reduce(sum);
+        
         if (tid == 0) {
-            atomicAdd(result, __float2half(val));
+            atomicAdd(result, __float2half(sum));
         }
     }
 }

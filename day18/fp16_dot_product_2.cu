@@ -46,9 +46,9 @@ __global__ void dot_product(const half* A, const half* B, float* result, int N) 
     __syncthreads();
 
     if (warpId == 0) {
-        sum = (tid < blockDim.x / warpSize) ? t[lane]: 0.0f;
+        int numWarps = (blockDim.x / warpSize);
+        sum = (lane < numWarps) ? t[lane] : 0.0f;
         sum = warp_reduce(sum); 
-
         if (tid == 0) {
             atomicAdd(result, sum);
         }
