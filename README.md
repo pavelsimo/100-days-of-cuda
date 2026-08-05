@@ -286,3 +286,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - finished chapter 4 of Programming Massively Parallel Processors, link to my notes: [chapter 4](docs/programming-massively-parallel-processors/chapter-4.md)
 
   ![Subarray Sum](images/subarray_sum.gif)
+
+### Day 18
+
+- solved the LeetGPU [Dot Product (FP16)](day18/fp16_dot_product.cu) problem and tried to optimize it as much as possible using warp shuffles and vectorized `float4` loads: [vectorized version](day18/fp16_dot_product_2.cu). 
+
+- i'm still amazed by how much effort it takes to write a performant dot product. the end result is pretty much unreadable to someone with no CUDA experience. a few things make it feel "magical". for instance, `__shfl_down_sync` is really weird. it blows my mind that you can copy a value directly from another thread's register within the same warp. 
+
+- it also takes a lot of effort not to mess up the indices once you start vectorizing with `float4`. using `half2` is easy to get wrong too, since accumulating in half precision can overflow, so i accumulated the results in `float` instead. it's not super hard, but it's easy to screw up.
