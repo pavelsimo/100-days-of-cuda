@@ -294,3 +294,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - i'm still amazed by how much effort it takes to write a performant dot product. the end result is pretty much unreadable to someone with no CUDA experience. a few things make it feel "magical". for instance, `__shfl_down_sync` is really weird. it blows my mind that you can copy a value directly from another thread's register in the same warp.
 
 - it also takes some effort not to mess up the indices once you start vectorizing (`float4`, `half2`, ...). you have to read more data at a time, so your loop conditions change, and you also have to take care of boundary conditions because the data size is not always a multiple of the vector size.
+
+### Day 19
+
+- solved two more LeetGPU problems: [3D Subarray Sum](day19/subarray_sum_3d.cu) and [2D Max Pooling](day19/max_pooling_2d.cu). i need to revisit max pooling, my solution feels quite naive and probably has plenty of room for optimization.
+
+- started chapter 5 of Programming Massively Parallel Processors. i should finish it tomorrow.
+
+![2D Max Pooling](images/2d_max_pooling_explorer.gif)
