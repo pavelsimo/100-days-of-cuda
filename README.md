@@ -301,4 +301,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - started chapter 5 of Programming Massively Parallel Processors. i should finish it tomorrow.
 
+- found this amazing resource: [CUDA Operations Optimization Guides](https://www.rightnowai.co/guides/cuda-operations). it has lots of nice tutorials on CUDA kernel optimizations. it takes you from the naive solution to the optimized one.
+
 ![2D Max Pooling](images/2d_max_pooling_explorer.gif)
