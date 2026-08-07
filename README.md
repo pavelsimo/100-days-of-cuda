@@ -307,6 +307,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 20
 
-- solved the LeetGPU [RMS Normalization](day20/rms_normalization.cu) problem. another reduction problem. i can see why reductions are a must-have in any library that goals is to ease the coding of kernels, these kinds of problems are everywhere, reductions are a fundamental parallel building block.
+- solved the LeetGPU [RMS Normalization](day20/rms_normalization.cu) problem. another reduction problem. i can see why reductions (or scans) are a must-have in any library that goals is to ease the implementation of kernels, these kinds of problems are everywhere, they are a fundamental building block.
 
 - still reading chapter 5 of PMPP. today i came across the concept of computational intensity (FLOP/B) and how to determine whether a program is compute-bound or memory-bound.
