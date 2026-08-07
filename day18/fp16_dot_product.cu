@@ -14,7 +14,6 @@ __global__ void dot_product(const half* A, const half* B, half* result, int N) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     int tid = threadIdx.x;
     float sum = 0;
-    unsigned mask = 0xFFFFFFFFU;
     int lane = threadIdx.x & (warpSize - 1);
     int warpId = threadIdx.x >> 5;
     int stride = gridDim.x * blockDim.x;

@@ -304,3 +304,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - found this amazing resource: [CUDA Operations Optimization Guides](https://www.rightnowai.co/guides/cuda-operations). it has lots of nice tutorials on CUDA kernel optimizations. it takes you from the naive solution to the optimized one.
 
 ![2D Max Pooling](images/2d_max_pooling_explorer.gif)
+
+### Day 20
+
+- solved the LeetGPU [RMS Normalization](day20/rms_normalization.cu) problem. another reduction problem. i can see why reductions are a must-have in any library designed to help you write CUDA code: these kinds of problems are everywhere, and reductions are a fundamental building block.
+
+- still reading chapter 5 of PMPP. today i came across the concept of computational intensity (FLOP/B) and how to determine whether a program is compute-bound or memory-bound.
