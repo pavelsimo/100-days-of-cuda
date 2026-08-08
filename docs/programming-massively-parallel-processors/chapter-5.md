@@ -1,3 +1,5 @@
+> Dear reader: These notes were created with the help of AI, with me cherry-picking the parts of the book I found most relevant. I also reviewed the content to make sure no AI hallucinations slipped through. I hope you find them useful. Happy reading! :)
+
 # Programming Massively Parallel Processors: Chapter 5, Memory Architecture and Data Locality
 
 1. [Memory Bandwidth as a Performance Limiter](#1-memory-bandwidth-as-a-performance-limiter)
@@ -418,7 +420,7 @@ Each phase:
 Number of phases:
 
 $$
-\frac{width}{TILE_WIDTH}
+\frac{width}{\mathtt{TILE\_WIDTH}}
 $$
 
 Finally:
@@ -548,7 +550,7 @@ Number of phases must round up:
 $$
 \text{phases} =
 \left\lceil
-\frac{\text{width}}{\text{TILE_WIDTH}}
+\frac{\text{width}}{\mathtt{TILE\_WIDTH}}
 \right\rceil
 $$
 
@@ -594,7 +596,7 @@ $$
 For tiled matrix multiplication, each block uses two shared tiles:
 
 $$
-2\times TILE_WIDTH^2\times4\text{ B}
+2\times \mathtt{TILE\_WIDTH}^2\times4\text{ B}
 $$
 
 Since the block has $T^2$ threads:

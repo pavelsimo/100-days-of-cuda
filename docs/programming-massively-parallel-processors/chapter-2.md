@@ -1,3 +1,5 @@
+> Dear reader: These notes were created with the help of AI, with me cherry-picking the parts of the book I found most relevant. I also reviewed the content to make sure no AI hallucinations slipped through. I hope you find them useful. Happy reading! :)
+
 # Programming Massively Parallel Processors: Chapter 2, Heterogeneous Data-Parallel Computing
 
 1. [Data Parallelism vs. Task Parallelism](#1-data-parallelism-vs-task-parallelism)
@@ -358,7 +360,7 @@ b. `cudaMemcpy(A_h, A_d, 3000, cudaMemcpyDeviceToHost);`
 c. `cudaMemcpy(A_d, A_h, 3000, cudaMemcpyHostToDevice);` ✅  
 d. `cudaMemcpy(3000, A_d, A_h, cudaMemcpyHostToDevice);`
 
-**Why:** The parameter order is **destination, source, size, direction** — same destination-first convention as C's `memcpy()`. We are copying *to* the device, so `A_d` comes first and the direction is `cudaMemcpyHostToDevice`.
+**Why:** The parameter order is **destination, source, size, direction**, following the same destination-first convention as C's `memcpy()`. We are copying *to* the device, so `A_d` comes first and the direction is `cudaMemcpyHostToDevice`.
 
 ### Question 8
 
@@ -381,7 +383,7 @@ Consider the CUDA kernel and the corresponding host function shown in Figure 2.1
 - **d. What is the number of threads that execute the code on line 02?** 200064
 - **e. What is the number of threads that execute the code on line 04?** 200000
 
-**Why:** The kernel is launched for `n = 200000` elements with 128 threads per block, so we need `ceil(200000 / 128) = 1563` blocks, which is `1563 * 128 = 200064` threads. Every one of those threads executes line 02 (computing its index `i`), but line 04 sits inside the `if (i < n)` guard, so only the 200000 threads with a valid index run it — the 64 extras do nothing.
+**Why:** The kernel is launched for `n = 200000` elements with 128 threads per block, so we need `ceil(200000 / 128) = 1563` blocks, which is `1563 * 128 = 200064` threads. Every one of those threads executes line 02 (computing its index `i`), but line 04 sits inside the `if (i < n)` guard, so only the 200000 threads with a valid index run it. The 64 extras do nothing.
 
 ### Question 10
 

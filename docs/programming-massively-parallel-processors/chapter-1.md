@@ -1,3 +1,5 @@
+> Dear reader: These notes were created with the help of AI, with me cherry-picking the parts of the book I found most relevant. I also reviewed the content to make sure no AI hallucinations slipped through. I hope you find them useful. Happy reading! :)
+
 # Programming Massively Parallel Processors: Chapter 1, Introduction
 
 1. [The End of Frequency Scaling (2003)](#1-the-end-of-frequency-scaling-2003)

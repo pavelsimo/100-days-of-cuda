@@ -1,3 +1,5 @@
+> Dear reader: These notes were created with the help of AI, with me cherry-picking the parts of the book I found most relevant. I also reviewed the content to make sure no AI hallucinations slipped through. I hope you find them useful. Happy reading! :)
+
 # Programming Massively Parallel Processors: Chapter 3, Multidimensional Grids and Data
 
 1. [Grid and Block Organization](#1-grid-and-block-organization)
@@ -125,7 +127,7 @@ Inside a kernel, CUDA automatically provides a set of built-in variables that te
 Properties:
 
 - They are **read-only**.
-- They are **automatically initialized** from the launch configuration — you never assign them yourself.
+- They are **automatically initialized** from the launch configuration; you never assign them yourself.
 
 **Summary:** Every thread runs the same kernel code, and these built-in variables are what let each thread figure out which piece of the data is its own.
 
@@ -279,7 +281,7 @@ if (plane < depth && row < rows && col < cols) {
 }
 ```
 
-**Summary:** A 3D array is just a stack of 2D planes in flat memory. The indexing pattern generalizes directly — one extra coordinate, one extra term in the index formula, and one extra bounds check.
+**Summary:** A 3D array is just a stack of 2D planes in flat memory. The indexing pattern generalizes directly: one extra coordinate, one extra term in the index formula, and one extra bounds check.
 
 ---
 
@@ -302,8 +304,8 @@ Matrix and vector operations are so common that they were standardized decades a
 
 - **Level 1** does the least work per element: for vectors of length `n`, it performs on the order of `n` operations.
 - **Level 2** steps up to matrix-vector products.
-- **Level 3** is the most computationally intensive and the best suited for GPUs — it performs enough arithmetic per byte of data to keep all those threads busy.
+- **Level 3** is the most computationally intensive and the best suited for GPUs because it performs enough arithmetic per byte of data to keep all those threads busy.
 
 **Note:** Matrix multiplication is a **Level 3 BLAS** operation, making it a key workload for CUDA.
 
-**Summary:** BLAS classifies linear algebra into three levels — vector-vector, matrix-vector, and matrix-matrix. The higher the level, the more computation per data element, which is exactly what GPUs thrive on; that is why matrix multiplication (Level 3) is such a central CUDA workload.
+**Summary:** BLAS classifies linear algebra into three levels: vector-vector, matrix-vector, and matrix-matrix. The higher the level, the more computation per data element, which is exactly what GPUs thrive on; that is why matrix multiplication (Level 3) is such a central CUDA workload.

@@ -1,3 +1,5 @@
+> Dear reader: These notes were created with the help of AI, with me cherry-picking the parts of the book I found most relevant. I also reviewed the content to make sure no AI hallucinations slipped through. I hope you find them useful. Happy reading! :)
+
 # Programming Massively Parallel Processors: Chapter 4, Compute Architecture and Scheduling
 
 1. [Modern GPU Architecture](#1-modern-gpu-architecture)
