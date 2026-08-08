@@ -310,3 +310,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - solved the LeetGPU [RMS Normalization](day20/rms_normalization.cu) problem. another reduction problem. i can see why reductions (or scans) are a must-have in any library that goals is to ease the implementation of kernels, these kinds of problems are everywhere, they are a fundamental building block.
 
 - still reading chapter 5 of PMPP. today i came across the concept of computational intensity (FLOP/B) and how to determine whether a program is compute-bound or memory-bound.
+
+### Day 21
+
+- solved the LeetGPU Cross Entropy Loss problem with two different solutions. the first one keeps the sum of the exp. in an additional array and then uses a warp reduction. the second solution avoids the extra memory by doing all the operations with warp shuffles. i learned about `__shfl_sync`, which allows threads within a warp to share register values, super useful for broadcasting a value to all threads in the warp. [cross_entropy_loss](day21/cross_entropy_loss.cu) and [cross_entropy_loss_2](day21/cross_entropy_loss_2.cu).
+
+- finished chapter 5 of PMPP. there were so many learnings in this chapter. i think the main highlight is that GPUs gives you more control over memory than CPUs through the use of shared memory. on a CPU, you can only lay out your data access pattern, but you have no control over what enters the cache or not. also, for GPUs it's really important to keep an eye on how much register and shared memory your threads use. if this is above the average for the target hardware, you may run into occupancy issues because there aren't enough resources to allocate all 2048 threads in the SM. link to my notes: [chapter 5](docs/programming-massively-parallel-processors/chapter-5.md)
