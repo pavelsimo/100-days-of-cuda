@@ -316,3 +316,18 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - solved in two different ways the LeetGPU Cross Entropy Loss problem. the first one keeps the sum of the exp. in an additional array and then uses a warp reduction. the second solution avoids the extra memory by doing all the operations with warp shuffles. i learned about `__shfl_sync`, which allows threads within a warp to share register values, super useful for broadcasting a value to all threads in the warp. [cross_entropy_loss](day21/cross_entropy_loss.cu) and [cross_entropy_loss_2](day21/cross_entropy_loss_2.cu).
 
 - finished chapter 5 of PMPP. there were so many learnings in this chapter. i think the main highlight is that GPUs gives you more control over memory than CPUs through the use of shared memory. on a CPU, you can only lay out your data access pattern, but you have no control over what enters the cache or not. also, for GPUs it's really important to keep an eye on how much register and shared memory your threads use. if this is above the average for the target hardware, you may run into occupancy issues because there aren't enough resources to allocate all 2048 threads in the SM. link to my notes: [chapter 5](docs/programming-massively-parallel-processors/chapter-5.md)
+
+
+### Day 22
+
+- solved the LeetGPU [3D Convolution](day22/conv_3d.cu) problem. this one is not too different from [2D Convolution](day11/conv_2d.cu), but it adds a depth dimension. so row-major indexes are given by the expression: 
+
+`(depth + d) * (input_rows * input_cols) + (row + r) * input_cols + (col + c)` 
+
+> as usual with these kind of problems, you need to be really organized, it helps to have clear variables, otherwise it's easy to mess up.
+
+- started chapter 6 of PMPP. this is a good one, the whole chapter is about optimizations techniques: memory coaslecing, loop unrolling, etc. 
+
+- today i reached the top 100 on LeetGPU after solving 39/98 tasks. the remaining problems are not trivial, and i'll probably need to first master more parallel building blocks. in PMPP, those start in chapter 7 and include techniques such as histograms, filtering, merging, sorting, etc.
+
+

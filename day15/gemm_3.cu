@@ -20,7 +20,7 @@ __global__ void gemm_kernel(const half* A, const half* B, half* C, int M, int N,
         const int bRow = tile + threadRow;
 
         As[threadRow * BLOCKSIZE + threadCol] = 
-            (row < M && acol < K) ? A[row * K + aCol] : __float2half(0.0f);
+            (row < M && aCol < K) ? A[row * K + aCol] : __float2half(0.0f);
         Bs[threadRow * BLOCKSIZE + threadCol] = 
             (bRow < K && col < N) ? B[bRow * N + col] : __float2half(0.0f);
         __syncthreads();
