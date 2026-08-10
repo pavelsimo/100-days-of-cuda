@@ -330,4 +330,8 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - today i reached the top 100 on LeetGPU after solving 39/98 tasks. the remaining problems are not trivial, and i'll probably need to first master more parallel building blocks. in PMPP, those start in chapter 7 and include techniques such as histograms, filtering, merging, sorting, etc.
 
+### Day 23
 
+- solved the LeetGPU Histogramming problem in two ways. the [first](day23/histogramming.cu) is a naive solution that uses `atomicAdd` to update the global histogram directly, causing a lot of thread contention since threads become serialized while storing the bins frequencies. the [second](day23/histogramming_2.cu) uses privatization, each block builds a private histogram in shared memory and then merges it into the global histogram, reducing contention and improving performance.
+
+- still reading chapter 6 of PMPP.

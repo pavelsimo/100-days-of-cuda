@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "CUDA: Debug active file",
+            "type": "cuda-gdb",
+            "request": "launch",
+            "debuggerPath": "/opt/cuda/bin/cuda-gdb",
+            "program": "${workspaceFolder}/.cuda-debug/${relativeFileDirname}/${fileBasenameNoExtension}",
+            "cwd": "${fileDirname}",
+            "args": [],
+            "preLaunchTask": "CUDA: build active file (debug)",
+            "breakOnLaunch": true,
+            "onAPIError": "stop"
+        }
+    ]
+}

@@ -1,0 +1,4 @@
+{
+    "nsight.cuda.languageSupport.provider": "cpptools",
+    "nsight.cuda.languageSupport.gpuArch": "sm_120"
+}
