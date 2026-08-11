@@ -340,6 +340,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU Monte Carlo Integration problem in three slightly different ways. it is another reduction problem: we just need to sum all the sampled values and multiply the result by `(b - a) / n_samples`. 
 
-- the [first](day24/monte_carlo_integration.cu) solution uses a classical shared memory reduction, the [second](day24/monte_carlo_integration_2.cu) uses warp shuffles to skip one of the thread synchronizations (__syncthreads), and the [third](day24/monte_carlo_integration_3.cu) moves the final scaling step into a separate kernel so it is executed only once, thus minimizing the repeated instructions in each thread.
+- the [first](day24/monte_carlo_integration.cu) solution is a classical shared memory reduction, the [second](day24/monte_carlo_integration_2.cu) uses warp shuffles to skip one of the thread synchronizations (__syncthreads), and the [third](day24/monte_carlo_integration_3.cu) moves the final scaling step into a separate kernel so it is executed only once, thus minimizing the repeated instructions in each thread.
 
 - still reading chapter 6 of PMPP, currently in section 6.6, today i learned a bit about thread coarsening, memory coalescing, bank conflicts and corner turning. 
