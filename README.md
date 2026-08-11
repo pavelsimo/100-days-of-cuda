@@ -324,7 +324,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 `(depth + d) * (input_rows * input_cols) + (row + r) * input_cols + (col + c)` 
 
-> as usual with these kind of problems, you need to be really organized, it helps to have clear variables, otherwise it's easy to mess up.
+- as usual with these kind of problems, you need to be really organized, it helps to have clear variables, otherwise it's easy to mess up.
 
 - started chapter 6 of PMPP. this is a good one, the whole chapter is about optimizations techniques: memory coaslecing, loop unrolling, etc. 
 
@@ -332,6 +332,14 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 23
 
-- solved the LeetGPU Histogramming problem in two ways. the [first](day23/histogramming.cu) is a naive solution that uses `atomicAdd` to update the global histogram directly, causing a lot of thread contention since threads become serialized while storing the bins frequencies. the [second](day23/histogramming_2.cu) uses privatization, each block builds a private histogram in shared memory and then merges it into the global histogram, reducing contention and improving performance.
+- solved the LeetGPU Histogramming problem in two ways. the [first](day23/histogramming.cu) is a naive solution that uses `atomicAdd` to update the histogram in global memory directly, this solution suffers of contention since all threads try to store the bin frequencies in the same global array, which is slow. the [second](day23/histogramming_2.cu) solution uses privatization, each block builds a private histogram in shared memory and then merges it into the global histogram, reducing contention and improving performance.
 
 - still reading chapter 6 of PMPP.
+
+### Day 24
+
+- solved the LeetGPU Monte Carlo Integration problem in three slightly different ways. it is another reduction problem: we just need to sum all the sampled values and multiply the result by `(b - a) / n_samples`. 
+
+- the [first](day24/monte_carlo_integration.cu) solution uses a classical shared memory reduction, the [second](day24/monte_carlo_integration_2.cu) uses warp shuffles to skip one of the thread synchronizations (__syncthreads), and the [third](day24/monte_carlo_integration_3.cu) moves the final scaling step into a separate kernel so it is executed only once, thus minimizing the repeated instructions in each thread.
+
+- still reading chapter 6 of PMPP, currently in section 6.6, today i learned a bit about thread coarsening, memory coalescing, bank conflicts and corner turning. 
