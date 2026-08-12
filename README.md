@@ -343,3 +343,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - the [first](day24/monte_carlo_integration.cu) solution is a classical shared memory reduction, the [second](day24/monte_carlo_integration_2.cu) uses warp shuffles to skip one of the thread synchronizations (__syncthreads), and the [third](day24/monte_carlo_integration_3.cu) moves the final scaling step into a separate kernel so it is executed only once, thus minimizing the repeated instructions in each thread.
 
 - still reading chapter 6 of PMPP, currently in section 6.6, today i learned a bit about thread coarsening, memory coalescing, bank conflicts and corner turning. 
+
+### Day 25
+
+- solved the LeetGPU Matrix Power problem. this was an interesting one for me because i had solved it sequentially for competitive programming contests. the approach is not too different this time, except the matmul itself runs in parallel with a CUDA kernel. one cool thing i learned back then is that this problem has an O(log P) solution, a trick that can be used for many surprising problems, like calculating Fibonacci numbers in O(log N) time. i found that super cool when i first encountered it. here is the fibonnaci matrix power, in case you're curious: https://algomaster.io/learn/dsa/matrix-exponentiation
+
+- anyway... i implemented three versions: a [naive solution](day25/matrix_power.cu) with a not-so-optimized matmul, a [tiled matmul](day25/matrix_power_2.cu), and a [tiled version using the O(log P) trick](day25/matrix_power_3.cu). since P <= 20 the O(log P) does not help much, but for larger powers the performance improvement should start to show.
+
+- finished chapter 6 of PMPP, link to my notes: [PMPP - Chapter 6](docs/programming-massively-parallel-processors/chapter-6.md)
