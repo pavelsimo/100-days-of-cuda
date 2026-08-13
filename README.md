@@ -351,3 +351,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - anyway... i implemented three versions: a [naive solution](day25/matrix_power.cu) with a not-so-optimized matmul, a [tiled matmul](day25/matrix_power_2.cu), and a [tiled version using the O(log P) trick](day25/matrix_power_3.cu). since P <= 20 the O(log P) does not help much, but for larger powers the performance improvement should start to show.
 
 - finished chapter 6 of PMPP, link to my notes: [PMPP - Chapter 6](docs/programming-massively-parallel-processors/chapter-6.md)
+
+### Day 26
+
+- solved the LeetGPU [Attention with Linear Biases](day26/softmax_attention_linear_biases_2.cu) problem. ALiBi (Attention with Linear Biases) is a way to give a transformer information about where tokens are relative to each other without using traditional positional embeddings. the implementation is not too difficult: for each attention element `(i, j)`, we just need to compute `alpha * (i - j)` and add it to the current attention score. the term `alpha * (i - j)` is the linear position bias. in case you would like to learn more here is the link to the paper: https://arxiv.org/pdf/2108.12409
+
+- started chapter 7 of PMPP, which kicks off part 2 of the book on parallel patterns. the first chapter is about convolutions, i can't wait to learn more about these patterns!
