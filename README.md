@@ -354,6 +354,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 26
 
-- solved the LeetGPU [Attention with Linear Biases](day26/softmax_attention_linear_biases_2.cu) problem. ALiBi (Attention with Linear Biases) is a way to give a transformer information about where tokens are relative to each other without using traditional positional embeddings. the implementation is not too difficult: for each attention element `(i, j)`, we just need to compute `alpha * (i - j)` and add it to the current attention score. the term `alpha * (i - j)` is the linear position bias. in case you would like to learn more here is the link to the paper: https://arxiv.org/pdf/2108.12409
+- solved the LeetGPU [Attention with Linear Biases](day26/softmax_attention_linear_biases_2.cu) problem. ALiBi (Attention with Linear Biases) is a way to give a transformer information about where tokens are relative to each other without using traditional positional embeddings. the implementation is not too difficult: for each attention element `(i, j)`, we just need to compute `alpha * (i - j)` and add it to the current attention score. the term `alpha * (i - j)` is the linear position bias. in case you would like to learn more, here is the link to the paper: https://arxiv.org/pdf/2108.12409
 
-- started chapter 7 of PMPP, which kicks off part 2 of the book on parallel patterns. the first chapter is about convolutions, i can't wait to learn more about these patterns!
+- started chapter 7 of PMPP, the first chapter in part 2 of the book. this part focuses on parallel patterns, starting with convolutions, i can't wait to deep dive!
