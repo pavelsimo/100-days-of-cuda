@@ -357,3 +357,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - solved the LeetGPU [Attention with Linear Biases](day26/softmax_attention_linear_biases_2.cu) problem. ALiBi (Attention with Linear Biases) is a way to give a transformer information about where tokens are relative to each other without using traditional positional embeddings. the implementation is not too difficult: for each attention element `(i, j)`, we just need to compute `alpha * (i - j)` and add it to the current attention score. the term `alpha * (i - j)` is the linear position bias. in case you would like to learn more, here is the link to the paper: https://arxiv.org/pdf/2108.12409
 
 - started chapter 7 of PMPP, the first chapter in part 2 of the book. this part focuses on parallel patterns, starting with convolutions, i can't wait to deep dive!
+
+### Day 27
+
+- solved the LeetGPU [Batched Matrix Multiplication](day27/batched_matmul.cu) problem. all the matmul problems so far have involved multiplying just two matrices, but in this case, we are given batches of matrices and have to store all the results in a row-major 1D array. a good guiding principle is to first try the stupidest solution that comes to mind, so that once the problem is solved, you can focus on optimizing it. well, it should be possible to run the matmul kernel once per batch, but hold on, cowboy... the maximum number of batches is 128, and the kernel launch overhead (yeah, there is a price to pay for launching kernels) would probably make that pretty slow. actually, we can process the entire batch in a single kernel by treating the batch index as a sort of "depth" dimension. this is exactly what we did on Day 22 when solving the 3D Convolution problem. in this case, the indices for each matrix are given by the formulas:
+
+`A[batch * (M * K) + row * K + k]`
+`B[batch * (K * N) + k   * N + col]`
+`C[batch * (M * N) + row * N + col]`
+
+- still reading chapter 7 of PMPP, which focuses on convolution as a parallel computation pattern.
