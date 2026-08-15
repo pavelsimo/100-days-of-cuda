@@ -382,4 +382,4 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - fortunately i noticed no extra memory is needed. for each output element we can find its rotated pair by checking whether `j` is in the first or second half of the row, then adding or subtracting `D / 2`. when `j` is in the first half, we also negate the paired value:
 
-`rotHalf = j < halfD ? -Q[i * D + j + halfD] : Q[i * D + j - halfD]`
+  `rotHalf = j < halfD ? -Q[i * D + j + halfD] : Q[i * D + j - halfD]`
