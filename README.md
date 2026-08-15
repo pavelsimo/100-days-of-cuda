@@ -373,3 +373,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ```
 
 - still reading chapter 7 of PMPP: convolutions.
+
+### Day 28
+
+- solved the LeetGPU [Rotary Positional Embeddings](day28/rope_3.cu) problem. RoPE gives transformers a sense of token order. here, i focused on the CUDA implementation, but you can learn more about RoPE in the [paper](https://arxiv.org/pdf/2104.09864).
+
+- so at first i thought i could precompute `rotate_half` in extra memory, making the rest a simple element-wise calculation. that seemed reasonable with the listed constraints of `M, D <= 10,000`, but the performance test uses `D = 128` and `M = 1,048,576`. copying that much data would hurt performance.
+
+- fortunately... no extra memory is needed. for each output element we can find its rotated pair by checking whether `j` is in the first or second half of the row, then adding or subtracting `D / 2`. when `j` is in the first half, we also negate the paired value:
+
+`rotHalf = j < halfD ? -Q[i * D + j + halfD] : Q[i * D + j - halfD]`
