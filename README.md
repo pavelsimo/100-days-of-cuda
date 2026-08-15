@@ -376,10 +376,10 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 28
 
-- solved the LeetGPU [Rotary Positional Embeddings](day28/rope_3.cu) problem. RoPE gives transformers a sense of token order. it does this by rotating the query (Q) and key (K) vectors according to each token position. you can learn more about RoPE in the here: https://arxiv.org/pdf/2104.09864.
+- solved the LeetGPU [Rotary Positional Embeddings](day28/rope_3.cu) problem. RoPE gives transformers a sense of token order. it does this by rotating the query (Q) and key (K) vectors according to each token's position. you can learn more about RoPE here: https://arxiv.org/pdf/2104.09864.
 
-- so at first, i thought i could precompute `rotate_half` in extra memory, making the rest a simple element-wise calculation. that seemed reasonable with the listed constraints of `M, D <= 10,000`, but then i noticed that the performance test uses `D = 128` and `M = 1,048,576`. copying that much data would hurt performance. i found this part of LeetGPU weird. why separate the constraints? on my first try, my solution passed all the test cases but failed the performance tests. i don't see the point of splitting the constraints if they all need to pass for a solution to be considered correct, anyway...
+- so at first, i thought i just needed to precompute `rotate_half` in a temporary array, thus transforming the problem into a simple element-wise calculation. however, the performance test uses `M = 1,048,576` and `D = 128`. creating a temporary array would add an unnecessary allocation and another pass over the data, not to mention the extra complexity.
 
-- fortunately i noticed no extra memory is needed. for each output element we can find its rotated pair by checking whether `j` is in the first or second half of the row, then adding or subtracting `D / 2`. when `j` is in the first half, we also negate the paired value:
+- fortunately, none of that is needed. we can calculate `rotate_half` directly, one element at a time. for each output element, we find its rotated pair by checking whether `j` is in the first or second half of the row, then adding or subtracting `D / 2`. if `j` is in the first half, we also negate the current query value value:
 
   `rotHalf = j < halfD ? -Q[i * D + j + halfD] : Q[i * D + j - halfD]`
