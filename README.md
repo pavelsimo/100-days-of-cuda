@@ -383,3 +383,14 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - fortunately, none of that is needed. we can calculate `rotate_half` directly, one element at a time. for each output element, we find its rotated pair by checking whether `j` is in the first or second half of the row, then adding or subtracting `D / 2`. if `j` is in the first half, we also negate the current query value value:
 
   `rotHalf = j < halfD ? -Q[i * D + j + halfD] : Q[i * D + j - halfD]`
+
+### Day 29
+
+- solved the LeetGPU [Weight Dequantization](day29/weight_dequa.cu) problem. The idea of Weight Dequantization is to turn compact low precision weights (like int4 or int8) back into approximate floating-point values (float16 or float32) using a scale. this is especially useful for LLM inference, since quantized models use less GPU memory and memory traffic while keeping the weights reasonably close to the originals.
+
+- this problem felt like it was misclassified. it should be an easy task, not a medium one. the problem already explains how to calculate the row and column, so the solution comes down to these two lines:
+
+  ```
+  int S_COLS = (N + TILE_SIZE - 1) / TILE_SIZE;
+  Y[i * N + j] = X[i * N + j] * S[row * S_COLS + col];
+  ```
