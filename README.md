@@ -386,11 +386,25 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 29
 
-- solved the LeetGPU [Weight Dequantization](day29/weight_dequa.cu) problem. The idea of Weight Dequantization is to turn compact low precision weights (like int4 or int8) back into approximate floating-point values (float16 or float32) using a scale. this is especially useful for LLM inference, since quantized models use less GPU memory and memory traffic while keeping the weights reasonably close to the originals.
+- solved the LeetGPU [Weight Dequantization](day29/weight_dequa.cu) problem. The idea of Weight Dequantization is to turn compact low precision weights (like int4 or int8) back into approximate versions of their original values (fp16 or fp32) using a scale matrix. this is useful for LLM inference, since quantized models use less GPU memory while keeping the weights "reasonably" close to the originals.
 
 - this problem felt like it was misclassified. it should be an easy task, not a medium one. the problem already explains how to calculate the row and column, so the solution comes down to these two lines:
 
   ```
   int S_COLS = (N + TILE_SIZE - 1) / TILE_SIZE;
   Y[i * N + j] = X[i * N + j] * S[row * S_COLS + col];
+  ```
+
+### Day 30
+
+- solved the LeetGPU [Causal Depthwise Conv1D](day30/causal_depthwise_conv1d_2.cu) problem. a causal depthwise 1D convolution gives a sequence model local context from the recent past. causal here means each output can only use the current and previous positions, never future ones, while depthwise means every feature channel (`D`) gets its own small convolution kernel.
+
+- the key to these problems is learning how to translate the math into code. if you've been following my series, you'll recognize the same 3D row-major indexing pattern from days 22 and 27, this time with dimensions `B x L x D`. once that pattern becomes familiar, the translation is straightforward. solving lots of these problems helps make the indexing feel natural and effortless. in short... the solution comes down to these few lines (see below). note that i moved the `l - k >= 0` check into the loop condition. there is no reason to keep looping once `l - k` becomes negative because all remaining `x` input values are treated as zero, so they cannot change the sum.
+
+  ```c
+  float sum = bias[d];
+  for (int k = 0; k < K && l - k >= 0; ++k) {
+      sum += weight[d * K + k] * x[b * (L * D) + (l - k) * D + d];
+  }
+  output[b * (L * D) + l * D + d] = sum;
   ```
