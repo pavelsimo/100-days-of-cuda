@@ -322,7 +322,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [3D Convolution](day22/conv_3d.cu) problem. this one is not too different from [2D Convolution](day11/conv_2d.cu), but it adds a depth dimension. so row-major indexes are given by the expression: 
 
-`(depth + d) * (input_rows * input_cols) + (row + r) * input_cols + (col + c)` 
+  `(depth + d) * (input_rows * input_cols) + (row + r) * input_cols + (col + c)` 
 
 - as usual with these kind of problems, you need to be really organized, it helps to have clear variables, otherwise it's easy to mess up.
 
@@ -366,7 +366,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - a better approach is to process the entire batch in a single kernel by treating the batch index as a sort of "depth" dimension. this is exactly what we did on Day 22 when solving the 3D Convolution problem. in this case, the indices for each matrix are given by the formulas:
 
-  ```text
+  ```c
   A[batch * (M * K) + row * K + k]
   B[batch * (K * N) + k * N + col]
   C[batch * (M * N) + row * N + col]
