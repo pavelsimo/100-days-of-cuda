@@ -408,3 +408,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   }
   output[b * (L * D) + l * D + d] = sum;
   ```
+
+### Day 31
+
+- solved the LeetGPU [SwiGLU MLP Block](day31/swiglu_mlp.cu) problem. SwiGLU is used in the MLP blocks of models like LLaMA and Mistral. in short, the SwiGLU MLP transforms each token's features independently, adding nonlinearities that helps the model to learn more complex patterns, the calculation looks like this:
+
+  `output = (SiLU(X * W_gate) ⊙ (X * W_up)) * W_down`
+
+- this problem has quite a few steps, so i kept the first version simple: one kernel per step and a few temporary buffers. definitely not optimized yet... i'll come back with a faster version soon. if you're curious, here is the paper: [GLU Variants Improve Transformer](http://arxiv.org/abs/2002.05202).
+
+- i also started a new series called CUDA 101. i'm planning to create highly visual content to help others (and myself) learn CUDA. these posts will take a bit more effort and excalidraw-maxxing... but i'm having a lot of fun creating them!
