@@ -418,3 +418,15 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - this problem has quite a few steps, so i kept the first version simple: one kernel per step and a few temporary buffers. definitely not optimized yet... i'll come back with a faster version soon. if you're curious, here is the paper: [GLU Variants Improve Transformer](http://arxiv.org/abs/2002.05202).
 
 - i also started a new series called CUDA 101. i'm planning to create highly visual content to help others (and myself) learn CUDA. these posts will take a bit more effort and excalidraw-maxxing... but i'm having a lot of fun creating them!
+
+### Day 32
+
+- solved the LeetGPU [LoRA Linear](day32/lora_linear.cu) problem. LoRA (**L**ow-**R**ank **A**daptation) is a technique for fine-tuning large models more efficiently. instead of updating the original weight matrix `W`, it freezes it and learns two smaller matrices, `A` and `B`. the calculation looks like this:
+
+  `output = xW^T + lora_scale * (xA^T) B^T`
+
+- i followed the equation pretty much line by line: again there is plenty of room to optimize here, fuse kernels, more efficient matmul and remove temporary buffers. if you're curious, here is the LoRA paper: [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685).
+
+- i have a few LeetGPU solutions that need some serious optimization, so starting tomorrow, i'm taking a break from solving new problems to focus on improving some of the ones i've already solved.
+
+- i'm almost done with chapter 7 of PMPP and should finish it today.
