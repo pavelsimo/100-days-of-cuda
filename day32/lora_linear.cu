@@ -48,7 +48,7 @@ extern "C" void solve(const float* x, const float* W, const float* A, const floa
     dim3 grid((8192 + threads.x - 1) / threads.x,
               (8192 + threads.y - 1) / threads.y);    
     
-              // output = x × WT + lora_scale × (x × AT) × BT
+    // output = x × WT + lora_scale × (x × AT) × BT
     float *xWT, *xAT;
     cudaMalloc(&xWT, batch * d_out * sizeof(float));
     cudaMalloc(&xAT, batch * rank * sizeof(float));

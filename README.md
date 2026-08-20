@@ -430,3 +430,28 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - i have a few LeetGPU solutions that need some serious optimization, so starting tomorrow, i'm taking a break from solving new problems to focus on improving some of the ones i've already solved.
 
 - i'm almost done with chapter 7 of PMPP and should finish it today.
+
+
+### Day 33
+
+- no new problems today. i went back to optimize the solutions from the last two days. the [SwiGLU MLP Block](day33/swiglu_mlp_2.cu) dropped from 431.44 ms to 308.38 ms, while [LoRA Linear](day33/lora_linear_2.cu) went from 82.20 ms to 42.10 ms. the biggest win in both came from replacing the naive matmuls with tiled versions. this lets threads reuse the same values instead of fetching them from global memory over and over again.
+
+- i also experimented with vectorized loads, but they did not improve the overall performance much. for SwiGLU's SiLU step, i tried the faster approximate exponential and division intrinsics:
+
+  ```c
+  z[i] *= __fdividef(1.0f, 1.0f + __expf(-z[i]));
+  ```
+
+  i compiled both versions and checked the PTX and SASS. the intrinsic version generated fewer instructions, but it still barely moved the overall runtime. the SiLU step is tiny compared with the three matmuls, so this was another nice reminder to optimize where the program actually spends its time... ;)
+
+- here are the commands i used to inspect both compiler outputs. change `sm_120` to match your GPU's compute capability:
+
+  ```bash
+  # generate and print PTX
+  nvcc -arch=sm_120 -O3 --ptx day33/swiglu_mlp_2.cu -o /tmp/swiglu.ptx
+  less /tmp/swiglu.ptx
+
+  # generate a cubin and disassemble it to SASS
+  nvcc -arch=sm_120 -O3 --cubin day33/swiglu_mlp_2.cu -o /tmp/swiglu.cubin
+  cuobjdump --dump-sass /tmp/swiglu.cubin | less
+  ```
