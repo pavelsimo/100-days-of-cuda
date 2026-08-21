@@ -455,3 +455,19 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   nvcc -arch=sm_120 -O3 --cubin day33/swiglu_mlp_2.cu -o /tmp/swiglu.cubin
   cuobjdump --dump-sass /tmp/swiglu.cubin | less
   ```
+
+### Day 34
+
+- solved the LeetGPU [Multi-Head Self-Attention](day34/multi_head_attention.cu) problem. multi-head attention was introduced in the famous [Attention Is All You Need](https://arxiv.org/abs/1706.03762) paper.
+
+- so for this one it really helps to write down each matrix operation and the shape of its output, we implemented attention on Day 29, but the multi-head thing add some "spiciness", which make it quite easy to mess up, i spent some time debugging the row major indices. the calculation looks like this:
+
+  ```text
+  d_k = d_model / h
+  head_i = softmax(Q_i @ K_i^T / sqrt(d_k)) @ V_i   -> N x d_k
+  output = Concat(head_1, ..., head_h)              -> N x d_model
+  ```
+
+- the solution uses three kernels: one for `Q @ K^T`, one for softmax, and one for multiplying the result by `V`. just like on Day 29, we avoid unnecessary allocations by reading `K` in transposed order instead of actually transposing it.
+
+- wrote a new CUDA 101 post about `__syncthreads()` vs. `__syncwarp()`: https://x.com/pavelsimo/status/2090771328466812967?s=20
