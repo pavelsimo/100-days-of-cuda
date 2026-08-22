@@ -458,7 +458,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 34
 
-- solved the LeetGPU [Multi-Head Self-Attention](day34/multi_head_attention.cu) problem. multi-head attention was introduced in the famous [Attention Is All You Need](https://arxiv.org/abs/1706.03762) paper.
+- solved the LeetGPU [Multi-Head Attention](day34/multi_head_attention.cu) problem. multi-head attention was introduced in the famous [Attention Is All You Need](https://arxiv.org/abs/1706.03762) paper.
 
 - so for this one it really helps to write down each matrix operation and the shape of its output, we implemented attention on Day 29, but the multi-head thing add some "spiciness", which make it quite easy to mess up, i spent some time debugging the row major indices. the calculation looks like this:
 
@@ -471,3 +471,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - the solution uses three kernels: one for `Q @ K^T`, one for softmax, and one for multiplying the result by `V`. just like on Day 29, we avoid unnecessary allocations by reading `K` in transposed order instead of actually transposing it.
 
 - wrote a new CUDA 101 post about `__syncthreads()` vs. `__syncwarp()`: https://x.com/pavelsimo/status/2090771328466812967?s=20
+
+### Day 35
+
+- solved the LeetGPU [Attention with Sinks](day35/attention_with_sinks.cu) problem. attention sinks are token positions that consistently receive much more attention than the rest, even when they contain little or no useful information. usually these sinks tend to emerge naturally in the first few tokens. in the paper [Efficient Streaming Language Models with Attention Sinks](https://arxiv.org/abs/2309.17453), the authors found that a sliding window stops working well once it moves past those first tokens. the fix is to choose a few of the first tokens as sinks and always include them in attention while the rest of the window moves forward.
+
+- so the CUDA part is pretty much regular attention, except that we exclude parts of the score matrix before calculating softmax. each token can attend to the sink tokens and the recent tokens inside the sliding window, while the remaining positions are masked out (excluded). there are a couple of ways to do this: skip the excluded scores with an `if` condition, like i did in my solution, or set them to `-INF` so softmax turns them into zeros later on.
