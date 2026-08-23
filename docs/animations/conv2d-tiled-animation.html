@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiled Conv2D Animation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nv-green:#76B900;
+    --nv-green-bright:#9BE000;
+    --nv-green-dim:#3d5c0a;
+    --nv-green-glow:rgba(118,185,0,.55);
+    --on-green:#04140a;
+
+    --bg:#050805;
+    --bg-radial:rgba(118,185,0,.08);
+    --bg-scan:rgba(118,185,0,.012);
+    --panel:#0a120a;
+    --panel-edge:#152315;
+    --grid-line:#12210f;
+    --tile-border:#2a4413;
+    --txt:#d7e8c8;
+    --txt-dim:#6b8259;
+    --title:#f2ffe0;
+    --title-glow:rgba(118,185,0,.55);
+
+    --cell-bg:#0b130b;
+    --cell-txt:#54704a;
+    --active-bg:#0e1a0b;
+    --active-txt:#a9cf7c;
+    --lane-bg:#1c2f08;
+    --acc-bg:#0d160d;
+    --acc-txt:#cfe9a8;
+    --hit-bg:#2b4d06;
+    --hit-txt:#f4ffd8;
+    --written-bg:#122408;
+    --ghost-txt:#42553a;
+
+    --ln:#3a4d30;
+    --c-fn:#c6e88a;
+    --c-num:#e8ffb0;
+    --c-op:#8fa87a;
+    --c-cm:#5b7048;
+
+    --cell:34px;
+    --cellMid:29px;
+    --cellSm:24px;
+  }
+  body.light{
+    --nv-green:#679f00;
+    --nv-green-bright:#4e8000;
+    --nv-green-dim:#a9c96e;
+    --nv-green-glow:rgba(118,185,0,.30);
+    --on-green:#0c1602;
+
+    --bg:#f3f7ec;
+    --bg-radial:rgba(118,185,0,.10);
+    --bg-scan:rgba(70,110,0,.010);
+    --panel:#ffffff;
+    --panel-edge:#d6e1c5;
+    --grid-line:#e3ebd5;
+    --tile-border:#b6cd8b;
+    --txt:#28361c;
+    --txt-dim:#75865f;
+    --title:#1c2a0e;
+    --title-glow:rgba(118,185,0,.28);
+
+    --cell-bg:#fbfdf6;
+    --cell-txt:#8a9c74;
+    --active-bg:#eef5dd;
+    --active-txt:#4a6a14;
+    --lane-bg:#dff0bc;
+    --acc-bg:#f3f8e7;
+    --acc-txt:#5a7a28;
+    --hit-bg:#a9d838;
+    --hit-txt:#182600;
+    --written-bg:#e6f2cd;
+    --ghost-txt:#c0cdae;
+
+    --ln:#b2c496;
+    --c-fn:#6d8f1e;
+    --c-num:#8a6d00;
+    --c-op:#7c8f64;
+    --c-cm:#98a884;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg)}
+  body{
+    background:
+      radial-gradient(1100px 500px at 50% -10%, var(--bg-radial), transparent 60%),
+      repeating-linear-gradient(0deg, transparent 0 3px, var(--bg-scan) 3px 4px),
+      var(--bg);
+    color:var(--txt);font-family:'JetBrains Mono',ui-monospace,monospace;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:28px 16px 48px;
+    transition:background .3s,color .3s;
+  }
+
+  /* ---------- header ---------- */
+  header{text-align:center;margin-bottom:18px}
+  h1{
+    font-family:'Orbitron',sans-serif;font-weight:900;
+    font-size:clamp(22px,4.5vw,38px);letter-spacing:.08em;
+    color:var(--title);text-transform:uppercase;
+    text-shadow:0 0 24px var(--title-glow);
+  }
+  h1 .accent{color:var(--nv-green)}
+
+  /* ---------- phase pipeline ---------- */
+  .pipeline{display:flex;gap:6px;margin:0 0 20px;flex-wrap:wrap;justify-content:center}
+  .phase{
+    font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    padding:7px 14px;border:1px solid var(--panel-edge);
+    color:var(--txt-dim);background:var(--panel);
+    clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);
+    transition:all .25s;
+  }
+  .phase.active{
+    color:var(--on-green);background:var(--nv-green);border-color:var(--nv-green);
+    font-weight:700;box-shadow:0 0 18px var(--nv-green-glow);
+  }
+
+  /* ---------- main: stage + code ---------- */
+  .main{display:flex;gap:30px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+
+  .stage{display:flex;gap:26px;align-items:flex-end;justify-content:center;flex-wrap:wrap}
+  .quad{display:flex;flex-direction:column;gap:8px;align-items:center}
+  .quad-label{
+    font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;
+    letter-spacing:.28em;text-transform:uppercase;color:var(--txt-dim);
+  }
+  .quad-label b{color:var(--nv-green);font-weight:700}
+  .dim-tag{font-size:10px;color:var(--txt-dim);letter-spacing:.2em}
+
+  /* chip die panel (shared memory + constant memory) */
+  .smem{
+    border:1px solid var(--panel-edge);background:var(--panel);
+    padding:14px 16px;position:relative;
+    display:flex;flex-direction:column;gap:12px;align-items:center;
+    box-shadow:inset 0 0 40px rgba(118,185,0,.04);
+  }
+  .smem::before{content:"";position:absolute;inset:5px;border:1px dashed var(--grid-line);pointer-events:none}
+  .smem-title{font-size:9.5px;letter-spacing:.3em;color:var(--nv-green);text-transform:uppercase}
+  .smem-grids{display:flex;gap:18px;align-items:flex-end}
+  .smem-block{display:flex;flex-direction:column;gap:5px;align-items:center}
+  .smem-block span{font-size:10px;color:var(--txt-dim);letter-spacing:.15em}
+
+  /* ---------- matrices ---------- */
+  .matrix{display:grid;gap:2px;position:relative}
+  .cell{
+    width:var(--cell);height:var(--cell);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:600;
+    background:var(--cell-bg);border:1px solid var(--grid-line);
+    color:var(--cell-txt);
+    transition:background .18s,color .18s,border-color .18s,box-shadow .18s;
+  }
+  .cell.mid{width:var(--cellMid);height:var(--cellMid);font-size:11px}
+  .cell.sm{width:var(--cellSm);height:var(--cellSm);font-size:10.5px}
+
+  .cell.tile-active{border-color:var(--nv-green-dim);color:var(--active-txt);background:var(--active-bg)}
+  .cell.loading{
+    background:var(--nv-green);color:var(--on-green);border-color:var(--nv-green-bright);
+    box-shadow:0 0 14px var(--nv-green-glow);
+    animation:pulse .7s ease-in-out infinite alternate;
+  }
+  .cell.lane{
+    background:var(--lane-bg);color:var(--nv-green-bright);border-color:var(--nv-green);
+    box-shadow:0 0 10px var(--nv-green-glow);
+  }
+  .cell.acc{border-color:var(--nv-green-dim);color:var(--acc-txt);background:var(--acc-bg)}
+  .cell.acc-hit{
+    background:var(--hit-bg);color:var(--hit-txt);border-color:var(--nv-green-bright);
+    box-shadow:0 0 16px var(--nv-green-glow);
+    animation:pulse .5s ease-in-out infinite alternate;
+  }
+  .cell.written{
+    background:var(--written-bg);color:var(--nv-green-bright);border-color:var(--nv-green);
+    text-shadow:0 0 8px var(--nv-green-glow);
+  }
+  .cell.ghost{
+    border-style:dashed;color:var(--ghost-txt);
+  }
+  .cell.incoming{color:transparent}
+  @keyframes pulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
+
+  /* filter (constant memory) cells */
+  .cell.f{color:var(--c-fn);border-color:var(--tile-border)}
+  .cell.f.lane{color:var(--nv-green-bright)}
+
+  /* ---------- flying numbers ---------- */
+  .flyer{
+    position:fixed;z-index:50;pointer-events:none;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
+    color:var(--on-green);background:var(--nv-green);
+    border:1px solid var(--nv-green-bright);border-radius:2px;
+    box-shadow:0 0 14px var(--nv-green-glow);
+    padding:2px 6px;
+    transition-property:transform,opacity;transition-timing-function:cubic-bezier(.25,.7,.35,1);
+    will-change:transform;
+  }
+  .flyer.delta{background:var(--active-bg);color:var(--nv-green-bright);border-color:var(--nv-green)}
+
+  /* ---------- code panel ---------- */
+  .code-panel{
+    border:1px solid var(--panel-edge);background:var(--panel);
+    position:relative;width:470px;max-width:94vw;
+    box-shadow:inset 0 0 40px rgba(118,185,0,.04);
+  }
+  .code-panel::before{content:"";position:absolute;inset:5px;border:1px dashed var(--grid-line);pointer-events:none}
+  .code-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px}
+  .code-title{font-size:9.5px;letter-spacing:.3em;color:var(--nv-green);text-transform:uppercase}
+  .code-file{font-size:10px;color:var(--txt-dim);letter-spacing:.1em}
+  pre.code{padding:6px 0 14px;overflow-x:auto;font-size:11.5px;line-height:1.6}
+  .cl{display:block;padding:0 16px 0 44px;position:relative;white-space:pre;transition:background .2s}
+  .cl::before{
+    content:attr(data-n);position:absolute;left:0;width:34px;text-align:right;
+    color:var(--ln);font-size:10px;
+  }
+  .cl.hl{
+    background:linear-gradient(90deg, rgba(118,185,0,.16), rgba(118,185,0,.03));
+    box-shadow:inset 3px 0 0 var(--nv-green);
+  }
+  .cl.hl::before{color:var(--nv-green)}
+  .kw{color:var(--nv-green-bright);font-weight:600}
+  .ty{color:var(--nv-green)}
+  .fn{color:var(--c-fn)}
+  .num{color:var(--c-num)}
+  .id{color:var(--txt)}
+  .op{color:var(--c-op)}
+  .cm{color:var(--c-cm);font-style:italic}
+
+  /* ---------- readouts ---------- */
+  .status{
+    margin-top:22px;min-height:20px;font-size:12.5px;letter-spacing:.04em;
+    color:var(--nv-green-bright);text-align:center;
+  }
+  .status .k{color:var(--txt-dim)}
+  .formula{
+    margin-top:10px;min-height:38px;
+    width:min(760px,94vw);
+    border:1px solid var(--panel-edge);background:var(--panel);
+    padding:9px 16px;text-align:center;
+    font-size:clamp(10px,2.4vw,13px);letter-spacing:.03em;
+    color:var(--txt-dim);
+    clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);
+  }
+  .formula .c-name{color:var(--title);font-weight:700}
+  .formula .a-val{color:var(--nv-green-bright);font-weight:700}
+  .formula .b-val{color:var(--c-fn);font-weight:700}
+  .formula .prod{color:var(--txt)}
+  .formula .res{color:var(--nv-green-bright);font-weight:700;text-shadow:0 0 10px var(--nv-green-glow)}
+
+  .progress{
+    width:min(560px,90vw);height:4px;background:var(--panel-edge);
+    margin:14px auto 0;position:relative;overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;background:linear-gradient(90deg,var(--nv-green-dim),var(--nv-green),var(--nv-green-bright));
+    width:0%;transition:width .2s;box-shadow:0 0 12px var(--nv-green-glow);
+  }
+
+  /* ---------- controls ---------- */
+  .controls{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+  button{
+    font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;
+    letter-spacing:.2em;text-transform:uppercase;
+    padding:10px 20px;cursor:pointer;
+    background:transparent;color:var(--nv-green);
+    border:1px solid var(--nv-green-dim);
+    clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+    transition:all .18s;
+  }
+  button:hover{background:rgba(118,185,0,.12);border-color:var(--nv-green)}
+  button:focus-visible{outline:2px solid var(--nv-green-bright);outline-offset:2px}
+  button.primary{
+    background:var(--nv-green);color:var(--on-green);border-color:var(--nv-green);
+    box-shadow:0 0 16px var(--nv-green-glow);
+  }
+  button.primary:hover{filter:brightness(1.12)}
+  button.toggled{
+    background:rgba(118,185,0,.18);border-color:var(--nv-green);color:var(--nv-green-bright);
+  }
+  .speed{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--txt-dim);letter-spacing:.15em}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:120px;height:3px;background:var(--panel-edge);outline:none}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:14px;height:14px;background:var(--nv-green);
+    cursor:pointer;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+  }
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--nv-green);border:none;cursor:pointer}
+
+  @media (max-width:1360px){
+    .code-panel{width:min(680px,94vw)}
+  }
+  @media (max-width:760px){
+    :root{--cell:26px;--cellMid:22px;--cellSm:18px}
+    .stage{gap:14px}
+    .cell{font-size:10px}
+    .cell.mid{font-size:9px}
+    .cell.sm{font-size:8.5px}
+    .smem{padding:10px}
+    .flyer{font-size:10px}
+    pre.code{font-size:10.5px}
+  }
+  @media (max-width:520px){
+    :root{--cell:20px;--cellMid:17px;--cellSm:14px}
+    .cell{font-size:8px}
+    .cell.mid{font-size:7px}
+    .cell.sm{font-size:7px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .cell.loading,.cell.acc-hit{animation:none}
+    .flyer{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Tiled <span class="accent">Conv2D</span></h1>
+</header>
+
+<div class="pipeline" id="pipeline">
+  <div class="phase" data-p="load">Load Halo Tile</div>
+  <div class="phase" data-p="sync1">__syncthreads()</div>
+  <div class="phase" data-p="conv">Convolve + Store</div>
+</div>
+
+<div class="main">
+  <div class="stage">
+    <!-- input N -->
+    <div class="quad">
+      <div class="quad-label">Input <b>N</b> <span class="dim-tag">8×8 · global</span></div>
+      <div class="matrix" id="matN"></div>
+    </div>
+
+    <!-- chip die: shared memory + constant memory -->
+    <div class="quad">
+      <div class="smem">
+        <div class="smem-title">On-Chip Memory</div>
+        <div class="smem-grids">
+          <div class="smem-block"><span>N_s[6][6] · shared</span><div class="matrix" id="smemN"></div></div>
+          <div class="smem-block"><span>F_c[3][3] · constant</span><div class="matrix" id="matF"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- output P -->
+    <div class="quad">
+      <div class="quad-label">Output <b>P</b> <span class="dim-tag">8×8 · global</span></div>
+      <div class="matrix" id="matP"></div>
+    </div>
+  </div>
+
+  <!-- source code panel -->
+  <div class="code-panel" id="codePanel">
+    <div class="code-head">
+      <span class="code-title">Kernel Source</span>
+      <span class="code-file">conv2d_tiled.cu</span>
+    </div>
+    <pre class="code" id="codeBox"></pre>
+  </div>
+</div>
+
+<div class="status" id="status">Press <b style="color:var(--nv-green)">RUN</b> to launch the kernel</div>
+<div class="formula" id="formula">waiting for kernel launch</div>
+<div class="progress"><div class="progress-fill" id="progress"></div></div>
+
+<div class="controls">
+  <button class="primary" id="btnPlay">▶ Run</button>
+  <button id="btnBack">‹ Prev</button>
+  <button id="btnStep">Next ›</button>
+  <button id="btnReset">Reset</button>
+  <button id="btnCode" class="toggled">Code: On</button>
+  <button id="btnTheme">○ Light</button>
+  <div class="speed">
+    <span>CLK</span>
+    <input type="range" id="speed" min="1" max="10" value="6">
+  </div>
+</div>
+
+<script>
+(() => {
+  // W×H image, radius-R filter, output tiles of OUT×OUT, input tiles of IN×IN
+  const W = 8, H = 8, R = 1;
+  const OUT = 4, IN = OUT + 2 * R;          // 4 and 6
+  const NBX = W / OUT, NBY = H / OUT;       // 2×2 blocks
+
+  const N = [], F = [[1,2,1],[2,4,2],[1,2,1]];
+  for (let i = 0; i < H; i++) {
+    N[i] = [];
+    for (let j = 0; j < W; j++) N[i][j] = (i * 2 + j * 3) % 10;
+  }
+  const inB = (r, c) => r >= 0 && r < H && c >= 0 && c < W;
+  const nAt = (r, c) => inB(r, c) ? N[r][c] : 0;
+  const convAt = (r, c) => {
+    let s = 0;
+    for (let fr = 0; fr < 2*R+1; fr++)
+      for (let fc = 0; fc < 2*R+1; fc++)
+        s += F[fr][fc] * nAt(r + fr - R, c + fc - R);
+    return s;
+  };
+
+  // ---- build DOM grids ----
+  const mk = (el, rows, cols, size) => {
+    const cs = size === 'sm' ? 'var(--cellSm)' : size === 'mid' ? 'var(--cellMid)' : 'var(--cell)';
+    el.style.gridTemplateColumns = `repeat(${cols}, ${cs})`;
+    const cells = [];
+    for (let i = 0; i < rows; i++) {
+      cells[i] = [];
+      for (let j = 0; j < cols; j++) {
+        const c = document.createElement('div');
+        c.className = 'cell' + (size ? ' ' + size : '');
+        el.appendChild(c);
+        cells[i][j] = c;
+      }
+    }
+    return cells;
+  };
+  const gN  = mk(document.getElementById('matN'), H, W);
+  const gP  = mk(document.getElementById('matP'), H, W);
+  const gNs = mk(document.getElementById('smemN'), IN, IN, 'mid');
+  const gF  = mk(document.getElementById('matF'), 2*R+1, 2*R+1, 'sm');
+
+  for (let i = 0; i < H; i++) for (let j = 0; j < W; j++) {
+    gN[i][j].textContent = N[i][j];
+    gP[i][j].textContent = '·';
+  }
+  for (let i = 0; i < 2*R+1; i++) for (let j = 0; j < 2*R+1; j++) {
+    gF[i][j].textContent = F[i][j];
+    gF[i][j].classList.add('f');
+  }
+
+  // ---- source code panel ----
+  const K = s => `<span class="kw">${s}</span>`;
+  const TY = s => `<span class="ty">${s}</span>`;
+  const Fn = s => `<span class="fn">${s}</span>`;
+  const NUM = s => `<span class="num">${s}</span>`;
+  const CM = s => `<span class="cm">${s}</span>`;
+  const codeLines = [
+    ['',        `${K('#define')} ${Fn('FILTER_RADIUS')} ${NUM('1')}`],
+    ['',        `${K('#define')} ${Fn('IN_TILE_DIM')} ${NUM('6')}`],
+    ['',        `${K('#define')} ${Fn('OUT_TILE_DIM')} ((${Fn('IN_TILE_DIM')}) - ${NUM('2')}*(${Fn('FILTER_RADIUS')}))`],
+    ['fc',      `${K('__constant__')} ${TY('float')} F_c[${NUM('2')}*${Fn('FILTER_RADIUS')}+${NUM('1')}][${NUM('2')}*${Fn('FILTER_RADIUS')}+${NUM('1')}];`],
+    ['',        ``],
+    ['sig',     `${K('__global__')} ${TY('void')} ${Fn('convolution_tiled_2D_const_mem_kernel')}(`],
+    ['sig',     `        ${TY('float')} *N, ${TY('float')} *P, ${TY('int')} width, ${TY('int')} height) {`],
+    ['idx',     `    ${TY('int')} col = blockIdx.x*${Fn('OUT_TILE_DIM')} + threadIdx.x - ${Fn('FILTER_RADIUS')};`],
+    ['idx',     `    ${TY('int')} row = blockIdx.y*${Fn('OUT_TILE_DIM')} + threadIdx.y - ${Fn('FILTER_RADIUS')};`],
+    ['smem',    `    ${K('__shared__')} ${TY('float')} N_s[${Fn('IN_TILE_DIM')}][${Fn('IN_TILE_DIM')}];`],
+    ['loadin',  `    ${K('if')} (row >= ${NUM('0')} && row < height && col >= ${NUM('0')} && col < width) {`],
+    ['loadin',  `        N_s[threadIdx.y][threadIdx.x] = N[row*width + col];`],
+    ['loadout', `    } ${K('else')} {`],
+    ['loadout', `        N_s[threadIdx.y][threadIdx.x] = ${NUM('0.0f')};`],
+    ['',        `    }`],
+    ['sync1',   `    ${Fn('__syncthreads')}();`],
+    ['tidx',    `    ${TY('int')} tileCol = threadIdx.x - ${Fn('FILTER_RADIUS')};`],
+    ['tidx',    `    ${TY('int')} tileRow = threadIdx.y - ${Fn('FILTER_RADIUS')};`],
+    ['guard',   `    ${CM('// turning off the threads at the edges of the block')}`],
+    ['guard',   `    ${K('if')} (col >= ${NUM('0')} && col < width && row >= ${NUM('0')} && row < height) {`],
+    ['guard',   `        ${K('if')} (tileCol >= ${NUM('0')} && tileCol < ${Fn('OUT_TILE_DIM')} &&`],
+    ['guard',   `            tileRow >= ${NUM('0')} && tileRow < ${Fn('OUT_TILE_DIM')}) {`],
+    ['conv',    `            ${TY('float')} Pvalue = ${NUM('0.0f')};`],
+    ['conv',    `            ${K('for')} (${TY('int')} fRow = ${NUM('0')}; fRow < ${NUM('2')}*${Fn('FILTER_RADIUS')}+${NUM('1')}; fRow++)`],
+    ['conv',    `                ${K('for')} (${TY('int')} fCol = ${NUM('0')}; fCol < ${NUM('2')}*${Fn('FILTER_RADIUS')}+${NUM('1')}; fCol++)`],
+    ['conv',    `                    Pvalue += F_c[fRow][fCol] *`],
+    ['conv',    `                              N_s[tileRow+fRow][tileCol+fCol];`],
+    ['write',   `            P[row*width + col] = Pvalue;`],
+    ['',        `        }`],
+    ['',        `    }`],
+    ['',        `}`],
+  ];
+  const codeBox = document.getElementById('codeBox');
+  const lineEls = codeLines.map(([tag, html], n) => {
+    const el = document.createElement('span');
+    el.className = 'cl';
+    el.dataset.n = n + 1;
+    if (tag) el.dataset.tag = tag;
+    el.innerHTML = html || ' ';
+    codeBox.appendChild(el);
+    return el;
+  });
+  function highlightCode(tags) {
+    lineEls.forEach(el => el.classList.toggle('hl', !!el.dataset.tag && tags.includes(el.dataset.tag)));
+  }
+
+  // ---- step script ----
+  // load: one thread per step copies (or zero-pads) one N_s element (li = 0..35)
+  // conv: one thread per step convolves its 3×3 window and stores P
+  const steps = [];
+  for (let by = 0; by < NBY; by++)
+    for (let bx = 0; bx < NBX; bx++) {
+      for (let li = 0; li < IN * IN; li++) steps.push({ t:'load', by, bx, li });
+      steps.push({ t:'sync1', by, bx });
+      for (let i = 0; i < OUT; i++)
+        for (let j = 0; j < OUT; j++) steps.push({ t:'conv', by, bx, i, j });
+    }
+
+  // ---- state ----
+  let idx = -1, playing = false, timer = null;
+
+  const statusEl  = document.getElementById('status');
+  const formulaEl = document.getElementById('formula');
+  const progEl    = document.getElementById('progress');
+  const phases    = [...document.querySelectorAll('.phase')];
+  const speedEl   = document.getElementById('speed');
+  const delay     = () => 1400 - speedEl.value * 125;
+  const flyTime   = () => Math.min(450, delay() * 0.72);
+
+  // global source position for thread (ty,tx) of block (by,bx)
+  const srcR = (by, ty) => by * OUT + ty - R;
+  const srcC = (bx, tx) => bx * OUT + tx - R;
+
+  function render() {
+    const wipe = (g) => g.forEach(row => row.forEach(c =>
+      c.classList.remove('tile-active','loading','lane','acc','acc-hit','written','ghost','incoming')));
+    wipe(gN); wipe(gP); wipe(gNs); wipe(gF);
+    gNs.forEach(row => row.forEach(c => c.textContent = ''));
+
+    // ---- replay to reconstruct state ----
+    const P = Array.from({length:H},()=>Array(W).fill(null));
+    let cur = null;
+    for (let s = 0; s <= idx; s++) {
+      const st = steps[s];
+      cur = st;
+      if (st.t === 'conv')
+        P[st.by*OUT + st.i][st.bx*OUT + st.j] = convAt(st.by*OUT + st.i, st.bx*OUT + st.j);
+    }
+
+    for (let i=0;i<H;i++) for (let j=0;j<W;j++) {
+      gP[i][j].textContent = P[i][j] === null ? '·' : P[i][j];
+      if (P[i][j] !== null) gP[i][j].classList.add('written');
+    }
+
+    phases.forEach(p=>p.classList.remove('active'));
+
+    if (!cur) {
+      statusEl.innerHTML = 'Press <b style="color:var(--nv-green)">RUN</b> to launch the kernel';
+      formulaEl.innerHTML = 'waiting for kernel launch';
+      progEl.style.width = '0%';
+      highlightCode(['fc','sig']);
+      return;
+    }
+
+    const {by, bx} = cur;
+    const ph = phases.find(p=>p.dataset.p===cur.t); if (ph) ph.classList.add('active');
+
+    // ---- N_s contents for the current block ----
+    let loaded = 0;
+    if (cur.t === 'load') loaded = cur.li + 1;
+    else loaded = IN * IN;
+    for (let li = 0; li < loaded; li++) {
+      const ty = (li / IN) | 0, tx = li % IN;
+      const r = srcR(by, ty), c = srcC(bx, tx);
+      gNs[ty][tx].textContent = nAt(r, c);
+      gNs[ty][tx].classList.add(inB(r, c) ? 'tile-active' : 'ghost');
+    }
+
+    // context: mark the block's input window (in-bounds part) and output region
+    for (let ty = 0; ty < IN; ty++) for (let tx = 0; tx < IN; tx++) {
+      const r = srcR(by, ty), c = srcC(bx, tx);
+      if (inB(r, c)) gN[r][c].classList.add('tile-active');
+    }
+    for (let i = 0; i < OUT; i++) for (let j = 0; j < OUT; j++)
+      if (P[by*OUT+i][bx*OUT+j] === null) gP[by*OUT+i][bx*OUT+j].classList.add('acc');
+
+    if (cur.t === 'load') {
+      const ty = (cur.li / IN) | 0, tx = cur.li % IN;
+      const r = srcR(by, ty), c = srcC(bx, tx);
+      gNs[ty][tx].classList.add('loading');
+      if (inB(r, c)) {
+        gN[r][c].classList.add('loading');
+        statusEl.innerHTML = `Block [${by}][${bx}] · thread(${ty},${tx}) loads its input element <span class="k">· step ${idx+1}/${steps.length}</span>`;
+        formulaEl.innerHTML = `N_s[${ty}][${tx}] ← N[${r}][${c}] = <span class="a-val">${N[r][c]}</span>`;
+      } else {
+        statusEl.innerHTML = `Block [${by}][${bx}] · thread(${ty},${tx}) is outside the image · ghost cell <span class="k">· step ${idx+1}/${steps.length}</span>`;
+        formulaEl.innerHTML = `N_s[${ty}][${tx}] ← <span class="a-val">0.0</span> · N[${r}][${c}] is out of bounds (zero padding)`;
+      }
+      highlightCode(inB(r, c) ? ['loadin'] : ['loadout']);
+    }
+    else if (cur.t === 'sync1') {
+      statusEl.innerHTML = `Block [${by}][${bx}] · __syncthreads() · all 36 threads wait for the halo tile <span class="k">· step ${idx+1}/${steps.length}</span>`;
+      formulaEl.innerHTML = `barrier · N_s holds the ${IN}×${IN} input tile including the halo ring`;
+      highlightCode(['sync1']);
+    }
+    else if (cur.t === 'conv') {
+      const {i, j} = cur;
+      const or_ = by*OUT + i, oc = bx*OUT + j;
+      // highlight the 3×3 window in N_s + the whole filter + in-bounds N window
+      for (let fr = 0; fr < 2*R+1; fr++) for (let fc = 0; fc < 2*R+1; fc++) {
+        gNs[i+fr][j+fc].classList.add('lane');
+        gF[fr][fc].classList.add('lane');
+        const r = or_ + fr - R, c = oc + fc - R;
+        if (inB(r, c)) gN[r][c].classList.add('lane');
+      }
+      const pc = gP[or_][oc];
+      pc.classList.remove('acc','written'); pc.classList.add('acc-hit');
+
+      const parts = [];
+      let v = 0;
+      for (let fr = 0; fr < 2*R+1; fr++) for (let fc = 0; fc < 2*R+1; fc++) {
+        const f = F[fr][fc], n = nAt(or_ + fr - R, oc + fc - R);
+        parts.push(`<span class="b-val">${f}</span>×<span class="a-val">${n}</span>`);
+        v += f * n;
+      }
+      statusEl.innerHTML = `Block [${by}][${bx}] · thread(${i+R},${j+R}) convolves its window and stores P[${or_}][${oc}] <span class="k">· step ${idx+1}/${steps.length}</span>`;
+      formulaEl.innerHTML =
+        `<span class="c-name">P[${or_}][${oc}]</span> = ` + parts.join(' + ') +
+        ` = <span class="res">${v}</span>`;
+      highlightCode(['guard','conv','write']);
+    }
+
+    progEl.style.width = ((idx+1)/steps.length*100)+'%';
+  }
+
+  // ---- flying number animation ----
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function fly(fromEl, toEl, text, delta) {
+    if (reduceMotion) return;
+    const f = fromEl.getBoundingClientRect(), t = toEl.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'flyer' + (delta ? ' delta' : '');
+    el.textContent = text;
+    el.style.left = (f.left + f.width/2) + 'px';
+    el.style.top  = (f.top  + f.height/2) + 'px';
+    el.style.transform = 'translate(-50%,-50%)';
+    el.style.transitionDuration = flyTime() + 'ms';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.transform =
+        `translate(-50%,-50%) translate(${t.left - f.left + (t.width - f.width)/2}px, ${t.top - f.top + (t.height - f.height)/2}px)`;
+    }));
+    setTimeout(() => el.remove(), flyTime() + 80);
+  }
+
+  function animateStep(st) {
+    if (!st) return;
+    const {by, bx} = st;
+    if (st.t === 'load') {
+      const ty = (st.li / IN) | 0, tx = st.li % IN;
+      const r = srcR(by, ty), c = srcC(bx, tx);
+      if (inB(r, c)) {
+        gNs[ty][tx].classList.add('incoming');
+        fly(gN[r][c], gNs[ty][tx], N[r][c]);
+        setTimeout(() => gNs[ty][tx].classList.remove('incoming'), flyTime());
+      }
+    } else if (st.t === 'conv') {
+      const or_ = by*OUT + st.i, oc = bx*OUT + st.j;
+      fly(gNs[st.i + R][st.j + R], gP[or_][oc], convAt(or_, oc), true);
+    }
+  }
+
+  // ---- controls ----
+  const btnPlay  = document.getElementById('btnPlay');
+  const btnCode  = document.getElementById('btnCode');
+  const btnTheme = document.getElementById('btnTheme');
+  const codePanel = document.getElementById('codePanel');
+
+  function stepFwd(){
+    if (idx < steps.length - 1) {
+      idx++;
+      render();
+      animateStep(steps[idx]);
+    } else stop();
+  }
+  function stepBack(){ if (idx >= 0){ idx--; render(); } }
+  function tick(){ stepFwd(); if (playing && idx < steps.length-1) timer=setTimeout(tick, delay()); else stop(); }
+  function play(){ if (idx>=steps.length-1) idx=-1; playing=true; btnPlay.textContent='❚❚ Pause'; tick(); }
+  function stop(){ playing=false; clearTimeout(timer); btnPlay.textContent='▶ Run'; }
+
+  btnPlay.onclick = ()=> playing ? stop() : play();
+  document.getElementById('btnStep').onclick  = ()=>{ stop(); stepFwd(); };
+  document.getElementById('btnBack').onclick  = ()=>{ stop(); stepBack(); };
+  document.getElementById('btnReset').onclick = ()=>{ stop(); idx=-1; render(); };
+  btnCode.onclick = ()=>{
+    const on = codePanel.style.display !== 'none';
+    codePanel.style.display = on ? 'none' : '';
+    btnCode.textContent = on ? 'Code: Off' : 'Code: On';
+    btnCode.classList.toggle('toggled', !on);
+  };
+  btnTheme.onclick = ()=>{
+    const light = document.body.classList.toggle('light');
+    btnTheme.textContent = light ? '● Dark' : '○ Light';
+  };
+  document.addEventListener('keydown', e=>{
+    if (e.key === ' ')         { e.preventDefault(); playing ? stop() : play(); }
+    if (e.key === 'ArrowRight'){ stop(); stepFwd(); }
+    if (e.key === 'ArrowLeft') { stop(); stepBack(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

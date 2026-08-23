@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiled MatMul Animation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nv-green:#76B900;
+    --nv-green-bright:#9BE000;
+    --nv-green-dim:#3d5c0a;
+    --nv-green-glow:rgba(118,185,0,.55);
+    --on-green:#04140a;
+
+    --bg:#050805;
+    --bg-radial:rgba(118,185,0,.08);
+    --bg-scan:rgba(118,185,0,.012);
+    --panel:#0a120a;
+    --panel-edge:#152315;
+    --grid-line:#12210f;
+    --tile-border:#2a4413;
+    --txt:#d7e8c8;
+    --txt-dim:#6b8259;
+    --title:#f2ffe0;
+    --title-glow:rgba(118,185,0,.55);
+
+    --cell-bg:#0b130b;
+    --cell-txt:#54704a;
+    --active-bg:#0e1a0b;
+    --active-txt:#a9cf7c;
+    --lane-bg:#1c2f08;
+    --acc-bg:#0d160d;
+    --acc-txt:#cfe9a8;
+    --hit-bg:#2b4d06;
+    --hit-txt:#f4ffd8;
+    --written-bg:#122408;
+
+    --ln:#3a4d30;
+    --c-fn:#c6e88a;
+    --c-num:#e8ffb0;
+    --c-op:#8fa87a;
+    --c-cm:#5b7048;
+
+    --cell:34px;
+    --cellSm:24px;
+  }
+  body.light{
+    --nv-green:#679f00;
+    --nv-green-bright:#4e8000;
+    --nv-green-dim:#a9c96e;
+    --nv-green-glow:rgba(118,185,0,.30);
+    --on-green:#0c1602;
+
+    --bg:#f3f7ec;
+    --bg-radial:rgba(118,185,0,.10);
+    --bg-scan:rgba(70,110,0,.010);
+    --panel:#ffffff;
+    --panel-edge:#d6e1c5;
+    --grid-line:#e3ebd5;
+    --tile-border:#b6cd8b;
+    --txt:#28361c;
+    --txt-dim:#75865f;
+    --title:#1c2a0e;
+    --title-glow:rgba(118,185,0,.28);
+
+    --cell-bg:#fbfdf6;
+    --cell-txt:#8a9c74;
+    --active-bg:#eef5dd;
+    --active-txt:#4a6a14;
+    --lane-bg:#dff0bc;
+    --acc-bg:#f3f8e7;
+    --acc-txt:#5a7a28;
+    --hit-bg:#a9d838;
+    --hit-txt:#182600;
+    --written-bg:#e6f2cd;
+
+    --ln:#b2c496;
+    --c-fn:#6d8f1e;
+    --c-num:#8a6d00;
+    --c-op:#7c8f64;
+    --c-cm:#98a884;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg)}
+  body{
+    background:
+      radial-gradient(1100px 500px at 50% -10%, var(--bg-radial), transparent 60%),
+      repeating-linear-gradient(0deg, transparent 0 3px, var(--bg-scan) 3px 4px),
+      var(--bg);
+    color:var(--txt);font-family:'JetBrains Mono',ui-monospace,monospace;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:28px 16px 48px;
+    transition:background .3s,color .3s;
+  }
+
+  /* ---------- header ---------- */
+  header{text-align:center;margin-bottom:18px}
+  h1{
+    font-family:'Orbitron',sans-serif;font-weight:900;
+    font-size:clamp(22px,4.5vw,38px);letter-spacing:.08em;
+    color:var(--title);text-transform:uppercase;
+    text-shadow:0 0 24px var(--title-glow);
+  }
+  h1 .accent{color:var(--nv-green)}
+
+  /* ---------- phase pipeline ---------- */
+  .pipeline{display:flex;gap:6px;margin:0 0 20px;flex-wrap:wrap;justify-content:center}
+  .phase{
+    font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    padding:7px 14px;border:1px solid var(--panel-edge);
+    color:var(--txt-dim);background:var(--panel);
+    clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);
+    transition:all .25s;
+  }
+  .phase.active{
+    color:var(--on-green);background:var(--nv-green);border-color:var(--nv-green);
+    font-weight:700;box-shadow:0 0 18px var(--nv-green-glow);
+  }
+
+  /* ---------- main: stage + code ---------- */
+  .main{display:flex;gap:30px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+
+  .stage{
+    display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;
+    gap:26px;align-items:end;
+  }
+  .quad{display:flex;flex-direction:column;gap:8px;align-items:center}
+  .quad-label{
+    font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;
+    letter-spacing:.28em;text-transform:uppercase;color:var(--txt-dim);
+  }
+  .quad-label b{color:var(--nv-green);font-weight:700}
+  .dim-tag{font-size:10px;color:var(--txt-dim);letter-spacing:.2em}
+
+  /* corner: shared memory die */
+  .smem{
+    border:1px solid var(--panel-edge);background:var(--panel);
+    padding:14px 16px;position:relative;
+    display:flex;flex-direction:column;gap:10px;align-items:center;
+    box-shadow:inset 0 0 40px rgba(118,185,0,.04);
+  }
+  .smem::before{content:"";position:absolute;inset:5px;border:1px dashed var(--grid-line);pointer-events:none}
+  .smem-title{font-size:9.5px;letter-spacing:.3em;color:var(--nv-green);text-transform:uppercase}
+  .smem-grids{display:flex;gap:14px}
+  .smem-block{display:flex;flex-direction:column;gap:5px;align-items:center}
+  .smem-block span{font-size:10px;color:var(--txt-dim);letter-spacing:.15em}
+
+  /* ---------- matrices ---------- */
+  .matrix{display:grid;gap:2px;position:relative}
+  .cell{
+    width:var(--cell);height:var(--cell);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:600;
+    background:var(--cell-bg);border:1px solid var(--grid-line);
+    color:var(--cell-txt);
+    transition:background .18s,color .18s,border-color .18s,box-shadow .18s;
+  }
+  .cell.sm{width:var(--cellSm);height:var(--cellSm);font-size:10.5px}
+
+  .cell.tile-active{border-color:var(--nv-green-dim);color:var(--active-txt);background:var(--active-bg)}
+  .cell.loading{
+    background:var(--nv-green);color:var(--on-green);border-color:var(--nv-green-bright);
+    box-shadow:0 0 14px var(--nv-green-glow);
+    animation:pulse .7s ease-in-out infinite alternate;
+  }
+  .cell.lane{
+    background:var(--lane-bg);color:var(--nv-green-bright);border-color:var(--nv-green);
+    box-shadow:0 0 10px var(--nv-green-glow);
+  }
+  .cell.acc{border-color:var(--nv-green-dim);color:var(--acc-txt);background:var(--acc-bg)}
+  .cell.acc-hit{
+    background:var(--hit-bg);color:var(--hit-txt);border-color:var(--nv-green-bright);
+    box-shadow:0 0 16px var(--nv-green-glow);
+    animation:pulse .5s ease-in-out infinite alternate;
+  }
+  .cell.written{
+    background:var(--written-bg);color:var(--nv-green-bright);border-color:var(--nv-green);
+    text-shadow:0 0 8px var(--nv-green-glow);
+  }
+  .cell.incoming{color:transparent}
+  @keyframes pulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
+
+  .cell.tb-r{border-right-color:var(--tile-border)}
+  .cell.tb-b{border-bottom-color:var(--tile-border)}
+
+  /* ---------- flying numbers ---------- */
+  .flyer{
+    position:fixed;z-index:50;pointer-events:none;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
+    color:var(--on-green);background:var(--nv-green);
+    border:1px solid var(--nv-green-bright);border-radius:2px;
+    box-shadow:0 0 14px var(--nv-green-glow);
+    padding:2px 6px;
+    transition-property:transform,opacity;transition-timing-function:cubic-bezier(.25,.7,.35,1);
+    will-change:transform;
+  }
+  .flyer.delta{background:var(--active-bg);color:var(--nv-green-bright);border-color:var(--nv-green)}
+
+  /* ---------- code panel ---------- */
+  .code-panel{
+    border:1px solid var(--panel-edge);background:var(--panel);
+    position:relative;width:430px;max-width:94vw;
+    box-shadow:inset 0 0 40px rgba(118,185,0,.04);
+  }
+  .code-panel::before{content:"";position:absolute;inset:5px;border:1px dashed var(--grid-line);pointer-events:none}
+  .code-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px}
+  .code-title{font-size:9.5px;letter-spacing:.3em;color:var(--nv-green);text-transform:uppercase}
+  .code-file{font-size:10px;color:var(--txt-dim);letter-spacing:.1em}
+  pre.code{padding:6px 0 14px;overflow-x:auto;font-size:11.5px;line-height:1.6}
+  .cl{display:block;padding:0 16px 0 44px;position:relative;white-space:pre;transition:background .2s}
+  .cl::before{
+    content:attr(data-n);position:absolute;left:0;width:34px;text-align:right;
+    color:var(--ln);font-size:10px;
+  }
+  .cl.hl{
+    background:linear-gradient(90deg, rgba(118,185,0,.16), rgba(118,185,0,.03));
+    box-shadow:inset 3px 0 0 var(--nv-green);
+  }
+  .cl.hl::before{color:var(--nv-green)}
+  .kw{color:var(--nv-green-bright);font-weight:600}
+  .ty{color:var(--nv-green)}
+  .fn{color:var(--c-fn)}
+  .num{color:var(--c-num)}
+  .id{color:var(--txt)}
+  .op{color:var(--c-op)}
+  .cm{color:var(--c-cm);font-style:italic}
+
+  /* ---------- readouts ---------- */
+  .status{
+    margin-top:22px;min-height:20px;font-size:12.5px;letter-spacing:.04em;
+    color:var(--nv-green-bright);text-align:center;
+  }
+  .status .k{color:var(--txt-dim)}
+  .formula{
+    margin-top:10px;min-height:38px;
+    width:min(680px,94vw);
+    border:1px solid var(--panel-edge);background:var(--panel);
+    padding:9px 16px;text-align:center;
+    font-size:clamp(11px,2.6vw,14px);letter-spacing:.03em;
+    color:var(--txt-dim);
+    clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);
+  }
+  .formula .c-name{color:var(--title);font-weight:700}
+  .formula .a-val{color:var(--nv-green-bright);font-weight:700}
+  .formula .b-val{color:var(--c-fn);font-weight:700}
+  .formula .prod{color:var(--txt)}
+  .formula .res{color:var(--nv-green-bright);font-weight:700;text-shadow:0 0 10px var(--nv-green-glow)}
+
+  .progress{
+    width:min(560px,90vw);height:4px;background:var(--panel-edge);
+    margin:14px auto 0;position:relative;overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;background:linear-gradient(90deg,var(--nv-green-dim),var(--nv-green),var(--nv-green-bright));
+    width:0%;transition:width .2s;box-shadow:0 0 12px var(--nv-green-glow);
+  }
+
+  /* ---------- controls ---------- */
+  .controls{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+  button{
+    font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;
+    letter-spacing:.2em;text-transform:uppercase;
+    padding:10px 20px;cursor:pointer;
+    background:transparent;color:var(--nv-green);
+    border:1px solid var(--nv-green-dim);
+    clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+    transition:all .18s;
+  }
+  button:hover{background:rgba(118,185,0,.12);border-color:var(--nv-green)}
+  button:focus-visible{outline:2px solid var(--nv-green-bright);outline-offset:2px}
+  button.primary{
+    background:var(--nv-green);color:var(--on-green);border-color:var(--nv-green);
+    box-shadow:0 0 16px var(--nv-green-glow);
+  }
+  button.primary:hover{filter:brightness(1.12)}
+  button.toggled{
+    background:rgba(118,185,0,.18);border-color:var(--nv-green);color:var(--nv-green-bright);
+  }
+  .speed{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--txt-dim);letter-spacing:.15em}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:120px;height:3px;background:var(--panel-edge);outline:none}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:14px;height:14px;background:var(--nv-green);
+    cursor:pointer;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+  }
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--nv-green);border:none;cursor:pointer}
+
+  @media (max-width:1220px){
+    .code-panel{width:min(680px,94vw)}
+  }
+  @media (max-width:760px){
+    :root{--cell:26px;--cellSm:18px}
+    .stage{gap:14px}
+    .cell{font-size:10px}
+    .cell.sm{font-size:8.5px}
+    .smem{padding:10px}
+    .flyer{font-size:10px}
+    pre.code{font-size:10.5px}
+  }
+  @media (max-width:520px){
+    :root{--cell:20px;--cellSm:14px}
+    .cell{font-size:8px}
+    .cell.sm{font-size:7px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .cell.loading,.cell.acc-hit{animation:none}
+    .flyer{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Tiled <span class="accent">MatMul</span></h1>
+</header>
+
+<div class="pipeline" id="pipeline">
+  <div class="phase" data-p="load">Load Tiles</div>
+  <div class="phase" data-p="sync1">__syncthreads()</div>
+  <div class="phase" data-p="mac">Dot Product</div>
+  <div class="phase" data-p="sync2">__syncthreads()</div>
+  <div class="phase" data-p="write">Write C Tile</div>
+</div>
+
+<div class="main">
+  <div class="stage">
+    <!-- corner: shared memory -->
+    <div class="quad">
+      <div class="smem">
+        <div class="smem-title">On-Chip Shared Memory</div>
+        <div class="smem-grids">
+          <div class="smem-block"><span>As[4][4]</span><div class="matrix" id="smemA"></div></div>
+          <div class="smem-block"><span>Bs[4][4]</span><div class="matrix" id="smemB"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B top right -->
+    <div class="quad">
+      <div class="quad-label">Matrix <b>B</b> <span class="dim-tag">K×N · global</span></div>
+      <div class="matrix" id="matB"></div>
+    </div>
+
+    <!-- A bottom left -->
+    <div class="quad">
+      <div class="quad-label">Matrix <b>A</b> <span class="dim-tag">M×K · global</span></div>
+      <div class="matrix" id="matA"></div>
+    </div>
+
+    <!-- C bottom right -->
+    <div class="quad">
+      <div class="quad-label">Matrix <b>C</b> <span class="dim-tag">M×N · accumulator</span></div>
+      <div class="matrix" id="matC"></div>
+    </div>
+  </div>
+
+  <!-- source code panel -->
+  <div class="code-panel" id="codePanel">
+    <div class="code-head">
+      <span class="code-title">Kernel Source</span>
+      <span class="code-file">tiled_matmul.cu</span>
+    </div>
+    <pre class="code" id="codeBox"></pre>
+  </div>
+</div>
+
+<div class="status" id="status">Press <b style="color:var(--nv-green)">RUN</b> to launch the kernel</div>
+<div class="formula" id="formula">waiting for kernel launch</div>
+<div class="progress"><div class="progress-fill" id="progress"></div></div>
+
+<div class="controls">
+  <button class="primary" id="btnPlay">▶ Run</button>
+  <button id="btnBack">‹ Prev</button>
+  <button id="btnStep">Next ›</button>
+  <button id="btnReset">Reset</button>
+  <button id="btnCode" class="toggled">Code: On</button>
+  <button id="btnTheme">○ Light</button>
+  <div class="speed">
+    <span>CLK</span>
+    <input type="range" id="speed" min="1" max="10" value="6">
+  </div>
+</div>
+
+<script>
+(() => {
+  const N = 8, T = 4, NT = N / T;
+  const A = [], B = [];
+  for (let i = 0; i < N; i++) {
+    A[i] = []; B[i] = [];
+    for (let j = 0; j < N; j++) {
+      A[i][j] = ((i * 3 + j * 5) % 9) + 1;
+      B[i][j] = ((i * 7 + j * 2) % 9) + 1;
+    }
+  }
+
+  // ---- build DOM grids ----
+  const mk = (el, n, small) => {
+    el.style.gridTemplateColumns = `repeat(${n}, ${small ? 'var(--cellSm)' : 'var(--cell)'})`;
+    const cells = [];
+    for (let i = 0; i < n; i++) {
+      cells[i] = [];
+      for (let j = 0; j < n; j++) {
+        const c = document.createElement('div');
+        c.className = 'cell' + (small ? ' sm' : '');
+        if (!small) {
+          if ((j + 1) % T === 0 && j !== n - 1) c.classList.add('tb-r');
+          if ((i + 1) % T === 0 && i !== n - 1) c.classList.add('tb-b');
+        }
+        el.appendChild(c);
+        cells[i][j] = c;
+      }
+    }
+    return cells;
+  };
+  const gA  = mk(document.getElementById('matA'), N);
+  const gB  = mk(document.getElementById('matB'), N);
+  const gC  = mk(document.getElementById('matC'), N);
+  const gAs = mk(document.getElementById('smemA'), T, true);
+  const gBs = mk(document.getElementById('smemB'), T, true);
+
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    gA[i][j].textContent = A[i][j];
+    gB[i][j].textContent = B[i][j];
+    gC[i][j].textContent = '·';
+  }
+
+  // ---- source code panel ----
+  const K = s => `<span class="kw">${s}</span>`;
+  const TY = s => `<span class="ty">${s}</span>`;
+  const F = s => `<span class="fn">${s}</span>`;
+  const NUM = s => `<span class="num">${s}</span>`;
+  const CM = s => `<span class="cm">${s}</span>`;
+  const codeLines = [
+    ['',      `${K('#define')} ${F('TILE')} ${NUM('4')}`],
+    ['',      ``],
+    ['sig',   `${K('__global__')} ${TY('void')} ${F('matmul_tiled')}(${K('const')} ${TY('float')}* A, ${K('const')} ${TY('float')}* B,`],
+    ['sig',   `                             ${TY('float')}* C, ${TY('int')} M, ${TY('int')} N, ${TY('int')} K) {`],
+    ['smem',  `    ${K('__shared__')} ${TY('float')} As[${F('TILE')}][${F('TILE')}];`],
+    ['smem',  `    ${K('__shared__')} ${TY('float')} Bs[${F('TILE')}][${F('TILE')}];`],
+    ['',      ``],
+    ['idx',   `    ${TY('int')} tx = threadIdx.x, ty = threadIdx.y;`],
+    ['',      ``],
+    ['idx',   `    ${TY('int')} row = blockIdx.y * ${F('TILE')} + ty;`],
+    ['idx',   `    ${TY('int')} col = blockIdx.x * ${F('TILE')} + tx;`],
+    ['acc',   `    ${TY('float')} sum = ${NUM('0.0f')};`],
+    ['',      ``],
+    ['kloop', `    ${K('for')} (${TY('int')} t = ${NUM('0')}; t < (K + ${F('TILE')} - ${NUM('1')}) / ${F('TILE')}; t++) {`],
+    ['',      ``],
+    ['load',  `        As[ty][tx] = (row < M && (t * ${F('TILE')} + tx) < K)`],
+    ['load',  `                     ? A[row * K + t * ${F('TILE')} + tx] : ${NUM('0.0f')};`],
+    ['',      ``],
+    ['load',  `        Bs[ty][tx] = ((t * ${F('TILE')} + ty) < K && col < N)`],
+    ['load',  `                     ? B[(t * ${F('TILE')} + ty) * N + col] : ${NUM('0.0f')};`],
+    ['',      ``],
+    ['sync1', `        ${F('__syncthreads')}();`],
+    ['',      ``],
+    ['mac',   `        ${K('for')} (${TY('int')} k = ${NUM('0')}; k < ${F('TILE')}; k++)`],
+    ['mac',   `            sum += As[ty][k] * Bs[k][tx];`],
+    ['',      ``],
+    ['sync2', `        ${F('__syncthreads')}();`],
+    ['',      `    }`],
+    ['',      ``],
+    ['write', `    ${K('if')} (row < M && col < N)`],
+    ['write', `        C[row * N + col] = sum;`],
+    ['',      `}`],
+  ];
+  const codeBox = document.getElementById('codeBox');
+  const lineEls = codeLines.map(([tag, html], n) => {
+    const el = document.createElement('span');
+    el.className = 'cl';
+    el.dataset.n = n + 1;
+    if (tag) el.dataset.tag = tag;
+    el.innerHTML = html || ' ';
+    codeBox.appendChild(el);
+    return el;
+  });
+  function highlightCode(tags) {
+    lineEls.forEach(el => el.classList.toggle('hl', !!el.dataset.tag && tags.includes(el.dataset.tag)));
+  }
+
+  // ---- step script ----
+  const steps = [];
+  for (let tr = 0; tr < NT; tr++)
+    for (let tc = 0; tc < NT; tc++) {
+      for (let kt = 0; kt < NT; kt++) {
+        for (let li = 0; li < T * T; li++) steps.push({ t:'load', tr, tc, kt, li });
+        steps.push({ t:'sync1', tr, tc, kt });
+        for (let i = 0; i < T; i++)
+          for (let j = 0; j < T; j++) steps.push({ t:'mac', tr, tc, kt, i, j });
+        steps.push({ t:'sync2', tr, tc, kt });
+      }
+      steps.push({ t:'write', tr, tc });
+    }
+
+  // ---- state ----
+  let idx = -1, playing = false, timer = null;
+
+  const statusEl  = document.getElementById('status');
+  const formulaEl = document.getElementById('formula');
+  const progEl    = document.getElementById('progress');
+  const phases    = [...document.querySelectorAll('.phase')];
+  const speedEl   = document.getElementById('speed');
+  const delay     = () => 1400 - speedEl.value * 125;
+  const flyTime   = () => Math.min(450, delay() * 0.72);
+
+  const dot = (tr, tc, kt, i, j) => {
+    let s = 0;
+    for (let k = 0; k < T; k++) s += A[tr*T+i][kt*T+k] * B[kt*T+k][tc*T+j];
+    return s;
+  };
+
+  function render() {
+    const wipe = (g, n) => { for (let i = 0; i < n; i++) for (let j = 0; j < n; j++)
+      g[i][j].classList.remove('tile-active','loading','lane','acc','acc-hit','written','incoming'); };
+    wipe(gA, N); wipe(gB, N); wipe(gC, N); wipe(gAs, T); wipe(gBs, T);
+    for (let i = 0; i < T; i++) for (let j = 0; j < T; j++) { gAs[i][j].textContent=''; gBs[i][j].textContent=''; }
+
+    // ---- replay to reconstruct state ----
+    const C = Array.from({length:N},()=>Array(N).fill(null));
+    const writtenTiles = new Set();
+    let cur = null;
+    for (let s = 0; s <= idx; s++) {
+      const st = steps[s];
+      cur = st;
+      if (st.t === 'load' && st.kt === 0 && st.li === 0)
+        for (let i=0;i<T;i++) for (let j=0;j<T;j++) C[st.tr*T+i][st.tc*T+j] = 0;
+      else if (st.t === 'mac')
+        C[st.tr*T+st.i][st.tc*T+st.j] += dot(st.tr, st.tc, st.kt, st.i, st.j);
+      else if (st.t === 'write') writtenTiles.add(st.tr+','+st.tc);
+    }
+
+    for (let i=0;i<N;i++) for (let j=0;j<N;j++)
+      gC[i][j].textContent = C[i][j] === null ? '·' : C[i][j];
+    writtenTiles.forEach(key=>{
+      const [tr,tc]=key.split(',').map(Number);
+      for (let i=0;i<T;i++) for (let j=0;j<T;j++) gC[tr*T+i][tc*T+j].classList.add('written');
+    });
+
+    phases.forEach(p=>p.classList.remove('active'));
+
+    if (!cur) {
+      statusEl.innerHTML = 'Press <b style="color:var(--nv-green)">RUN</b> to launch the kernel';
+      formulaEl.innerHTML = 'waiting for kernel launch';
+      progEl.style.width = '0%';
+      highlightCode(['sig']);
+      return;
+    }
+
+    const {tr, tc, kt} = cur;
+    const ph = phases.find(p=>p.dataset.p===cur.t); if (ph) ph.classList.add('active');
+
+    // ---- shared memory contents ----
+    let loaded = 0;
+    if (cur.t === 'load') loaded = cur.li + 1;
+    else if (cur.t !== 'write') loaded = T * T;
+    for (let li = 0; li < loaded; li++) {
+      const i = (li / T) | 0, j = li % T;
+      gAs[i][j].textContent = A[tr*T+i][kt*T+j];
+      gBs[i][j].textContent = B[kt*T+i][tc*T+j];
+      gAs[i][j].classList.add('tile-active');
+      gBs[i][j].classList.add('tile-active');
+    }
+
+    // ---- highlights per step type ----
+    if (cur.t !== 'write') {
+      for (let i=0;i<T;i++) for (let j=0;j<T;j++){
+        gA[tr*T+i][kt*T+j].classList.add('tile-active');
+        gB[kt*T+i][tc*T+j].classList.add('tile-active');
+        gC[tr*T+i][tc*T+j].classList.add('acc');
+      }
+    }
+
+    if (cur.t === 'load') {
+      const i = (cur.li / T) | 0, j = cur.li % T;
+      gA[tr*T+i][kt*T+j].classList.add('loading');
+      gB[kt*T+i][tc*T+j].classList.add('loading');
+      gAs[i][j].classList.add('loading');
+      gBs[i][j].classList.add('loading');
+      const aV = A[tr*T+i][kt*T+j], bV = B[kt*T+i][tc*T+j];
+      statusEl.innerHTML = `C-tile [${tr}][${tc}] · k-phase ${kt} · thread(${i},${j}) loads its two elements <span class="k">· step ${idx+1}/${steps.length}</span>`;
+      formulaEl.innerHTML =
+        `As[${i}][${j}] ← A[${tr*T+i}][${kt*T+j}] = <span class="a-val">${aV}</span>` +
+        ` &nbsp;·&nbsp; Bs[${i}][${j}] ← B[${kt*T+i}][${tc*T+j}] = <span class="b-val">${bV}</span>`;
+      highlightCode(['kloop','load']);
+    }
+    else if (cur.t === 'mac') {
+      const {i, j} = cur;
+      for (let k = 0; k < T; k++) {
+        gAs[i][k].classList.add('lane');
+        gBs[k][j].classList.add('lane');
+        gA[tr*T+i][kt*T+k].classList.add('lane');
+        gB[kt*T+k][tc*T+j].classList.add('lane');
+      }
+      const cc = gC[tr*T+i][tc*T+j];
+      cc.classList.remove('acc'); cc.classList.add('acc-hit');
+
+      const parts = [], prods = [];
+      let d = 0;
+      for (let k = 0; k < T; k++) {
+        const a = A[tr*T+i][kt*T+k], b = B[kt*T+k][tc*T+j];
+        parts.push(`<span class="a-val">${a}</span>×<span class="b-val">${b}</span>`);
+        prods.push(`<span class="prod">${a*b}</span>`);
+        d += a * b;
+      }
+      const total = C[tr*T+i][tc*T+j];
+      statusEl.innerHTML = `C-tile [${tr}][${tc}] · k-phase ${kt} · thread(${i},${j}) computes its dot product <span class="k">· step ${idx+1}/${steps.length}</span>`;
+      formulaEl.innerHTML =
+        `<span class="c-name">C[${tr*T+i}][${tc*T+j}]</span> += ` +
+        parts.join(' + ') + ` = ` + prods.join('+') +
+        ` = <span class="res">+${d}</span> &nbsp;→&nbsp; <span class="res">${total}</span>`;
+      highlightCode(['kloop','mac']);
+    }
+    else if (cur.t === 'sync1') {
+      statusEl.innerHTML = `C-tile [${tr}][${tc}] · __syncthreads() · all 16 threads wait for the tile load <span class="k">· step ${idx+1}/${steps.length}</span>`;
+      formulaEl.innerHTML = `barrier · shared memory tiles As / Bs are now fully populated`;
+      highlightCode(['kloop','sync1']);
+    }
+    else if (cur.t === 'sync2') {
+      statusEl.innerHTML = `C-tile [${tr}][${tc}] · __syncthreads() · safe to overwrite shared memory <span class="k">· step ${idx+1}/${steps.length}</span>`;
+      formulaEl.innerHTML = `barrier · every thread finished its dot product for k-phase ${kt}`;
+      highlightCode(['kloop','sync2']);
+    }
+    else if (cur.t === 'write') {
+      statusEl.innerHTML = `C-tile [${tr}][${tc}] · accumulators written back to global memory ✓ <span class="k">· step ${idx+1}/${steps.length}</span>`;
+      formulaEl.innerHTML = `16 results committed · thread block moves to the next C-tile`;
+      highlightCode(['write']);
+    }
+
+    progEl.style.width = ((idx+1)/steps.length*100)+'%';
+  }
+
+  // ---- flying number animation ----
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function fly(fromEl, toEl, text, delta) {
+    if (reduceMotion) return;
+    const f = fromEl.getBoundingClientRect(), t = toEl.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'flyer' + (delta ? ' delta' : '');
+    el.textContent = text;
+    el.style.left = (f.left + f.width/2) + 'px';
+    el.style.top  = (f.top  + f.height/2) + 'px';
+    el.style.transform = 'translate(-50%,-50%)';
+    el.style.transitionDuration = flyTime() + 'ms';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.transform =
+        `translate(-50%,-50%) translate(${t.left - f.left + (t.width - f.width)/2}px, ${t.top - f.top + (t.height - f.height)/2}px)`;
+    }));
+    setTimeout(() => el.remove(), flyTime() + 80);
+  }
+
+  function animateStep(st) {
+    if (!st) return;
+    const {tr, tc, kt} = st;
+    if (st.t === 'load') {
+      const i = (st.li / T) | 0, j = st.li % T;
+      gAs[i][j].classList.add('incoming');
+      gBs[i][j].classList.add('incoming');
+      fly(gA[tr*T+i][kt*T+j], gAs[i][j], A[tr*T+i][kt*T+j]);
+      fly(gB[kt*T+i][tc*T+j], gBs[i][j], B[kt*T+i][tc*T+j]);
+      setTimeout(() => {
+        gAs[i][j].classList.remove('incoming');
+        gBs[i][j].classList.remove('incoming');
+      }, flyTime());
+    } else if (st.t === 'mac') {
+      const {i, j} = st;
+      const d = dot(tr, tc, kt, i, j);
+      fly(gBs[T-1][j], gC[tr*T+i][tc*T+j], '+' + d, true);
+    }
+  }
+
+  // ---- controls ----
+  const btnPlay  = document.getElementById('btnPlay');
+  const btnCode  = document.getElementById('btnCode');
+  const btnTheme = document.getElementById('btnTheme');
+  const codePanel = document.getElementById('codePanel');
+
+  function stepFwd(){
+    if (idx < steps.length - 1) {
+      idx++;
+      render();
+      animateStep(steps[idx]);
+    } else stop();
+  }
+  function stepBack(){ if (idx >= 0){ idx--; render(); } }
+  function tick(){ stepFwd(); if (playing && idx < steps.length-1) timer=setTimeout(tick, delay()); else stop(); }
+  function play(){ if (idx>=steps.length-1) idx=-1; playing=true; btnPlay.textContent='❚❚ Pause'; tick(); }
+  function stop(){ playing=false; clearTimeout(timer); btnPlay.textContent='▶ Run'; }
+
+  btnPlay.onclick = ()=> playing ? stop() : play();
+  document.getElementById('btnStep').onclick  = ()=>{ stop(); stepFwd(); };
+  document.getElementById('btnBack').onclick  = ()=>{ stop(); stepBack(); };
+  document.getElementById('btnReset').onclick = ()=>{ stop(); idx=-1; render(); };
+  btnCode.onclick = ()=>{
+    const on = codePanel.style.display !== 'none';
+    codePanel.style.display = on ? 'none' : '';
+    btnCode.textContent = on ? 'Code: Off' : 'Code: On';
+    btnCode.classList.toggle('toggled', !on);
+  };
+  btnTheme.onclick = ()=>{
+    const light = document.body.classList.toggle('light');
+    btnTheme.textContent = light ? '● Dark' : '○ Light';
+  };
+  document.addEventListener('keydown', e=>{
+    if (e.key === ' ')         { e.preventDefault(); playing ? stop() : play(); }
+    if (e.key === 'ArrowRight'){ stop(); stepFwd(); }
+    if (e.key === 'ArrowLeft') { stop(); stepBack(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
