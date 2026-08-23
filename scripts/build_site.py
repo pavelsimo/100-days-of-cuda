@@ -49,6 +49,26 @@ KATEX_HEAD = """
     {left:'\\\\(',right:'\\\\)',display:false}]})"></script>
 """
 
+# Injected into the copied animation pages so visitors can get back to the
+# site. Uses the animation's own CSS variables, so it follows its theme toggle.
+BACK_NAV_STYLE = """<style>
+.site-back{position:fixed;top:12px;left:12px;z-index:100;display:flex;gap:6px}
+.site-back a{
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  padding:7px 14px;border:1px solid var(--panel-edge);
+  color:var(--txt-dim);background:var(--panel);text-decoration:none;
+  clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);
+  transition:all .25s;
+}
+.site-back a:hover{color:var(--nv-green-bright);border-color:var(--nv-green-dim)}
+@media (max-width:760px){.site-back{position:static;justify-content:center;margin-bottom:14px}}
+</style>"""
+BACK_NAV_HTML = """<nav class="site-back">
+  <a href="../index.html">&lsaquo; Home</a>
+  <a href="index.html">Animations</a>
+</nav>"""
+
 PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -194,21 +214,14 @@ def build():
     chapters = collect_chapters()
     anims = collect_animations()
     for a in anims:
-        shutil.copy2(a["path"], OUT / "animations" / a["file"])
+        text = a["path"].read_text(encoding="utf-8")
+        text = text.replace("</head>", BACK_NAV_STYLE + "\n</head>", 1)
+        text = text.replace("<body>", "<body>\n" + BACK_NAV_HTML, 1)
+        (OUT / "animations" / a["file"]).write_text(text, encoding="utf-8")
 
-    # ---- index.html: section cards + rendered README ----
+    # ---- index.html: rendered README ----
     readme_html = rewrite_readme_links(md_to_html((ROOT / "README.md").read_text(encoding="utf-8")))
     sections = f"""
-<div class="cards">
-  <section class="panel" id="pmpp">
-    <div class="panel-title">PMPP Notes &middot; Programming Massively Parallel Processors, 5th ed.</div>
-    {chapter_list_html(chapters, prefix="pmpp/")}
-  </section>
-  <section class="panel" id="animations">
-    <div class="panel-title">Animations &middot; Interactive CUDA visualizations</div>
-    {animation_list_html(anims, prefix="animations/")}
-  </section>
-</div>
 <article class="panel">
   <div class="panel-title">Progress Log &middot; README.md</div>
   <div class="md">

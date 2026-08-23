@@ -1,8 +1,8 @@
 # 100 days of CUDA challenge
 
-This is a 100-day challenge to master CUDA:
+Hi! I'm Pavel, and this is my 100-day journey to master CUDA. The rules are simple: write GPU code every single day and share what I learn along the way. Most days that means solving kernel problems on LeetGPU, working through the Programming Massively Parallel Processors book, and turning the ideas into notes and animations so they actually stick.
 
-- https://github.com/hkproj/100-days-of-gpu/blob/main/CUDA.md
+If you want to join the challenge, the rules come from [hkproj/100-days-of-gpu](https://github.com/hkproj/100-days-of-gpu/blob/main/CUDA.md).
 
 ## Progress 
 
