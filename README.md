@@ -482,6 +482,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [FP16 Batched Matrix Multiplication](day36/fp16_batched_matmul.cu) problem. this one is pretty much the same problem we solved on Day 27, except inputs and outputs are in fp16. as usual with this kind of problem, arithmetic is done in single precision and the final result must be converted back to fp16 to prevent rounding errors.
 
-- finished chapter 7 of PMPP, this one was all about convolutions. the main example takes a regular 2D convolution kernel and moves input matrix tiles into shared memory, pretty much the same trick as tiled matmul. 
+- finished chapter 7 of PMPP, this one was all about convolutions. the main example moves input matrix tiles into shared memory to improve the conv. performance, pretty much the same trick as tiled matmul.
 
 - i used what i learned to rewrite my Day 11 [2D Convolution](day36/conv_2d_2.cu) solution with shared memory. the funny part? it did not get any faster... my guess is that the naive kernel already had nicely coalesced reads. i want to run both versions through NVIDIA Nsight and see where the time is actually going. something for later. 
