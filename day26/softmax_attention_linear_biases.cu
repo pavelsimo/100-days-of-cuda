@@ -5,7 +5,7 @@
 
 #define BLOCKSIZE 16
 
-__global__ void row_softmax(float* scores, int M, int N) {
+__global__ void softmax(float* scores, int M, int N) {
     int row = blockIdx.x * blockDim.x + threadIdx.x;
     if (row < M) {
         float max = -FLT_MAX;
@@ -91,7 +91,7 @@ extern "C" void solve(const float* Q,
                     (N + threadsPerBlockGrid.y - 1) / threadsPerBlockGrid.y);
     softmax_attention<<<scoresGrid, threadsPerBlockGrid>>>(Q, K, V, scores, M, N, d, alpha);
 
-    row_softmax<<<(M + threadsPerBlock - 1) / threadsPerBlock, threadsPerBlock>>>(scores, M, N);
+    softmax<<<(M + threadsPerBlock - 1) / threadsPerBlock, threadsPerBlock>>>(scores, M, N);
 
     dim3 outputGrid((d + threadsPerBlockGrid.x - 1) / threadsPerBlockGrid.x,
                     (M + threadsPerBlockGrid.y - 1) / threadsPerBlockGrid.y);

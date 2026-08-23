@@ -50,8 +50,8 @@ __global__ void softmax(float* scores, int M, int N, int num_sinks, int window_s
     }
 
     const float inv = 1.0f / t[0];
-    for (int col = tid; col < N; col += blockDim.x) {
-        scores[i * N + col] *= inv;
+    for (int j = tid; j < N; j += blockDim.x) {
+        scores[i * N + j] *= inv;
     }
 }
 
