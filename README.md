@@ -477,3 +477,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - solved the LeetGPU [Attention with Sinks](day35/attention_with_sinks.cu) problem. attention sinks are token positions that consistently receive much more attention than the rest, even when they contain little or no useful information. usually these sinks tend to emerge naturally in the first few tokens. in the paper [Efficient Streaming Language Models with Attention Sinks](https://arxiv.org/abs/2309.17453), the authors found that a sliding window stops working well once it moves past those first tokens. the fix is to choose a few of the first tokens as sinks and always include them in attention while the rest of the window moves forward.
 
 - for most part the implementation is regular attention (see Days 14 and 34), except that we exclude parts of the score matrix before applying softmax. each token can attend to the sink tokens and the recent tokens inside the sliding window. all other positions are masked out. there are a couple of ways to do this: skip those scores with an `if` condition, like i did in my solution, or set them to `-INF` so softmax turns them into zeros later on.
+
+### Day 36
+
+- solved the LeetGPU [FP16 Batched Matrix Multiplication](day36/fp16_batched_matmul.cu) problem. this one is pretty much the same problem we solved on Day 27, except inputs and outputs are in fp16. as usual with this kind of problem, arithmetic is done in single precision and the final result must be converted back to fp16 to prevent rounding errors.
+
+- finished chapter 7 of PMPP, this one was all about convolutions. the main example takes a regular 2D convolution kernel and moves input matrix tiles into shared memory, pretty much the same trick as tiled matmul. 
+
+- i used what i learned to rewrite my Day 11 [2D Convolution](day36/conv_2d_2.cu) solution with shared memory. the funny part? it did not get any faster... my guess is that the naive kernel already had nicely coalesced reads. i want to run both versions through NVIDIA Nsight and see where the time is actually going. something for later. 
