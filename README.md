@@ -462,7 +462,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - so for this one it really helps to write down each matrix operation and the shape of its output, we implemented attention on Day 29, but the multi-head thing add some "spiciness", which make it quite easy to mess up, i spent some time debugging the row major indices. the calculation looks like this:
 
-  ```text
+  ```c
   d_k = d_model / h
   head_i = softmax(Q_i @ K_i^T / sqrt(d_k)) @ V_i   -> N x d_k
   output = Concat(head_1, ..., head_h)              -> N x d_model
@@ -485,3 +485,25 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - finished chapter 7 of PMPP, this one was all about convolutions. the main example moves input matrix tiles into shared memory to improve the conv. performance, pretty much the same trick as tiled matmul. i used that optimization to rewrite my Day 11 [2D Convolution](day36/conv_2d_2.cu) solution. 
 
 - the funny part? it did not get any faster... my guess is that the naive kernel already had nicely coalesced reads. i want to run both versions through NVIDIA Nsight and see where the time is actually going. something for later. 
+
+### Day 37
+
+- solved the LeetGPU [Decaying Causal Attention](day37/decaying_causal_attention.cu) problem. this one is pretty much traditional attention (see Days 14 and 34), except we add a decay mask. it blocks future tokens and slowly reduces the weight of older ones. the [LeetDecoding paper](https://arxiv.org/abs/2501.02573) has a much deeper explanation and compares a few CUDA implementations.
+
+- the interesting bit is this loop in the final matmul. `k <= row` means each row stops at its own position, which gives us the triangle below. the dots are future tokens, so we never touch them:
+
+  ```text
+          k ->
+  row 0   1        .        .        .
+  row 1   gamma    1        .        .
+  row 2   gamma^2  gamma    1        .
+  row 3   gamma^3  gamma^2  gamma    1
+  ```
+
+- the expression `powf(gamma, row - k)` takes care of the decay:
+
+  ```c
+  for (int k = 0; k <= row; ++k) {
+      sum += powf(gamma, row - k) * A[row * K + k] * B[k * N + col];
+  }
+  ```
