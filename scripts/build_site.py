@@ -8,6 +8,7 @@ Usage: python scripts/build_site.py
 Deps:  pip install markdown pymdown-extensions pygments mdx-truly-sane-lists
 """
 
+import html
 import re
 import shutil
 from pathlib import Path
@@ -20,6 +21,8 @@ ASSETS = Path(__file__).resolve().parent / "assets"
 
 REPO_URL = "https://github.com/pavelsimo/100-days-of-cuda"
 BLOB_URL = f"{REPO_URL}/blob/main/"
+SITE_URL = "https://pavelsimo.github.io/100-days-of-cuda/"
+OG_IMAGE = f"{SITE_URL}images/og-card.png"
 
 PMPP_DIR = ROOT / "docs" / "programming-massively-parallel-processors"
 ANIM_DIR = ROOT / "docs" / "animations"
@@ -69,12 +72,42 @@ BACK_NAV_HTML = """<nav class="site-back">
   <a href="index.html">Animations</a>
 </nav>"""
 
+# Social / link-preview metadata (Open Graph + Twitter Card).
+SOCIAL_META = """<meta name="description" content="{description}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="100 Days of CUDA">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{description}">
+<meta property="og:url" content="{page_url}">
+<meta property="og:image" content="{og_image}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{description}">
+<meta name="twitter:image" content="{og_image}">"""
+
+DEFAULT_DESCRIPTION = (
+    "100 days of writing CUDA kernels: day-by-day progress log, "
+    "PMPP chapter notes, and interactive kernel visualizations."
+)
+
+
+def social_meta(title: str, description: str, path: str) -> str:
+    return SOCIAL_META.format(
+        title=html.escape(title, quote=True),
+        description=html.escape(description, quote=True),
+        page_url=SITE_URL + path,
+        og_image=OG_IMAGE,
+    )
+
 PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title}</title>
+{social_meta}
 <script>try{{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}}catch(e){{}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -123,13 +156,15 @@ def md_to_html(text: str) -> str:
     return markdown.markdown(text, extensions=MD_EXTENSIONS, extension_configs=MD_CONFIG)
 
 
-def render_page(*, title, subtitle, content, root="", active="", math=False) -> str:
+def render_page(*, title, subtitle, content, root="", active="", math=False,
+                path="", description=DEFAULT_DESCRIPTION) -> str:
     return PAGE_TEMPLATE.format(
         title=title,
         subtitle=subtitle,
         content=content,
         root=root,
         repo_url=REPO_URL,
+        social_meta=social_meta(title, description, path),
         extra_head=KATEX_HEAD if math else "",
         active_home=' class="active"' if active == "home" else "",
         active_pmpp=' class="active"' if active == "pmpp" else "",
@@ -215,6 +250,14 @@ def build():
     anims = collect_animations()
     for a in anims:
         text = a["path"].read_text(encoding="utf-8")
+        if 'property="og:' not in text:
+            meta = social_meta(
+                f'{a["title"]} · 100 Days of CUDA',
+                "Interactive step-by-step CUDA kernel visualization from the "
+                "100 Days of CUDA series.",
+                f'animations/{a["file"]}',
+            )
+            text = text.replace("</head>", meta + "\n</head>", 1)
         text = text.replace("</head>", BACK_NAV_STYLE + "\n</head>", 1)
         text = text.replace("<body>", "<body>\n" + BACK_NAV_HTML, 1)
         (OUT / "animations" / a["file"]).write_text(text, encoding="utf-8")
@@ -235,6 +278,7 @@ def build():
             subtitle="one kernel at a time &middot; day by day progress log",
             content=sections,
             active="home",
+            path="",
         ),
         encoding="utf-8",
     )
@@ -255,6 +299,9 @@ def build():
             content=pmpp_index,
             root="../",
             active="pmpp",
+            path="pmpp/",
+            description="Chapter-by-chapter notes on Programming Massively "
+            "Parallel Processors, 5th edition, from the 100 Days of CUDA series.",
         ),
         encoding="utf-8",
     )
@@ -288,6 +335,9 @@ def build():
                 root="../",
                 active="pmpp",
                 math=True,
+                path=f'pmpp/chapter-{c["num"]}.html',
+                description=f'Notes on PMPP chapter {c["num"]}, {c["title"]}, '
+                "from the 100 Days of CUDA series.",
             ),
             encoding="utf-8",
         )
@@ -308,6 +358,10 @@ def build():
             content=anim_index,
             root="../",
             active="anim",
+            path="animations/",
+            description="Interactive step-by-step visualizations of CUDA "
+            "kernels: run them, single-step them, and watch data move between "
+            "global and shared memory.",
         ),
         encoding="utf-8",
     )
