@@ -502,4 +502,4 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
   ![alt text](images/decay.png)
 
-- notice how the loop never reaches the dots. those are scores for future tokens, and k <= row keeps them out completely.
+- notice how the loop never reaches the empty black squares. those are scores for future tokens, and k <= row keeps them out completely.
