@@ -488,9 +488,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 37
 
-- solved the LeetGPU [Decaying Causal Attention](day37/decaying_causal_attention.cu) problem. this one is pretty much traditional attention (see Days 14 and 34), except we add a decay mask. it blocks future tokens and slowly reduces the weight of older ones. the [LeetDecoding paper](https://arxiv.org/abs/2501.02573) has a much deeper explanation and compares a few CUDA implementations.
+- solved the LeetGPU [Decaying Causal Attention](day37/decaying_causal_attention.cu) problem. this one is pretty much traditional attention (see Days 14 and 34), except we add a decay mask. it blocks future tokens and slowly reduces the weight of older ones. the decay mask was introduced in the [Retentive Network paper](https://arxiv.org/pdf/2307.08621).
 
-- the interesting bit is this loop in the final matmul. `k <= row` means each row stops at its own position, which gives us the triangle below. the dots are future tokens, so we never touch them:
+- the interesting bit is this loop in the final matmul. `k <= row` means each row stops at its own position, which gives us the triangle below:
 
   ```text
           k ->
@@ -499,6 +499,8 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   row 2   gamma^2  gamma    1        .
   row 3   gamma^3  gamma^2  gamma    1
   ```
+
+- notice how the loop never reaches the dots. those are scores for future tokens, and `k <= row` keeps them out completely.
 
 - the expression `powf(gamma, row - k)` takes care of the decay:
 
