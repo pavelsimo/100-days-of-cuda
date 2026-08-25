@@ -503,3 +503,27 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ![alt text](images/decay.png)
 
 - notice how the loop never reaches the empty black squares. those are scores for future tokens, and k <= row keeps them out completely.
+
+### Day 38
+
+- another day, another attention problem. i really can't get enough of these :) this time i solved the LeetGPU [Grouped Query Attention](day38/grouped_query_attention.cu) problem. according to my research GQA is basically the middle ground between Multi-Head Attention (MHA) and Multi-Query Attention (MQA). the diagram below explains it best:
+
+  ![Grouped Query Attention](images/gqa.png)
+
+- as the diagram shows, GQA splits the query heads into groups and gives each group its own pair. a pretty nice compromise between performance and KV cache size. you can check out the paper here: [GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints](https://arxiv.org/abs/2305.13245).
+
+- when i first saw this problem, i thought: great, another index soup... now we have query heads, K/V heads, and groups on top of the usual matrix indices. turns out the host (CPU realm) can prepare the data nicely before we launch the kernels. the trick is to offset a few pointers so they match the heads we're currently processing. the kernels can then treat them as regular matrices with the dimensions they already expect:
+
+  ```c
+    float scale = 1.0 / sqrt(head_dim);
+    int group_size = num_q_heads / num_kv_heads;
+    for (int head_idx = 0; head_idx < num_q_heads; ++head_idx) {
+        int kv_head_idx = head_idx / group_size;
+        const float *q = Q + head_idx * seq_len * head_dim;
+        const float *k = K + kv_head_idx * seq_len * head_dim;
+        const float *v = V + kv_head_idx * seq_len * head_dim;
+        // matmul, softmax, matmul... 
+    }
+  ```
+
+- note: no data gets copied here. we're only changing where each pointer starts. from there, the kernels can pretend they're doing regular attention. much cleaner.
