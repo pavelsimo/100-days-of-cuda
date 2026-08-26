@@ -536,9 +536,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - so this problem requires us to calculate the mean and variance. both are reduction operations, which means they take a bunch of values and produce a single value. whenever you see this kind of operation, it screams `__shfl_down_sync`, `__syncthreads()`, and all that good stuff :)
 
-- clearly the biggest challenge is figuring out how to calculate `column_mean` or `column_var`. the good news is once you get one of them working, the other follows pretty much the same reduction pattern.
-
-- in our particular case, we need to output a vector of `C` means and `C` variances (`C` stands for the number of features), which we can use later for normalization. the sequence of kernel calls looks something like this:
+- clearly the biggest challenge is figuring out how to calculate `column_mean` or `column_var`. in our case, each kernel needs to output a vector of `C` values, one per feature, which we can use later for normalization. the good news is that once you get one working, the other follows pretty much the same reduction pattern. the sequence of kernel calls looks something like this:
 
   ```c
   column_mean<<<C, threads>>>(input, mean, N, C, alpha);
