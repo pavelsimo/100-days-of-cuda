@@ -543,3 +543,20 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   column_var<<<C, threads>>>(input, mean, var, N, C, alpha);
   batch_norm<<<blocks, threads>>>(input, gamma, beta, mean, var, output, N, C, eps);
   ```
+
+### Day 40
+
+- solved the LeetGPU [Fused Residual Addition and RMS Normalization](day40/fused_res_add_rms_norm.cu) problem. RMSNorm was introduced in the paper [Root Mean Square Layer Normalization](https://papers.neurips.cc/paper_files/paper/2019/file/1e8a19426224ca89e83cef47f1e7f53b-Paper.pdf). the goal is the same as Batch Normalization keep activations on a stable scale.
+
+- this problem is really similar to yesterday Batch Normalization (see day 39). the main difference is the direction of the reduction: yesterday each block reduced a feature column across `N` rows. today each block reduces a token row across its `C` features (see image below).
+
+- the sequence of kernel calls looks as follow:
+
+  ```c
+  matadd<<<grid, threads>>>(x, residual, Z, N, C);
+  row_rms<<<N, threads.x * threads.y>>>(Z, N, C, rms, eps);
+  norm<<<grid, threads>>>(Z, rms, weight, out, N, C);
+  ```
+
+  ![RMS normalization computes one RMS value for each token row](images/rms_norm.png)
+
