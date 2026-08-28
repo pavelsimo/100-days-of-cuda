@@ -557,6 +557,18 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   row_rms<<<N, threads.x * threads.y>>>(Z, N, C, rms, eps);
   norm<<<grid, threads>>>(Z, rms, weight, out, N, C);
   ```
-
   ![RMS normalization computes one RMS value for each token row](images/rms_norm.png)
 
+### Day 41
+
+- continuing with the normalization theme, today i solved the LeetGPU [Layer Normalization](day41/layer_norm.cu) problem. if this looks familiar, that's because it is pretty close to the Batch Normalization problem from Day 39. the difference is which direction we reduce. BatchNorm calculates the mean and variance for each feature across the batch (columns), while LayerNorm calculates them for each sample across its features (rows). the image below shows the difference in more detail.
+
+  ![BatchNorm vs LayerNorm](images/batch_norm_vs_layer_norm.png)
+
+- probably not a surprise the implementation follows the same reduction pattern as the last two days. one kernel calculates the mean of each row, another calculates the variance, and the final kernel normalizes every value and applies the learnable weight and bias:
+
+  ```c
+  row_mean<<<N, nthreads>>>(input, mean, N, C);
+  row_var<<<N, nthreads>>>(input, mean, var, N, C);
+  layer_norm<<<grid, threads>>>(input, weight, bias, output, mean, var, N, C, eps);
+  ```
