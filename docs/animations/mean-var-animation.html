@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mean &amp; Variance Animation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nv-green:#76B900; --nv-green-bright:#9BE000; --nv-green-dim:#3d5c0a;
+    --nv-green-glow:rgba(118,185,0,.55); --on-green:#04140a;
+    --bg:#050805; --bg-radial:rgba(118,185,0,.08); --bg-scan:rgba(118,185,0,.012);
+    --panel:#0a120a; --panel-edge:#152315; --grid-line:#12210f; --tile-border:#2a4413;
+    --txt:#d7e8c8; --txt-dim:#6b8259; --title:#f2ffe0; --title-glow:rgba(118,185,0,.55);
+    --cell-bg:#0b130b; --cell-txt:#54704a;
+    --active-bg:#0e1a0b; --active-txt:#a9cf7c;
+    --lane-bg:#1c2f08;
+    --hit-bg:#2b4d06; --hit-txt:#f4ffd8;
+    --written-bg:#122408;
+    --dead-txt:#2c3a24;
+    --ln:#3a4d30; --c-fn:#c6e88a; --c-num:#e8ffb0; --c-op:#8fa87a; --c-cm:#5b7048;
+    --cell:44px; --cellH:28px;
+  }
+  body.light{
+    --nv-green:#679f00; --nv-green-bright:#4e8000; --nv-green-dim:#a9c96e;
+    --nv-green-glow:rgba(118,185,0,.30); --on-green:#0c1602;
+    --bg:#f3f7ec; --bg-radial:rgba(118,185,0,.10); --bg-scan:rgba(70,110,0,.010);
+    --panel:#ffffff; --panel-edge:#d6e1c5; --grid-line:#e3ebd5; --tile-border:#b6cd8b;
+    --txt:#28361c; --txt-dim:#75865f; --title:#1c2a0e; --title-glow:rgba(118,185,0,.28);
+    --cell-bg:#fbfdf6; --cell-txt:#8a9c74;
+    --active-bg:#eef5dd; --active-txt:#4a6a14;
+    --lane-bg:#dff0bc;
+    --hit-bg:#a9d838; --hit-txt:#182600;
+    --written-bg:#e6f2cd;
+    --dead-txt:#cdd8bd;
+    --ln:#b2c496; --c-fn:#6d8f1e; --c-num:#8a6d00; --c-op:#7c8f64; --c-cm:#98a884;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg)}
+  body{
+    background:radial-gradient(1100px 500px at 50% -10%, var(--bg-radial), transparent 60%),
+      repeating-linear-gradient(0deg, transparent 0 3px, var(--bg-scan) 3px 4px), var(--bg);
+    color:var(--txt);font-family:'JetBrains Mono',ui-monospace,monospace;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:28px 16px 48px;transition:background .3s,color .3s;
+  }
+  header{text-align:center;margin-bottom:18px}
+  h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(22px,4.5vw,38px);letter-spacing:.08em;
+     color:var(--title);text-transform:uppercase;text-shadow:0 0 24px var(--title-glow)}
+  h1 .accent{color:var(--nv-green)}
+  .sub{font-size:11px;letter-spacing:.2em;color:var(--txt-dim);text-transform:uppercase;margin-top:6px}
+
+  .pipeline{display:flex;gap:6px;margin:0 0 20px;flex-wrap:wrap;justify-content:center}
+  .phase{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;padding:7px 14px;border:1px solid var(--panel-edge);
+         color:var(--txt-dim);background:var(--panel);clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .25s}
+  .phase.active{color:var(--on-green);background:var(--nv-green);border-color:var(--nv-green);font-weight:700;box-shadow:0 0 18px var(--nv-green-glow)}
+
+  .main{display:flex;gap:30px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;gap:18px;align-items:center}
+
+  .panel{border:1px solid var(--panel-edge);background:var(--panel);padding:14px 16px;position:relative;
+         display:flex;flex-direction:column;gap:10px;align-items:center;box-shadow:inset 0 0 40px rgba(118,185,0,.04)}
+  .panel::before{content:"";position:absolute;inset:5px;border:1px dashed var(--grid-line);pointer-events:none}
+  .panel-title{font-size:9.5px;letter-spacing:.3em;color:var(--nv-green);text-transform:uppercase}
+  .panel-sub{font-size:10px;color:var(--txt-dim);letter-spacing:.15em}
+
+  .hdr{display:grid;gap:2px;margin-left:calc(var(--cell) * 1.6 + 6px)}
+  .hdr span{width:var(--cell);text-align:center;font-size:9px;color:var(--txt-dim)}
+  .line{display:flex;align-items:center;gap:6px}
+  .line-label{width:calc(var(--cell) * 1.6);font-size:9.5px;letter-spacing:.12em;color:var(--txt-dim);text-align:right;
+              font-family:'Orbitron',sans-serif;font-weight:700;transition:color .2s}
+  .line-label.on{color:var(--nv-green)}
+  .row{display:grid;gap:2px}
+  .cell{width:var(--cell);height:var(--cellH);display:flex;align-items:center;justify-content:center;
+        font-size:11.5px;font-weight:600;background:var(--cell-bg);border:1px solid var(--grid-line);color:var(--cell-txt);
+        transition:background .18s,color .18s,border-color .18s,box-shadow .18s}
+  .cell.active{border-color:var(--nv-green-dim);color:var(--active-txt);background:var(--active-bg)}
+  .cell.src{background:var(--lane-bg);color:var(--nv-green-bright);border-color:var(--nv-green);box-shadow:0 0 10px var(--nv-green-glow)}
+  .cell.dst{background:var(--hit-bg);color:var(--hit-txt);border-color:var(--nv-green-bright);box-shadow:0 0 16px var(--nv-green-glow);
+            animation:pulse .5s ease-in-out infinite alternate}
+  .cell.dead{color:var(--dead-txt)}
+  .cell.written{background:var(--written-bg);color:var(--nv-green-bright);border-color:var(--nv-green);text-shadow:0 0 8px var(--nv-green-glow)}
+  .cell.result{background:var(--nv-green);color:var(--on-green);border-color:var(--nv-green-bright);box-shadow:0 0 18px var(--nv-green-glow);font-weight:700}
+  @keyframes pulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
+  .cell{position:relative}
+  .cell .tid{position:absolute;top:1px;right:3px;font-size:7px;font-weight:400;letter-spacing:0;color:var(--nv-green);opacity:.85}
+  .cell.flash{animation:flash .55s ease-out}
+  @keyframes flash{0%{background:var(--nv-green-bright);color:var(--on-green);transform:scale(1.12)}100%{}}
+
+  .threads{display:flex;gap:16px;align-items:flex-start}
+  .thr{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .thr-id{font-size:9px;color:var(--txt-dim);letter-spacing:.15em;font-family:'Orbitron',sans-serif;font-weight:700;transition:color .2s}
+  .thr.on .thr-id{color:var(--nv-green)}
+  .cellwrap{position:relative}
+  .cell.big{width:78px;height:42px;font-family:'Orbitron',sans-serif;font-size:17px;font-weight:700}
+  .delta{position:absolute;top:-11px;right:-12px;font-size:10px;font-weight:700;padding:1px 6px;background:var(--nv-green);color:var(--on-green);
+         border:1px solid var(--nv-green-bright);box-shadow:0 0 10px var(--nv-green-glow);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none}
+  .delta.on{opacity:1;transform:none}
+  .trace{font-size:10px;color:var(--txt-dim);min-height:15px;max-width:150px;text-align:center;letter-spacing:.02em;line-height:1.4}
+  .trace b{color:var(--nv-green-bright);font-weight:600}
+  .trace.stale{color:var(--dead-txt)}
+
+  .flyer{position:fixed;z-index:50;pointer-events:none;display:flex;align-items:center;justify-content:center;
+         font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--on-green);background:var(--nv-green);
+         border:1px solid var(--nv-green-bright);border-radius:2px;box-shadow:0 0 14px var(--nv-green-glow);padding:2px 6px;
+         transition-property:transform,opacity;transition-timing-function:cubic-bezier(.25,.7,.35,1);will-change:transform}
+
+  .code-panel{border:1px solid var(--panel-edge);background:var(--panel);position:relative;width:520px;max-width:94vw;box-shadow:inset 0 0 40px rgba(118,185,0,.04)}
+  .code-panel::before{content:"";position:absolute;inset:5px;border:1px dashed var(--grid-line);pointer-events:none}
+  .code-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px}
+  .code-title{font-size:9.5px;letter-spacing:.3em;color:var(--nv-green);text-transform:uppercase}
+  .code-file{font-size:10px;color:var(--txt-dim);letter-spacing:.1em}
+  pre.code{padding:6px 0 14px;overflow-x:auto;font-size:11.5px;line-height:1.6}
+  .cl{display:block;padding:0 16px 0 44px;position:relative;white-space:pre;transition:background .2s}
+  .cl::before{content:attr(data-n);position:absolute;left:0;width:34px;text-align:right;color:var(--ln);font-size:10px}
+  .cl.hl{background:linear-gradient(90deg, rgba(118,185,0,.16), rgba(118,185,0,.03));box-shadow:inset 3px 0 0 var(--nv-green)}
+  .cl.hl::before{color:var(--nv-green)}
+  .kw{color:var(--nv-green-bright);font-weight:600}.ty{color:var(--nv-green)}.fn{color:var(--c-fn)}.num{color:var(--c-num)}.op{color:var(--c-op)}.cm{color:var(--c-cm);font-style:italic}
+  .code-note{padding:0 16px 12px;font-size:10px;color:var(--txt-dim);letter-spacing:.06em}
+  .code-note a{color:var(--nv-green);text-decoration:none;border-bottom:1px dotted var(--nv-green-dim)}
+  .code-note a:hover{color:var(--nv-green-bright)}
+
+  .status{margin-top:22px;min-height:20px;font-size:12.5px;letter-spacing:.04em;color:var(--nv-green-bright);text-align:center}
+  .status .k{color:var(--txt-dim)}
+  .formula{margin-top:10px;min-height:38px;width:min(760px,94vw);border:1px solid var(--panel-edge);background:var(--panel);padding:9px 16px;text-align:center;
+           font-size:clamp(11px,2.6vw,14px);letter-spacing:.03em;color:var(--txt-dim);clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+  .formula .c-name{color:var(--title);font-weight:700}
+  .formula .a-val{color:var(--nv-green-bright);font-weight:700}
+  .formula .b-val{color:var(--c-fn);font-weight:700}
+  .formula .res{color:var(--nv-green-bright);font-weight:700;text-shadow:0 0 10px var(--nv-green-glow)}
+  .progress{width:min(560px,90vw);height:4px;background:var(--panel-edge);margin:14px auto 0;position:relative;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--nv-green-dim),var(--nv-green),var(--nv-green-bright));width:0%;transition:width .2s;box-shadow:0 0 12px var(--nv-green-glow)}
+
+  .controls{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+  button,select{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:10px 20px;cursor:pointer;
+         background:transparent;color:var(--nv-green);border:1px solid var(--nv-green-dim);clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:all .18s}
+  select{padding:9px 24px 9px 16px;font-size:10px}
+  select option{background:var(--panel);color:var(--txt)}
+  button:hover,select:hover{background:rgba(118,185,0,.12);border-color:var(--nv-green)}
+  button:focus-visible,select:focus-visible{outline:2px solid var(--nv-green-bright);outline-offset:2px}
+  button.primary{background:var(--nv-green);color:var(--on-green);border-color:var(--nv-green);box-shadow:0 0 16px var(--nv-green-glow)}
+  button.primary:hover{filter:brightness(1.12)}
+  button.toggled{background:rgba(118,185,0,.18);border-color:var(--nv-green);color:var(--nv-green-bright)}
+  .speed{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--txt-dim);letter-spacing:.15em}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:120px;height:3px;background:var(--panel-edge);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;background:var(--nv-green);cursor:pointer;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--nv-green);border:none;cursor:pointer}
+
+  @media (max-width:1220px){.code-panel{width:min(680px,94vw)}}
+  @media (max-width:760px){:root{--cell:32px;--cellH:22px}.cell{font-size:9px}.cell.big{width:60px;height:34px;font-size:13px}.threads{gap:8px}.trace{max-width:80px;font-size:9px}.panel{padding:10px}.flyer{font-size:10px}pre.code{font-size:10.5px}.line-label{font-size:8px}}
+  @media (prefers-reduced-motion:reduce){.cell.dst{animation:none}.flyer{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Mean <span class="accent">&amp; Variance</span></h1>
+  <div class="sub" id="subtitle">one block per row → strided loop → block_reduce_sum</div>
+</header>
+
+<div class="pipeline" id="pipeline">
+  <div class="phase" data-p="launch">Launch Grid</div>
+  <div class="phase" data-p="load">Strided Loop</div>
+  <div class="phase" data-p="reduce">block_reduce_sum</div>
+  <div class="phase" data-p="write">Thread 0 Writes</div>
+  <div class="phase" data-p="others">All Blocks</div>
+</div>
+
+<div class="main">
+  <div class="stage">
+    <div class="panel">
+      <div class="panel-title">Global Memory · <b>input</b>[N][C]</div>
+      <div class="panel-sub" id="inputSub">N = 6 · C = 8 · one block per row</div>
+      <div class="hdr" id="colHdr"></div>
+      <div id="matrix"></div>
+    </div>
+
+    <div class="panel" id="meanPanel">
+      <div class="panel-title">Global Memory · <b>mean</b>[] · from the previous kernel</div>
+      <div class="panel-sub" id="meanSub">computed by row_mean&lt;&lt;&lt;N, threads&gt;&gt;&gt; before this launch</div>
+      <div class="hdr" id="meanHdr"></div>
+      <div class="line"><div class="line-label" id="meanLbl">MEAN</div><div class="row" id="meanRow"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Registers · <b id="regBlk">block 0</b> · one <b>sum</b> per thread</div>
+      <div class="panel-sub" id="regSub">4 threads share row 0 · thread t reads col t, t + 4, …</div>
+      <div class="threads" id="threads"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title" id="outTitle">Global Memory · <b>mean</b>[N]</div>
+      <div class="panel-sub" id="outSub">mean[row] = sum / C</div>
+      <div class="hdr" id="outHdr"></div>
+      <div class="line"><div class="line-label" id="outLbl">OUT</div><div class="row" id="outRow"></div></div>
+    </div>
+  </div>
+
+  <div class="code-panel" id="codePanel">
+    <div class="code-head"><span class="code-title">Kernel Source</span><span class="code-file" id="codeFile">layer_norm.cu</span></div>
+    <pre class="code" id="codeBox"></pre>
+    <div class="code-note">block_reduce_sum is the warp-shuffle + shared-memory reduction from the <a href="block-reduce-animation.html">Block Reduce animation</a>.</div>
+  </div>
+</div>
+
+<div class="status" id="status">Press <b style="color:var(--nv-green)">RUN</b> to launch the kernel</div>
+<div class="formula" id="formula">waiting for kernel launch</div>
+<div class="progress"><div class="progress-fill" id="progress"></div></div>
+
+<div class="controls">
+  <button class="primary" id="btnPlay">▶ Run</button>
+  <button id="btnBack">‹ Prev</button>
+  <button id="btnStep">Next ›</button>
+  <button id="btnReset">Reset</button>
+  <select id="selAxis" aria-label="reduction axis"><option value="row" selected>Row-wise</option><option value="col">Column-wise</option></select>
+  <select id="selOp" aria-label="operation"><option value="mean" selected>Mean</option><option value="var">Variance</option></select>
+  <select id="selBlock" aria-label="block to follow"></select>
+  <button id="btnCode" class="toggled">Code: On</button>
+  <button id="btnTheme">○ Light</button>
+  <div class="speed"><span>CLK</span><input type="range" id="speed" min="1" max="10" value="6"></div>
+</div>
+
+<script>
+(() => {
+  // ---------- config ----------
+  const N = 6, C = 8, T = 4;          // matrix shape, threads per block (small so the strided loop is visible)
+  let axis = 'row', op = 'mean';
+  // hand-picked so every row mean and column mean is an integer (values 1..9)
+  const X = [[4,2,1,3,4,3,4,3],[1,7,2,3,8,2,5,4],[4,6,3,6,6,6,4,5],[5,5,6,6,8,3,9,6],[4,8,1,5,7,4,7,4],[6,8,5,7,9,6,7,8]];
+  const $ = id => document.getElementById(id);
+  const fmt = v => v == null ? '·' : (Number.isInteger(v) ? String(v) : (+v.toFixed(2)).toString());
+
+  const B   = () => axis === 'row' ? N : C;               // number of blocks
+  const LEN = () => axis === 'row' ? C : N;               // elements reduced per block
+  const ITERS = () => Math.ceil(LEN() / T);
+  const elem = (b, k) => axis === 'row' ? X[b][k] : X[k][b];       // k-th element handled by block b
+  const meanOf = b => { let s = 0; for (let k = 0; k < LEN(); k++) s += elem(b, k); return s / LEN(); };
+  const term = (b, k) => op === 'mean' ? elem(b, k) : (elem(b, k) - meanOf(b)) ** 2;
+  const kName = () => (axis === 'row' ? 'row_' : 'column_') + (op === 'mean' ? 'mean' : 'var');
+  const outName = () => op === 'mean' ? 'mean' : 'var';
+  const idxName = () => axis === 'row' ? 'row' : 'col';   // blockIdx.x meaning
+  const lpName  = () => axis === 'row' ? 'col' : 'row';   // loop variable
+  const lim     = () => axis === 'row' ? 'C' : 'N';       // loop bound
+
+  // ---------- source code panel ----------
+  const K = s => `<span class="kw">${s}</span>`, TY = s => `<span class="ty">${s}</span>`, F = s => `<span class="fn">${s}</span>`,
+        NUM = s => `<span class="num">${s}</span>`, CM = s => `<span class="cm">${s}</span>`;
+  const codeBox = $('codeBox');
+  let lineEls = [];
+  function buildCode() {
+    const bi = idxName(), lv = lpName(), o = outName(), L = lim();
+    const meanArg = op === 'var' ? `${K('const')} ${TY('float')}* mean, ` : '';
+    const idxExpr = 'row * C + col';
+    const lines = [
+      ['launch', CM(`// ${kName()}&lt;&lt;&lt;${axis === 'row' ? 'N' : 'C'}, threads&gt;&gt;&gt;(...)   one block per ${bi}`)],
+      ['sig',    `${K('__global__')} ${TY('void')} ${F(kName())}(${K('const')} ${TY('float')}* input, ${meanArg}`],
+      ['sig',    `${' '.repeat(kName().length + 17)}${TY('float')}* ${o}, ${TY('int')} N, ${TY('int')} C) {`],
+      ['idx',    `    ${TY('int')} ${bi} = blockIdx.x;`],
+      ['init',   `    ${TY('float')} sum = ${NUM('0.0f')};`],
+      ['for',    `    ${K('for')} (${TY('int')} ${lv} = threadIdx.x; ${lv} < ${L}; ${lv} += blockDim.x) {`],
+    ];
+    if (op === 'mean') lines.push(['body', `        sum += input[${idxExpr}];`]);
+    else { lines.push(['body', `        ${TY('float')} d = input[${idxExpr}] - mean[${bi}];`]); lines.push(['body', `        sum += d * d;`]); }
+    lines.push(
+      ['',       `    }`],
+      ['reduce', `    sum = ${F('block_reduce_sum')}(sum);       ${CM('// ' + T + ' partials → 1')}`],
+      ['write',  `    ${K('if')} (threadIdx.x == ${NUM('0')}) {`],
+      ['write',  `        ${o}[${bi}] = sum / ${L};`],
+      ['write',  `    }`],
+      ['',       `}`],
+    );
+    codeBox.innerHTML = '';
+    lineEls = lines.map(([tag, html], n) => {
+      const el = document.createElement('span'); el.className = 'cl'; el.dataset.n = n + 1;
+      if (tag) el.dataset.tag = tag; el.innerHTML = html || ' '; codeBox.appendChild(el); return el;
+    });
+    $('codeFile').textContent = axis === 'row' ? 'layer_norm.cu' : 'batch_normalization.cu';
+  }
+  const highlightCode = tags => lineEls.forEach(el => el.classList.toggle('hl', !!el.dataset.tag && tags.includes(el.dataset.tag)));
+
+  // ---------- DOM grids ----------
+  let fb = 0;                                   // the block we follow
+  let gX = [], gM = [], gO = [], rowLbl = [], thr = [];   // thr[t] = {el, cell, delta, trace}
+  const mkHdr = (el, n, labels) => { el.innerHTML = ''; el.style.gridTemplateColumns = `repeat(${n}, var(--cell))`; for (let i = 0; i < n; i++) { const s = document.createElement('span'); s.textContent = labels ? labels[i] : i; el.appendChild(s); } };
+  const mkRow = (el, n) => { el.innerHTML = ''; el.style.gridTemplateColumns = `repeat(${n}, var(--cell))`; const a = []; for (let i = 0; i < n; i++) { const c = document.createElement('div'); c.className = 'cell'; el.appendChild(c); a.push(c); } return a; };
+  function buildGrids() {
+    const b = B(), bi = idxName(), len = LEN();
+    $('subtitle').textContent = `one block per ${bi} → strided loop → block_reduce_sum`;
+    mkHdr($('colHdr'), C, Array.from({ length: C }, (_, j) => 'c' + j));
+    const m = $('matrix'); m.innerHTML = ''; rowLbl = []; gX = [];
+    for (let i = 0; i < N; i++) {
+      const line = document.createElement('div'); line.className = 'line'; if (i) line.style.marginTop = '2px';
+      const lbl = document.createElement('div'); lbl.className = 'line-label'; lbl.textContent = 'ROW ' + i; rowLbl.push(lbl);
+      const grid = document.createElement('div'); grid.className = 'row'; gX[i] = mkRow(grid, C);
+      line.appendChild(lbl); line.appendChild(grid); m.appendChild(line);
+    }
+    $('inputSub').textContent = `N = ${N} · C = ${C} · one block per ${bi}`;
+    $('meanPanel').style.display = op === 'var' ? '' : 'none';
+    $('meanSub').innerHTML = `computed by ${axis === 'row' ? 'row_mean' : 'column_mean'}&lt;&lt;&lt;${axis === 'row' ? 'N' : 'C'}, threads&gt;&gt;&gt; before this launch`;
+    mkHdr($('meanHdr'), b, Array.from({ length: b }, (_, i) => bi + i));
+    gM = mkRow($('meanRow'), b);
+    // threads of the followed block
+    $('regBlk').textContent = `block ${fb}`;
+    $('regSub').textContent = `${T} threads share ${bi} ${fb} · thread t reads ${lpName()} t, t + ${T}, …`;
+    const th = $('threads'); th.innerHTML = ''; thr = [];
+    for (let t = 0; t < T; t++) {
+      const el = document.createElement('div'); el.className = 'thr';
+      const id = document.createElement('div'); id.className = 'thr-id'; id.textContent = 'tid ' + t;
+      const wrap = document.createElement('div'); wrap.className = 'cellwrap';
+      const cell = document.createElement('div'); cell.className = 'cell big';
+      const delta = document.createElement('div'); delta.className = 'delta';
+      const trace = document.createElement('div'); trace.className = 'trace';
+      wrap.appendChild(cell); wrap.appendChild(delta); el.appendChild(id); el.appendChild(wrap); el.appendChild(trace); th.appendChild(el);
+      thr.push({ el, cell, delta, trace });
+    }
+    $('outTitle').innerHTML = `Global Memory · <b>${outName()}</b>[${axis === 'row' ? 'N' : 'C'}]`;
+    $('outSub').textContent = `${outName()}[${bi}] = sum / ${lim()}`;
+    mkHdr($('outHdr'), b, Array.from({ length: b }, (_, i) => bi + i));
+    gO = mkRow($('outRow'), b);
+    const sb = $('selBlock'); sb.innerHTML = '';
+    for (let i = 0; i < b; i++) { const o = document.createElement('option'); o.value = i; o.textContent = `block ${i} · ${bi} ${i}`; if (i === fb) o.selected = true; sb.appendChild(o); }
+  }
+
+  // ---------- step script + simulation ----------
+  let steps = [];
+  function buildSteps() {
+    steps = [{ t: 'launch' }];
+    for (let k = 0; k < ITERS(); k++) steps.push({ t: 'load', k });
+    steps.push({ t: 'reduce' });
+    steps.push({ t: 'write' });
+    steps.push({ t: 'others' });
+  }
+  const finalOf = b => { let s = 0; for (let k = 0; k < LEN(); k++) s += term(b, k); return s / LEN(); };
+  // replay simulation of the followed block up to (and including) step index upTo → state
+  function simulate(upTo) {
+    const b = B(), len = LEN();
+    const acc = Array(T).fill(null);                 // per-thread running sum
+    const terms = Array.from({ length: T }, () => []); // what each thread has added so far
+    const out = Array(b).fill(null);
+    let consumed = 0;
+    for (let s = 0; s <= upTo; s++) {
+      const st = steps[s];
+      if (st.t === 'launch') acc.fill(0);
+      else if (st.t === 'load') { for (let t = 0; t < T; t++) { const k = st.k * T + t; if (k < len) { acc[t] += term(fb, k); terms[t].push(term(fb, k)); } } consumed = Math.min(len, (st.k + 1) * T); }
+      else if (st.t === 'reduce') { terms[0] = acc.slice(); acc[0] = acc.reduce((x, y) => x + y, 0); for (let t = 1; t < T; t++) acc[t] = null; }
+      else if (st.t === 'write') out[fb] = acc[0] / len;
+      else if (st.t === 'others') for (let i = 0; i < b; i++) out[i] = finalOf(i);
+    }
+    return { acc, terms, out, consumed };
+  }
+
+  // ---------- state ----------
+  let idx = -1, playing = false, timer = null, renderSeq = 0;
+  const statusEl = $('status'), formulaEl = $('formula'), progEl = $('progress'), speedEl = $('speed');
+  const phases = [...document.querySelectorAll('.phase')];
+  const delay = () => 1500 - speedEl.value * 130;
+  const flyTime = () => Math.min(480, delay() * 0.72);
+  const cellOf = (b, k) => axis === 'row' ? gX[b][k] : gX[k][b];
+  const dTerm = (b, k) => { const x = elem(b, k), m = meanOf(b); return `(${x} − ${fmt(m)})² = ${fmt((x - m) ** 2)}`; };
+
+  function render() {
+    renderSeq++;
+    const b = B(), len = LEN(), bi = idxName();
+    const wipe = c => { c.classList.remove('active','src','dst','dead','written','result','flash'); c.querySelector('.tid')?.remove(); };
+    gX.forEach(r => r.forEach(wipe)); gM.forEach(wipe); gO.forEach(wipe); thr.forEach(t => { wipe(t.cell); t.el.classList.remove('on'); t.delta.classList.remove('on'); t.trace.classList.remove('stale'); });
+    rowLbl.forEach(l => l.classList.remove('on')); $('meanLbl').classList.remove('on'); $('outLbl').classList.remove('on');
+    phases.forEach(p => p.classList.remove('active'));
+
+    const st = simulate(idx), cur = idx >= 0 ? steps[idx] : null;
+    for (let i = 0; i < N; i++) for (let j = 0; j < C; j++) gX[i][j].textContent = X[i][j];
+    for (let i = 0; i < b; i++) { gM[i].textContent = fmt(meanOf(i)); gM[i].classList.add('written'); }
+    for (let t = 0; t < T; t++) { thr[t].cell.textContent = fmt(st.acc[t]); thr[t].trace.innerHTML = st.terms[t].length ? st.terms[t].map(fmt).join(' + ') : '·'; }
+    for (let i = 0; i < b; i++) gO[i].textContent = fmt(st.out[i]);
+
+    // matrix: everything outside the followed block is dimmed; consumed elements carry the id of the thread that read them
+    for (let i = 0; i < N; i++) for (let j = 0; j < C; j++) { const k = axis === 'row' ? j : i, blk = axis === 'row' ? i : j; if (blk !== fb && !(cur && cur.t === 'others')) gX[i][j].classList.add('dead'); }
+    for (let k = 0; k < st.consumed; k++) { const c = cellOf(fb, k); c.classList.add('active'); const tag = document.createElement('span'); tag.className = 'tid'; tag.textContent = 't' + (k % T); c.appendChild(tag); }
+    if (axis === 'row') rowLbl[fb].classList.add('on');
+
+    if (!cur) {
+      statusEl.innerHTML = 'Press <b style="color:var(--nv-green)">RUN</b> to launch the kernel';
+      formulaEl.innerHTML = `waiting for kernel launch · ${kName()} over a ${N}×${C} matrix · ${b} blocks, one per ${bi} · following <span class="c-name">block ${fb}</span>`;
+      progEl.style.width = '0%'; highlightCode(['sig']);
+      return;
+    }
+    const ph = phases.find(p => p.dataset.p === cur.t); if (ph) ph.classList.add('active');
+    const stepTag = `<span class="k">· step ${idx+1}/${steps.length}</span>`;
+    const prev = simulate(idx - 1);
+    const outNm = outName();
+
+    if (cur.t === 'launch') {
+      thr.forEach(t => { t.el.classList.add('on'); t.cell.classList.add('dst'); });
+      statusEl.innerHTML = `${kName()}&lt;&lt;&lt;${b}, ${T}&gt;&gt;&gt; · ${b} blocks, one per ${bi} · we follow block ${fb} → ${bi} ${fb} · every thread starts with sum = 0 ${stepTag}`;
+      formulaEl.innerHTML = `<span class="c-name">${bi} = blockIdx.x = ${fb}</span> &nbsp;·&nbsp; ${T} threads share the ${len} elements of ${bi} ${fb} &nbsp;·&nbsp; each keeps its own <span class="a-val">sum</span> in a register`;
+      highlightCode(['launch','idx','init']);
+    } else if (cur.t === 'load') {
+      const k0 = cur.k * T; const parts = [];
+      if (op === 'var') { $('meanLbl').classList.add('on'); gM[fb].classList.add('src'); }
+      for (let t = 0; t < T; t++) {
+        const k = k0 + t, T_ = thr[t];
+        if (k < len) {
+          const c = cellOf(fb, k); c.classList.remove('active'); c.classList.add('src'); c.querySelector('.tid').textContent = 't' + t;
+          T_.el.classList.add('on'); T_.cell.classList.add('dst'); T_.delta.textContent = '+' + fmt(term(fb, k)); T_.delta.classList.add('on');
+          if (axis === 'col') rowLbl[k].classList.add('on');
+          const a = prev.acc[t], r = st.acc[t];
+          parts.push(op === 'mean'
+            ? `<span class="c-name">t${t}:</span> <span class="a-val">${fmt(a)}</span> + <span class="b-val">${elem(fb, k)}</span> = <span class="res">${fmt(r)}</span>`
+            : `<span class="c-name">t${t}:</span> <span class="a-val">${fmt(a)}</span> + <span class="b-val">${dTerm(fb, k)}</span> → <span class="res">${fmt(r)}</span>`);
+        } else { T_.cell.classList.add('dead'); T_.trace.classList.add('stale'); }
+      }
+      const idle = T - parts.length;
+      const idleNote = idle ? ` · t${T - idle}${idle > 1 ? `..t${T-1}` : ''}: ${lpName()} = ${k0 + T - idle}${idle > 1 ? '+' : ''} ≥ ${lim()} → loop ends, idle` : '';
+      const what = op === 'mean' ? `sum += input[row * C + col]` : `d = input[row * C + col] − mean[${bi}] · sum += d * d`;
+      statusEl.innerHTML = `strided loop · iteration ${cur.k + 1}/${ITERS()} · thread t reads ${lpName()} = ${k0} + t · ${what}${idleNote} ${stepTag}`;
+      formulaEl.innerHTML = parts.join(' &nbsp;·&nbsp; ');
+      highlightCode(['for','body']);
+    } else if (cur.t === 'reduce') {
+      thr.forEach((t, i) => { t.el.classList.add('on'); t.cell.classList.add(i === 0 ? 'dst' : 'src'); if (i) t.trace.classList.add('stale'); });
+      statusEl.innerHTML = `block_reduce_sum · the ${T} per-thread partial sums are folded into thread 0 (warp shuffle + shared memory) ${stepTag}`;
+      formulaEl.innerHTML = `<span class="c-name">block ${fb}:</span> sum = block_reduce_sum(sum) &nbsp;=&nbsp; <span class="a-val">${prev.acc.map(fmt).join(' + ')}</span> = <span class="res">${fmt(st.acc[0])}</span> &nbsp;·&nbsp; other threads' sum is now stale`;
+      highlightCode(['reduce']);
+    } else if (cur.t === 'write') {
+      thr[0].el.classList.add('on'); thr[0].cell.classList.add('src'); for (let t = 1; t < T; t++) { thr[t].cell.classList.add('dead'); thr[t].trace.classList.add('stale'); }
+      $('outLbl').classList.add('on'); gO[fb].classList.add('result');
+      statusEl.innerHTML = `thread 0 writes ${outNm}[${fb}] · one global-memory store per block ${stepTag}`;
+      formulaEl.innerHTML = `<span class="c-name">block ${fb}, thread 0:</span> ${outNm}[${fb}] = sum / ${lim()} &nbsp;=&nbsp; <span class="a-val">${fmt(prev.acc[0])}</span> / <span class="b-val">${len}</span> = <span class="res">${fmt(st.out[fb])}</span>`;
+      highlightCode(['write']);
+    } else if (cur.t === 'others') {
+      thr[0].cell.classList.add('active'); for (let t = 1; t < T; t++) { thr[t].cell.classList.add('dead'); thr[t].trace.classList.add('stale'); }
+      $('outLbl').classList.add('on'); for (let i = 0; i < b; i++) gO[i].classList.add(i === fb ? 'result' : 'written');
+      if (axis === 'row') rowLbl.forEach(l => l.classList.add('on'));
+      statusEl.innerHTML = `the other ${b - 1} blocks ran the same loop in parallel, each on its own ${bi} · ${outNm}[] complete ✓ ${stepTag}`;
+      formulaEl.innerHTML = `<span class="c-name">${outNm}[0..${b-1}]</span> = [ ${st.out.map((v, i) => i === fb ? `<span class="res">${fmt(v)}</span>` : `<span class="a-val">${fmt(v)}</span>`).join(', ')} ] &nbsp;·&nbsp; pick another block in the dropdown to follow it`;
+      highlightCode(['launch']);
+    }
+    progEl.style.width = ((idx+1) / steps.length * 100) + '%';
+  }
+
+  // ---------- flying numbers ----------
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fly(fromEl, toEl, text, wait) {
+    if (reduceMotion) return;
+    const f = fromEl.getBoundingClientRect(), t = toEl.getBoundingClientRect();
+    const el = document.createElement('div'); el.className = 'flyer'; el.textContent = text;
+    el.style.left = f.left + 'px'; el.style.top = f.top + 'px'; el.style.width = f.width + 'px'; el.style.height = f.height + 'px';
+    el.style.transitionDuration = flyTime() + 'ms'; el.style.transitionDelay = (wait || 0) + 'ms';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.transform = `translate(${t.left - f.left}px, ${t.top - f.top}px) scale(.7)`; el.style.opacity = '0';
+    }));
+    setTimeout(() => el.remove(), flyTime() + (wait || 0) + 60);
+  }
+  // show the old value in a cell until the flyer lands, then swap to the new value with a flash
+  function landing(cell, oldText, newText, wait) {
+    if (reduceMotion) return;
+    const seq = renderSeq; cell.textContent = oldText;
+    setTimeout(() => { if (seq !== renderSeq) return; cell.textContent = newText; cell.classList.remove('flash'); void cell.offsetWidth; cell.classList.add('flash'); }, flyTime() + (wait || 0) - 40);
+  }
+  function animateStep() {
+    const cur = steps[idx], prev = simulate(idx - 1), st = simulate(idx), b = B(), len = LEN();
+    if (cur.t === 'load') {
+      for (let t = 0; t < T; t++) { const k = cur.k * T + t; if (k < len) { fly(cellOf(fb, k), thr[t].cell, elem(fb, k), t * 90); landing(thr[t].cell, fmt(prev.acc[t]), fmt(st.acc[t]), t * 90); } }
+    } else if (cur.t === 'reduce') {
+      for (let t = 1; t < T; t++) fly(thr[t].cell, thr[0].cell, fmt(prev.acc[t]), (t - 1) * 90);
+      landing(thr[0].cell, fmt(prev.acc[0]), fmt(st.acc[0]), (T - 2) * 90);
+    } else if (cur.t === 'write') {
+      fly(thr[0].cell, gO[fb], fmt(prev.acc[0]), 0); landing(gO[fb], '·', fmt(st.out[fb]), 0);
+    } else if (cur.t === 'others') {
+      for (let i = 0; i < b; i++) if (i !== fb) landing(gO[i], '·', fmt(st.out[i]), i * 60);
+    }
+  }
+
+  // ---------- controls ----------
+  function step(dir, animate) {
+    const n = idx + dir; if (n < -1 || n >= steps.length) { if (n >= steps.length) stop(); return; }
+    idx = n; render(); if (animate && dir > 0 && idx >= 0) animateStep();
+  }
+  function tick() { if (idx >= steps.length - 1) { stop(); return; } step(1, true); if (idx >= steps.length - 1) stop(); }
+  function start() { playing = true; $('btnPlay').textContent = '❚❚ Pause'; if (idx >= steps.length - 1) { idx = -1; render(); } tick(); timer = setInterval(tick, delay()); }
+  function stop()  { playing = false; clearInterval(timer); $('btnPlay').textContent = '▶ Run'; }
+  function reset() { stop(); idx = -1; if (fb >= B()) fb = 0; buildSteps(); buildGrids(); buildCode(); render(); }
+
+  $('btnPlay').onclick  = () => playing ? stop() : start();
+  $('btnStep').onclick  = () => { stop(); step(1, true); };
+  $('btnBack').onclick  = () => { stop(); step(-1, false); };
+  $('btnReset').onclick = reset;
+  $('selAxis').onchange = e => { axis = e.target.value; reset(); };
+  $('selOp').onchange   = e => { op = e.target.value; reset(); };
+  $('selBlock').onchange = e => { fb = +e.target.value; reset(); };
+  speedEl.oninput = () => { if (playing) { clearInterval(timer); timer = setInterval(tick, delay()); } };
+  $('btnCode').onclick = e => { const p = $('codePanel'); const on = p.style.display !== 'none'; p.style.display = on ? 'none' : ''; e.target.textContent = on ? 'Code: Off' : 'Code: On'; e.target.classList.toggle('toggled', !on); };
+  $('btnTheme').onclick = e => { const light = document.body.classList.toggle('light'); e.target.textContent = light ? '● Dark' : '○ Light'; };
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+    if (e.key === ' ') { e.preventDefault(); playing ? stop() : start(); }
+    else if (e.key === 'ArrowRight') { stop(); step(1, true); }
+    else if (e.key === 'ArrowLeft') { stop(); step(-1, false); }
+    else if (e.key.toLowerCase() === 'r') reset();
+  });
+
+  reset();
+})();
+</script>
+</body>
+</html>
