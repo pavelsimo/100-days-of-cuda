@@ -572,3 +572,5 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   row_var<<<N, nthreads>>>(input, mean, var, N, C);
   layer_norm<<<grid, threads>>>(input, weight, bias, output, mean, var, N, C, eps);
   ```
+
+- if you're curious, here is the original paper for [Layer Normalization](https://arxiv.org/abs/1607.06450).
