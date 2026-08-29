@@ -574,3 +574,18 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ```
 
 - if you're curious, here is the original paper for [Layer Normalization](https://arxiv.org/abs/1607.06450).
+
+### Day 42
+
+- solved the LeetGPU Parallel Merge problem. this one was cool for me because i play around with the sequential version for several competitive programming problems in the past. the sequential algorithm is a classic two-pointer problem. you need to maintain one pointer for each list, put whichever number is smaller into a third array, and advance the corresponding pointer. the time complexity is `O(M + N)`. the issue is that this solution does not map very well to the CUDA world (a lot of threads!), since each step depends on the previous one, in case you're curious this is the sequential approach: https://www.geeksforgeeks.org/dsa/merge-two-sorted-arrays/
+
+- so the key insight to solve this problem is if you can figure out where each element will land in the output array, you can divide the task for each thread. is not too hard to see if each thread iterates until it find a suitable position for it's element this will be really expensive, but actually we don't need to do that, since both list are sorted we can use binary search to find where the element should land. see the image below for the complete explanation.
+
+- i tried two versions. the [first one](day42/parallel_merge.cu) uses two kernels, one for merging the elements in `A` and another for the elements in `B`. both kernels were almost identical, so in the [second version](day42/parallel_merge_2.cu) i combined them into a single kernel with `M + N` threads. the first `M` handle `A`, and the rest handle `B`. same idea, just one kernel launch instead of two.
+
+- in case you're wondering? `lower_bound` and `upper_bound` are two flavours of binary search. the links below have a really nice explanation. i use `lower_bound` for `A` and `upper_bound` for `B` so equal values don't try to write to the same output position.
+
+  - lower bound: https://www.geeksforgeeks.org/dsa/implement-lower-bound/
+  - upper bound: https://www.geeksforgeeks.org/dsa/implement-upper-bound/
+
+![Parallel Merge](images/parallel_merge.png)
