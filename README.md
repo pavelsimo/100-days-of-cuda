@@ -590,8 +590,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ![Parallel Merge](images/parallel_merge.png)
 
-Merge Path - A Visually Intuitive Approach to Parallel Merging
-https://arxiv.org/pdf/1406.2628
+- in case you're curious, there's an even better algorithm than the scatter-based approach: [Merge Path - A Visually Intuitive Approach to Parallel Merging](https://arxiv.org/pdf/1406.2628).
 
 ### Day 43
 
@@ -608,7 +607,7 @@ https://arxiv.org/pdf/1406.2628
   dK = dS^T @ Q
   ```
 
-- i wrote two versions. the first uses naive matmuls and recalculates `rowsum(P * dP)` for every element of `dS`. that means repeating the same reduction `N` times per row... not the must "ideal", quite slow in fact...
+- i wrote two versions. the [first](day43/softmax_attention_backward.cu) uses naive matmuls and recalculates `rowsum(P * dP)` for every element of `dS`. that means repeating the same reduction `N` times per row... not the must "ideal", quite slow in fact...
 
 - the [second version](day43/softmax_attention_backward_2.cu) calculates the sum once per row, stores it in `D`, and lets every `dS` thread reuse `D[i]`. it also replaces the naive matmul kernel with a tiled version. the runtime difference is pretty noticeable: the naive version took 791 ms, while the second took only 77 ms (LeetGPU perf. test). precomputing the row sum made the biggest difference.
 
