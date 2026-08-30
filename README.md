@@ -597,7 +597,7 @@ https://arxiv.org/pdf/1406.2628
 
 - solved the LeetGPU [Softmax Attention Backward](day43/softmax_attention_backward.cu) problem. after solving so many attention forward passes, it was finally time to go backwards :) so given the gradient of the output `dO`, the goal is to calculate the gradients for all three inputs: `dQ`, `dK`, and `dV`.
 
-- the math is not too bad, but there are a lot of matrix dimensions joggling, quite easy to mess up. i added comments with the output shape after every step, that helped a lot. here is the full backward pass:
+- the math is not too bad, but there's a lot of juggling with matrix dimensions, quite easy to mess up. i added comments with the output shape after every step, that helped a lot. here is the full backward pass:
 
   ```c
   P  = softmax(Q @ K^T / sqrt(d))
