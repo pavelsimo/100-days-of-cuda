@@ -577,7 +577,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 42
 
-- solved the LeetGPU Parallel Merge problem. this one was cool for me because i play around with the sequential version for several competitive programming problems in the past. the sequential algorithm is a classic two-pointer problem. you need to maintain one pointer for each list, put whichever number is smaller into a third array, and advance the corresponding pointer. the time complexity is `O(M + N)`. the issue is that this solution does not map very well to the CUDA world (a lot of threads!), since each step depends on the previous one, in case you're curious this is the sequential approach: https://www.geeksforgeeks.org/dsa/merge-two-sorted-arrays/
+- solved the LeetGPU Parallel Merge problem. i had seen the sequential version before in competitive programming, so it was fun to revisit it with CUDA. the usual approach uses two pointers, one for each sorted array. compare the current values, write the smaller one to the output, then move that pointer forward. simple, and `O(M + N)`, but very sequential: every step depends on the one before it. that is a bad fit for a GPU, where we want a lot of threads doing useful work at the same time. if you haven't seen the two-pointer version before, this explanation is pretty good: [Merge Two Sorted Arrays](https://www.geeksforgeeks.org/dsa/merge-two-sorted-arrays/).
 
 - so the key insight to solve this problem is if you can figure out where each element will land in the output array, you can divide the task for each thread. is not too hard to see if each thread iterates until it find a suitable position for it's element this will be really expensive, but actually we don't need to do that, since both list are sorted we can use binary search to find where the element should land. see the image below for the complete explanation.
 
@@ -589,3 +589,27 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   - upper bound: https://www.geeksforgeeks.org/dsa/implement-upper-bound/
 
 ![Parallel Merge](images/parallel_merge.png)
+
+Merge Path - A Visually Intuitive Approach to Parallel Merging
+https://arxiv.org/pdf/1406.2628
+
+### Day 43
+
+- solved the LeetGPU [Softmax Attention Backward](day43/softmax_attention_backward.cu) problem. after solving so many attention forward passes, it was finally time to go backwards :) so given the gradient of the output `dO`, the goal is to calculate the gradients for all three inputs: `dQ`, `dK`, and `dV`.
+
+- the math is not too bad, but there are a lot of matrix dimensions joggling, quite easy to mess up. i added comments with the output shape after every step, that helped a lot. here is the full backward pass:
+
+  ```c
+  P  = softmax(Q @ K^T / sqrt(d))
+  dV = P^T @ dO
+  dP = dO @ V^T
+  dS = P * (dP - rowsum(P * dP)) / sqrt(d)
+  dQ = dS @ K
+  dK = dS^T @ Q
+  ```
+
+- i wrote two versions. the first uses naive matmuls and recalculates `rowsum(P * dP)` for every element of `dS`. that means repeating the same reduction `N` times per row... not the must "ideal", quite slow in fact...
+
+- the [second version](day43/softmax_attention_backward_2.cu) calculates the sum once per row, stores it in `D`, and lets every `dS` thread reuse `D[i]`. it also replaces the naive matmul kernel with a tiled version. the runtime difference is pretty noticeable: the naive version took 791 ms, while the second took only 77 ms (LeetGPU perf. test). precomputing the row sum made the biggest difference.
+
+  ![Softmax Backward Attention](images/softmax_backward_attention.png)
