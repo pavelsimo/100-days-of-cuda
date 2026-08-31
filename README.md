@@ -612,3 +612,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - the [second version](day43/softmax_attention_backward_2.cu) calculates the sum once per row, stores it in `D`, and lets every `dS` thread reuse `D[i]`. it also replaces the naive matmul kernel with a tiled version. the runtime difference is pretty noticeable: the naive version took 791 ms, while the second took only 77 ms (LeetGPU perf. test). precomputing the row sum made the biggest difference.
 
   ![Softmax Backward Attention](images/softmax_backward_attention.png)
+
+### Day 44
+
+- solved the LeetGPU [Stream Compaction](day44/stream_compact.cu) problem. given a float array, the goal is to keep only the positive values and pack them together without any gaps while preserving their relative order.
+
+- turns out the solution is a variation of what we did for Prefix Sum on Day 13, but there is a trick (like always...). see the image below.
+
+- once you see the "trick", it should be clear what to do: mark every positive value with a `1`, run a prefix sum for that, then use `prefix_sums[i] - 1` as the position where that value lands in the output.
+
+![Stream Compaction](images/stream_compaction.png)
