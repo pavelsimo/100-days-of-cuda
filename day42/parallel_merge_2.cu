@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
 #include <cstdio>
 
-__device__ int lower_bound(const float *arr, float target, int N) {
+__device__ __forceinline__ int lower_bound(const float *arr, float target, int N) {
     int lo = 0;
     int hi = N - 1;
     int res = N;
@@ -17,7 +17,7 @@ __device__ int lower_bound(const float *arr, float target, int N) {
     return res;
 }
 
-__device__ int upper_bound(const float *arr, float target, int N) {
+__device__ __forceinline__ int upper_bound(const float *arr, float target, int N) {
     int lo = 0;
     int hi = N - 1;
     int res = N;
