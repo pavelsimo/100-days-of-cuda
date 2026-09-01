@@ -640,6 +640,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   }
   ```
 
-- if that still sounds a bit abstract, the image below might help. i put Linear Self-Attention next to regular Softmax Attention, so the big picture is a bit more clear:
+- personally i found all these matrix shapes much easier to follow visually. the image below puts Linear Self-Attention next to regular Softmax Attention, so you can get a better sense of the big picture:
 
   ![Linear Self-Attention Vs. Softmax Attention](images/linear_self_attention_vs_softmax_attention.png)
