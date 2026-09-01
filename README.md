@@ -622,3 +622,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - once you see the "trick", it should be clear what to do: create an array and mark every positive value with a `1`, run a prefix sum on that array, then use `prefix_sums[i] - 1` as the position where each positive value lands in the output. see the image below.
 
 ![Stream Compaction](images/stream_compaction.png)
+
+### Day 45
+
+- solved the LeetGPU [Linear Self-Attention](day45/linear_self_attention.cu) problem. standard attention compares every token with every other token, building an `M x M` score matrix. that makes both time and memory grow quadratically with the sequence length, which can become a bottleneck for long sequences. for more details, check out the paper [Transformers are RNNs: Fast Autoregressive Transformers with Linear Attention](https://arxiv.org/pdf/2006.16236).
+
+- a cool thing about LSA is that it replaces softmax with a feature map, in this case `phi(x) = ELU(x) + 1`. without softmax in the middle, we can use the associative property of matrix multiplication to calculate `phi(K)^T @ V` first and completely avoid materializing the huge `M x M` attention matrix.
+
+- the CUDA part pretty much follows the formula. what confused me at first was the final division: we have an `M x d` matrix on top and an `M x 1` vector at the bottom. i'm used to the `sqrt(d)` scalar in vanilla attention, so this looked a bit weird. the image below shows both versions side by side:
+
+  ![Linear Self-Attention Vs. Softmax Attention](images/linear_self_attention_vs_softmax_attention.png)
