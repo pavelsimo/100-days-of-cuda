@@ -625,9 +625,9 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 45
 
-- solved the LeetGPU [Linear Self-Attention](day45/linear_self_attention.cu) problem. softmax attention compares every token with every other token, building an `M x M` score matrix. that makes both time and memory grow quadratically with the sequence length, which can become a bottleneck for long sequences. 
+- solved the LeetGPU [Linear Self-Attention](day45/linear_self_attention.cu) problem. "traditional" softmax attention compares every token with every other token, building an `M x M` score matrix. that makes both time and memory grow quadratically with the sequence length, which can become a bottleneck for long sequences. 
 
-- Linear Self-Attention on the otherhand replaces softmax with a feature map, in this case `phi(x) = ELU(x) + 1`. without softmax in the middle, we can use the associative property of matrix multiplication to calculate `phi(K)^T @ V` first and completely avoid materializing the huge `M x M` attention matrix. for more details check out the paper [Transformers are RNNs: Fast Autoregressive Transformers with Linear Attention](https://arxiv.org/pdf/2006.16236).
+- linear self-attention on the otherhand replaces softmax with a feature map, in this case `phi(x) = ELU(x) + 1`. without softmax in the middle, we can use the associative property of matrix multiplication to calculate `phi(K)^T @ V` first and completely avoid materializing the huge `M x M` attention matrix. for more details check out the paper [Transformers are RNNs: Fast Autoregressive Transformers with Linear Attention](https://arxiv.org/pdf/2006.16236).
 
 - my solution pretty much follows the formula. what confused me at first was the final division: we have an `M x d` matrix on top and an `M x 1` vector at the bottom. i'm used to the `sqrt(d)` scalar in vanilla attention, so this looked a bit weird. regardless once is translated to code that part is quite simple:
 
@@ -640,6 +640,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   }
   ```
 
-- personally i found all these matrix shapes much easier to follow visually. the image below puts Linear Self-Attention next to regular Softmax Attention, so you can get a better sense of the big picture:
+- personally i found all these matrix shapes much easier to follow visually. the image below puts linear self-Attention next to regular softmax attention, so you can get a better sense of the big picture:
 
   ![Linear Self-Attention Vs. Softmax Attention](images/linear_self_attention_vs_softmax_attention.png)
