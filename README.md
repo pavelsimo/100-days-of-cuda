@@ -648,15 +648,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU Sparse Matrix-Vector Multiplication problem in two ways.
 
-- [the first](day46/sparse_matrix_vec_mult.cu) is a naive approach. each thread handles one row and loops through every column, zeros included. it works in LeetGPU because the M and N limits are pretty low:
-
-  ```c
-  float sum =  0;
-  for (int j = 0; j < N; ++j) {
-      sum += A[i * N + j] * x[j];
-  }
-  y[i] = sum;
-  ```
+- [the first](day46/sparse_matrix_vec_mult.cu) is a naive approach. each thread handles one row and loops through every column, zeros included. it works in LeetGPU because the M and N limits are pretty low.
 
 - [the second](day46/sparse_matrix_vec_mult_2.cu) packs the non-zero values with their column indices, so we only multiply the non-zero values. the issue is that it uses tons of memory.
 
