@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sparse Matrix-Vector Multiplication Animation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nv-green:#76B900; --nv-green-bright:#9BE000; --nv-green-dim:#3d5c0a;
+    --nv-green-glow:rgba(118,185,0,.55); --on-green:#04140a;
+    --bg:#050805; --bg-radial:rgba(118,185,0,.08); --bg-scan:rgba(118,185,0,.012);
+    --panel:#0a120a; --panel-edge:#152315; --grid-line:#12210f; --tile-border:#2a4413;
+    --txt:#d7e8c8; --txt-dim:#6b8259; --title:#f2ffe0; --title-glow:rgba(118,185,0,.55);
+    --cell-bg:#0b130b; --cell-txt:#54704a;
+    --active-bg:#0e1a0b; --active-txt:#a9cf7c;
+    --lane-bg:#1c2f08;
+    --hit-bg:#2b4d06; --hit-txt:#f4ffd8;
+    --written-bg:#122408;
+    --dead-txt:#2c3a24;
+    --zero-bg:#161a12; --zero-txt:#8a7a55; --zero-border:#6b5a2a;
+    --ln:#3a4d30; --c-fn:#c6e88a; --c-num:#e8ffb0; --c-op:#8fa87a; --c-cm:#5b7048;
+    --cell:26px; --cellSm:24px; --lbl:64px;
+  }
+  body.light{
+    --nv-green:#679f00; --nv-green-bright:#4e8000; --nv-green-dim:#a9c96e;
+    --nv-green-glow:rgba(118,185,0,.30); --on-green:#0c1602;
+    --bg:#f3f7ec; --bg-radial:rgba(118,185,0,.10); --bg-scan:rgba(70,110,0,.010);
+    --panel:#ffffff; --panel-edge:#d6e1c5; --grid-line:#e3ebd5; --tile-border:#b6cd8b;
+    --txt:#28361c; --txt-dim:#75865f; --title:#1c2a0e; --title-glow:rgba(118,185,0,.28);
+    --cell-bg:#fbfdf6; --cell-txt:#8a9c74;
+    --active-bg:#eef5dd; --active-txt:#4a6a14;
+    --lane-bg:#dff0bc;
+    --hit-bg:#a9d838; --hit-txt:#182600;
+    --written-bg:#e6f2cd;
+    --dead-txt:#cdd8bd;
+    --zero-bg:#f7f1e0; --zero-txt:#8a6d1e; --zero-border:#d9c48a;
+    --ln:#b2c496; --c-fn:#6d8f1e; --c-num:#8a6d00; --c-op:#7c8f64; --c-cm:#98a884;
+  }
+  body.lanes32{--cell:20px}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg)}
+  body{
+    background:radial-gradient(1100px 500px at 50% -10%, var(--bg-radial), transparent 60%),
+      repeating-linear-gradient(0deg, transparent 0 3px, var(--bg-scan) 3px 4px), var(--bg);
+    color:var(--txt);font-family:'JetBrains Mono',ui-monospace,monospace;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:28px 16px 48px;transition:background .3s,color .3s;
+  }
+  header{text-align:center;margin-bottom:18px}
+  h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(22px,4.5vw,38px);letter-spacing:.08em;
+     color:var(--title);text-transform:uppercase;text-shadow:0 0 24px var(--title-glow)}
+  h1 .accent{color:var(--nv-green)}
+  .sub{font-size:11px;letter-spacing:.2em;color:var(--txt-dim);text-transform:uppercase;margin-top:6px}
+
+  .pipeline{display:flex;gap:6px;margin:0 0 20px;flex-wrap:wrap;justify-content:center}
+  .phase{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;padding:7px 14px;border:1px solid var(--panel-edge);
+         color:var(--txt-dim);background:var(--panel);clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .25s}
+  .phase.active{color:var(--on-green);background:var(--nv-green);border-color:var(--nv-green);font-weight:700;box-shadow:0 0 18px var(--nv-green-glow)}
+
+  .main{display:flex;gap:30px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;gap:18px;align-items:center}
+
+  .panel{border:1px solid var(--panel-edge);background:var(--panel);padding:14px 18px;position:relative;
+         display:flex;flex-direction:column;gap:10px;align-items:center;box-shadow:inset 0 0 40px rgba(118,185,0,.04)}
+  .panel::before{content:"";position:absolute;inset:5px;border:1px dashed var(--grid-line);pointer-events:none}
+  .panel-title{font-size:9.5px;letter-spacing:.3em;color:var(--nv-green);text-transform:uppercase}
+  .panel-sub{font-size:10px;color:var(--txt-dim);letter-spacing:.15em;text-align:center}
+
+  /* ---- A · x = y ---- */
+  .equation{display:flex;align-items:center;gap:14px;margin-top:4px}
+  .operand{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .op-name{font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;color:var(--title);letter-spacing:.1em;height:20px;display:flex;align-items:flex-end}
+  .op-name small{font-family:'JetBrains Mono',monospace;font-weight:400;font-size:9px;color:var(--txt-dim);margin-left:6px;letter-spacing:.1em}
+  .op-sym{font-family:'Orbitron',sans-serif;font-weight:900;font-size:26px;color:var(--nv-green);text-shadow:0 0 14px var(--nv-green-glow);padding:0 2px;margin-top:22px}
+  .hdr{display:grid;gap:2px;height:12px}
+  .hdr span{width:var(--cellSm);text-align:center;font-size:8px;color:var(--txt-dim);line-height:12px}
+  .hdr.withlbl{margin-left:calc(var(--lbl) + 6px)}
+  .mrow{display:flex;align-items:center;gap:6px}
+  .mrow + .mrow{margin-top:2px}
+  .row-label{width:var(--lbl);font-size:9.5px;letter-spacing:.12em;color:var(--txt-dim);text-align:right;
+             font-family:'Orbitron',sans-serif;font-weight:700;transition:color .2s;white-space:nowrap;line-height:1.1}
+  .row-label small{display:block;font-family:'JetBrains Mono',monospace;font-weight:400;font-size:8.5px;letter-spacing:.05em;opacity:.8}
+  .row-label.on{color:var(--nv-green)}
+  .row-label.done{color:var(--nv-green-dim)}
+  .row{display:grid;gap:2px}
+  .col{display:grid;grid-template-columns:auto var(--cellSm);gap:2px 4px;align-items:center}
+  .col .ci{font-size:8px;color:var(--txt-dim);text-align:right;width:14px}
+  .col.noidx{grid-template-columns:var(--cellSm)}
+  .cell{width:var(--cell);height:var(--cell);display:flex;align-items:center;justify-content:center;
+        font-size:11px;font-weight:600;background:var(--cell-bg);border:1px solid var(--grid-line);color:var(--cell-txt);
+        transition:background .18s,color .18s,border-color .18s,box-shadow .18s}
+  .cell.sm{width:var(--cellSm);height:var(--cellSm);font-size:10px}
+  .cell.active{border-color:var(--nv-green-dim);color:var(--active-txt);background:var(--active-bg)}
+  .cell.src{background:var(--lane-bg);color:var(--nv-green-bright);border-color:var(--nv-green);box-shadow:0 0 10px var(--nv-green-glow)}
+  .cell.srcz{background:var(--zero-bg);color:var(--zero-txt);border-color:var(--zero-border);box-shadow:0 0 8px rgba(200,160,60,.35)}
+  .cell.dst{background:var(--hit-bg);color:var(--hit-txt);border-color:var(--nv-green-bright);box-shadow:0 0 16px var(--nv-green-glow);
+            animation:pulse .5s ease-in-out infinite alternate}
+  .cell.dead{color:var(--dead-txt)}
+  .cell.zero{color:var(--dead-txt)}
+  .cell.written{background:var(--written-bg);color:var(--nv-green-bright);border-color:var(--nv-green);text-shadow:0 0 8px var(--nv-green-glow)}
+  .cell.result{background:var(--nv-green);color:var(--on-green);border-color:var(--nv-green-bright);box-shadow:0 0 18px var(--nv-green-glow);font-weight:700}
+  @keyframes pulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
+
+  /* ---- grid of blocks ---- */
+  .block{display:flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid transparent;transition:border-color .2s,background .2s}
+  .block + .block{margin-top:3px}
+  .block.on{border-color:var(--nv-green-dim);background:rgba(118,185,0,.04)}
+  .block.done{border-color:var(--panel-edge)}
+  .block .arrow{font-size:10px;color:var(--txt-dim);margin-left:8px;white-space:nowrap;letter-spacing:.05em}
+  .block .arrow b{color:var(--nv-green-bright);font-weight:700}
+
+  .flyer{position:fixed;z-index:50;pointer-events:none;display:flex;align-items:center;justify-content:center;
+         font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--on-green);background:var(--nv-green);
+         border:1px solid var(--nv-green-bright);border-radius:2px;box-shadow:0 0 14px var(--nv-green-glow);padding:2px 6px;
+         transition-property:transform,opacity;transition-timing-function:cubic-bezier(.25,.7,.35,1);will-change:transform}
+  .flyer.zero{background:var(--zero-bg);color:var(--zero-txt);border-color:var(--zero-border);box-shadow:none;opacity:.85}
+
+  .legend{display:flex;gap:14px;font-size:9.5px;color:var(--txt-dim);letter-spacing:.1em;flex-wrap:wrap;justify-content:center}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{display:inline-block;width:10px;height:10px;border:1px solid var(--grid-line)}
+  .legend i.nz{background:var(--active-bg);border-color:var(--nv-green-dim)}
+  .legend i.z{background:var(--cell-bg)}
+  .legend i.zh{background:var(--zero-bg);border-color:var(--zero-border)}
+  .legend i.hit{background:var(--lane-bg);border-color:var(--nv-green)}
+  .legend i.acc{background:var(--hit-bg);border-color:var(--nv-green-bright)}
+
+  .code-panel{border:1px solid var(--panel-edge);background:var(--panel);position:relative;width:520px;max-width:94vw;box-shadow:inset 0 0 40px rgba(118,185,0,.04)}
+  .code-panel::before{content:"";position:absolute;inset:5px;border:1px dashed var(--grid-line);pointer-events:none}
+  .code-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px}
+  .code-title{font-size:9.5px;letter-spacing:.3em;color:var(--nv-green);text-transform:uppercase}
+  .code-file{font-size:10px;color:var(--txt-dim);letter-spacing:.1em}
+  pre.code{padding:6px 0 14px;overflow-x:auto;font-size:11.5px;line-height:1.6}
+  .cl{display:block;padding:0 16px 0 44px;position:relative;white-space:pre;transition:background .2s}
+  .cl::before{content:attr(data-n);position:absolute;left:0;width:34px;text-align:right;color:var(--ln);font-size:10px}
+  .cl.hl{background:linear-gradient(90deg, rgba(118,185,0,.16), rgba(118,185,0,.03));box-shadow:inset 3px 0 0 var(--nv-green)}
+  .cl.hl::before{color:var(--nv-green)}
+  .kw{color:var(--nv-green-bright);font-weight:600}.ty{color:var(--nv-green)}.fn{color:var(--c-fn)}.num{color:var(--c-num)}.op{color:var(--c-op)}.cm{color:var(--c-cm);font-style:italic}
+
+  .status{margin-top:22px;min-height:20px;font-size:12.5px;letter-spacing:.04em;color:var(--nv-green-bright);text-align:center}
+  .status .k{color:var(--txt-dim)}
+  .formula{margin-top:10px;min-height:38px;width:min(780px,94vw);border:1px solid var(--panel-edge);background:var(--panel);padding:9px 16px;text-align:center;
+           font-size:clamp(11px,2.6vw,14px);letter-spacing:.03em;color:var(--txt-dim);clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+  .formula .c-name{color:var(--title);font-weight:700}
+  .formula .a-val{color:var(--nv-green-bright);font-weight:700}
+  .formula .b-val{color:var(--c-fn);font-weight:700}
+  .formula .z-val{color:var(--zero-txt);font-weight:700}
+  .formula .res{color:var(--nv-green-bright);font-weight:700;text-shadow:0 0 10px var(--nv-green-glow)}
+  .progress{width:min(560px,90vw);height:4px;background:var(--panel-edge);margin:14px auto 0;position:relative;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--nv-green-dim),var(--nv-green),var(--nv-green-bright));width:0%;transition:width .2s;box-shadow:0 0 12px var(--nv-green-glow)}
+
+  .controls{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+  button,select{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:10px 20px;cursor:pointer;
+         background:transparent;color:var(--nv-green);border:1px solid var(--nv-green-dim);clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:all .18s}
+  select{padding:9px 24px 9px 16px;font-size:10px}
+  select option{background:var(--panel);color:var(--txt)}
+  button:hover,select:hover{background:rgba(118,185,0,.12);border-color:var(--nv-green)}
+  button:focus-visible,select:focus-visible{outline:2px solid var(--nv-green-bright);outline-offset:2px}
+  button.primary{background:var(--nv-green);color:var(--on-green);border-color:var(--nv-green);box-shadow:0 0 16px var(--nv-green-glow)}
+  button.primary:hover{filter:brightness(1.12)}
+  button.toggled{background:rgba(118,185,0,.18);border-color:var(--nv-green);color:var(--nv-green-bright)}
+  .speed{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--txt-dim);letter-spacing:.15em}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:120px;height:3px;background:var(--panel-edge);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;background:var(--nv-green);cursor:pointer;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--nv-green);border:none;cursor:pointer}
+
+  @media (max-width:1280px){.code-panel{width:min(720px,94vw)}}
+  @media (max-width:760px){:root{--cell:18px;--cellSm:16px;--lbl:50px}body.lanes32{--cell:13px}.cell{font-size:9px}.cell.sm{font-size:7.5px}.panel{padding:10px}.flyer{font-size:10px}pre.code{font-size:10.5px}.hdr span{font-size:7px}.op-sym{font-size:18px}}
+  @media (prefers-reduced-motion:reduce){.cell.dst{animation:none}.flyer{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Sparse <span class="accent">SpMV</span></h1>
+  <div class="sub">y = A · x &nbsp;·&nbsp; one block per row &nbsp;·&nbsp; warp shuffle reduce</div>
+</header>
+
+<div class="pipeline" id="pipeline">
+  <div class="phase" data-p="init">Grid Launch</div>
+  <div class="phase" data-p="load">Strided MAC Loop</div>
+  <div class="phase" data-p="warp">Warp Shuffle</div>
+  <div class="phase" data-p="write">Lane 0 Writes y</div>
+</div>
+
+<div class="main">
+  <div class="stage">
+    <div class="panel">
+      <div class="panel-title">Global Memory · y = A · x</div>
+      <div class="equation">
+        <div class="operand">
+          <div class="op-name">A <small id="aDim"></small></div>
+          <div class="hdr withlbl" id="colHdr"></div>
+          <div id="matrix"></div>
+        </div>
+        <div class="op-sym">·</div>
+        <div class="operand">
+          <div class="op-name">x <small id="xDim"></small></div>
+          <div class="hdr"></div>
+          <div class="col" id="xcol"></div>
+        </div>
+        <div class="op-sym">=</div>
+        <div class="operand">
+          <div class="op-name">y <small id="yDim"></small></div>
+          <div class="hdr"></div>
+          <div class="col noidx" id="ycol"></div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="hit"></i>reading</span><span><i class="zh"></i>reading a zero (wasted)</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Grid · <span id="gridTitle">M blocks × BLOCKSIZE threads</span></div>
+      <div class="panel-sub" id="laneSub">block r → y[r]</div>
+      <div class="hdr withlbl" id="laneHdr" style="margin-left:calc(var(--lbl) + 14px)"></div>
+      <div id="blocks"></div>
+    </div>
+  </div>
+
+  <div class="code-panel" id="codePanel">
+    <div class="code-head"><span class="code-title">Kernel Source</span><span class="code-file">sparse_matrix_vec_mult_3.cu</span></div>
+    <pre class="code" id="codeBox"></pre>
+  </div>
+</div>
+
+<div class="status" id="status">Press <b style="color:var(--nv-green)">RUN</b> to launch the kernel</div>
+<div class="formula" id="formula">waiting for kernel launch</div>
+<div class="progress"><div class="progress-fill" id="progress"></div></div>
+
+<div class="controls">
+  <button class="primary" id="btnPlay">▶ Run</button>
+  <button id="btnBack">‹ Prev</button>
+  <button id="btnStep">Next ›</button>
+  <button id="btnReset">Reset</button>
+  <select id="selLanes" aria-label="threads per block"><option value="8" selected>8 threads / block</option><option value="16">16 threads / block</option><option value="32">32 threads / block</option></select>
+  <select id="selM" aria-label="rows"><option value="3">M = 3 rows</option><option value="4" selected>M = 4 rows</option><option value="6">M = 6 rows</option></select>
+  <select id="selN" aria-label="columns"><option value="12">N = 12 cols</option><option value="16" selected>N = 16 cols</option><option value="24">N = 24 cols</option></select>
+  <button id="btnCode" class="toggled">Code: On</button>
+  <button id="btnTheme">○ Light</button>
+  <div class="speed"><span>CLK</span><input type="range" id="speed" min="1" max="10" value="6"></div>
+</div>
+
+<script>
+(() => {
+  // ---------- config ----------
+  let L = 8, M = 4, N = 16;           // L = BLOCKSIZE (= warpSize in the demo), M rows, N columns
+  let A = [], X = [];
+  const $ = id => document.getElementById(id);
+
+  // ---------- source code panel ----------
+  const K = s => `<span class="kw">${s}</span>`, TY = s => `<span class="ty">${s}</span>`, F = s => `<span class="fn">${s}</span>`,
+        NUM = s => `<span class="num">${s}</span>`, CM = s => `<span class="cm">${s}</span>`;
+  const codeLines = [
+    ['def',   `${K('#define')} BLOCKSIZE ${NUM('32')}`],
+    ['',      ``],
+    ['wsig',  `${K('__device__')} ${K('__forceinline__')} ${TY('float')} ${F('warp_reduce_sum')}(${TY('float')} val) {`],
+    ['wfor',  `    ${K('for')} (${TY('int')} offset = warpSize / ${NUM('2')}; offset > ${NUM('0')}; offset >>= ${NUM('1')}) {`],
+    ['wshfl', `        val += ${F('__shfl_down_sync')}(${NUM('0xffffffff')}, val, offset);`],
+    ['',      `    }`],
+    ['wret',  `    ${K('return')} val;`],
+    ['',      `}`],
+    ['',      ``],
+    ['ksig',  `${K('__global__')} ${TY('void')} ${F('sparse_matrix_vec_mult')}(`],
+    ['ksig',  `        ${K('const')} ${TY('float')}* A, ${K('const')} ${TY('float')}* x, ${TY('float')}* y, ${TY('int')} M, ${TY('int')} N) {`],
+    ['init',  `    ${TY('float')} sum = ${NUM('0')};                           ${CM('// block r owns row r')}`],
+    ['loop',  `    ${K('for')} (${TY('int')} j = threadIdx.x; j < N; j += BLOCKSIZE) {`],
+    ['mac',   `        sum += A[blockIdx.x * N + j] * x[j];     ${CM('// zeros included')}`],
+    ['loop',  `    }`],
+    ['warp',  `    sum = ${F('warp_reduce_sum')}(sum);              ${CM('// 32 partials → 1')}`],
+    ['write', `    ${K('if')} (threadIdx.x == ${NUM('0')}) {`],
+    ['write', `        y[blockIdx.x] = sum;`],
+    ['write', `    }`],
+    ['',      `}`],
+    ['',      ``],
+    ['launch',`${K('extern')} ${NUM('"C"')} ${TY('void')} ${F('solve')}(${K('const')} ${TY('float')}* A, ${K('const')} ${TY('float')}* x, ${TY('float')}* y,`],
+    ['launch',`                      ${TY('int')} M, ${TY('int')} N, ${TY('int')} nnz) {`],
+    ['launch',`    ${F('sparse_matrix_vec_mult')}&lt;&lt;&lt;M, BLOCKSIZE&gt;&gt;&gt;(A, x, y, M, N);`],
+    ['',      `}`],
+  ];
+  const codeBox = $('codeBox');
+  const lineEls = codeLines.map(([tag, html], n) => {
+    const el = document.createElement('span'); el.className = 'cl'; el.dataset.n = n + 1;
+    if (tag) el.dataset.tag = tag; el.innerHTML = html || ' '; codeBox.appendChild(el); return el;
+  });
+  const highlightCode = tags => lineEls.forEach(el => el.classList.toggle('hl', !!el.dataset.tag && tags.includes(el.dataset.tag)));
+
+  // ---------- DOM grids ----------
+  let gA = [], gX = [], gY = [], gLn = [], rowLbl = [], blkEl = [], blkLbl = [], blkArrow = [];
+  function buildGrids() {
+    document.body.classList.toggle('lanes32', L === 32);
+    $('aDim').textContent = `${M}×${N}`; $('xDim').textContent = `${N}×1`; $('yDim').textContent = `${M}×1`;
+    $('gridTitle').innerHTML = `${M} blocks × ${L} threads`;
+    $('laneSub').innerHTML = `block r → y[r] &nbsp;·&nbsp; lane l reads columns l, l+${L}, l+${2*L} …`;
+
+    const ch = $('colHdr'); ch.innerHTML = ''; ch.style.gridTemplateColumns = `repeat(${N}, var(--cellSm))`;
+    for (let c = 0; c < N; c++) { const s = document.createElement('span'); s.textContent = c; ch.appendChild(s); }
+
+    const mat = $('matrix'); mat.innerHTML = ''; gA = []; rowLbl = [];
+    for (let r = 0; r < M; r++) {
+      const row = document.createElement('div'); row.className = 'mrow';
+      const lbl = document.createElement('div'); lbl.className = 'row-label'; lbl.innerHTML = `ROW ${r}<small>block ${r}</small>`; rowLbl.push(lbl);
+      const grid = document.createElement('div'); grid.className = 'row'; grid.style.gridTemplateColumns = `repeat(${N}, var(--cellSm))`;
+      gA[r] = [];
+      for (let c = 0; c < N; c++) { const cell = document.createElement('div'); cell.className = 'cell sm'; grid.appendChild(cell); gA[r][c] = cell; }
+      row.appendChild(lbl); row.appendChild(grid); mat.appendChild(row);
+    }
+    const xc = $('xcol'); xc.innerHTML = ''; gX = [];
+    for (let c = 0; c < N; c++) {
+      const i = document.createElement('span'); i.className = 'ci'; i.textContent = c; xc.appendChild(i);
+      const cell = document.createElement('div'); cell.className = 'cell sm'; xc.appendChild(cell); gX[c] = cell;
+    }
+    const yc = $('ycol'); yc.innerHTML = ''; gY = [];
+    for (let r = 0; r < M; r++) { const cell = document.createElement('div'); cell.className = 'cell sm'; cell.title = 'y[' + r + ']'; yc.appendChild(cell); gY[r] = cell; }
+
+    const lh = $('laneHdr'); lh.innerHTML = ''; lh.style.gridTemplateColumns = `repeat(${L}, var(--cell))`;
+    for (let l = 0; l < L; l++) { const s = document.createElement('span'); s.textContent = l; s.style.width = 'var(--cell)'; lh.appendChild(s); }
+    const bl = $('blocks'); bl.innerHTML = ''; gLn = []; blkEl = []; blkLbl = []; blkArrow = [];
+    for (let r = 0; r < M; r++) {
+      const b = document.createElement('div'); b.className = 'block'; blkEl.push(b);
+      const lbl = document.createElement('div'); lbl.className = 'row-label'; lbl.innerHTML = `BLOCK ${r}<small>→ row ${r}</small>`; blkLbl.push(lbl);
+      const grid = document.createElement('div'); grid.className = 'row'; grid.style.gridTemplateColumns = `repeat(${L}, var(--cell))`;
+      gLn[r] = [];
+      for (let l = 0; l < L; l++) { const c = document.createElement('div'); c.className = 'cell'; grid.appendChild(c); gLn[r][l] = c; }
+      const ar = document.createElement('div'); ar.className = 'arrow'; ar.innerHTML = `→ y[${r}]`; blkArrow.push(ar);
+      b.appendChild(lbl); b.appendChild(grid); b.appendChild(ar); bl.appendChild(b);
+    }
+  }
+
+  // ---------- data + step script ----------
+  let steps = [];
+  function buildData() {
+    A = Array.from({ length: M }, (_, r) => Array.from({ length: N }, (_, c) => {
+      const h = (Math.imul(r * 97 + c * 31 + 7, 2654435761) >>> 0) % 100;             // deterministic hash
+      const nz = h < 30 || c === (r * 5) % N;                                            // ~30% density, ≥1 nz per row
+      return nz ? (h % 5) + 1 : 0;
+    }));
+    X = Array.from({ length: N }, (_, c) => ((c * 7 + 2) % 4) + 1);
+    steps = [{ t: 'init' }];
+    for (let k = 0; k < Math.ceil(N / L); k++) steps.push({ t: 'load', k });
+    for (let off = L / 2; off > 0; off >>= 1) steps.push({ t: 'warp', off });
+    steps.push({ t: 'write' });
+  }
+  const nnzRow = r => A[r].filter(v => v).length;
+  const nnzAll = () => A.reduce((s, r) => s + r.filter(v => v).length, 0);
+  const dot = r => A[r].reduce((s, v, c) => s + v * X[c], 0);
+
+  // replay simulation up to (and including) step index → state (all blocks advance in lockstep)
+  function simulate(upTo) {
+    const y = Array(M).fill(null); let sums = null;
+    for (let s = 0; s <= upTo; s++) {
+      const st = steps[s];
+      if (st.t === 'init') sums = Array.from({ length: M }, () => Array(L).fill(0));
+      else if (st.t === 'load') for (let r = 0; r < M; r++) for (let l = 0; l < L; l++) { const j = l + st.k * L; if (j < N) sums[r][l] += A[r][j] * X[j]; }
+      else if (st.t === 'warp') for (let r = 0; r < M; r++) for (let l = 0; l < st.off; l++) sums[r][l] += sums[r][l + st.off];
+      else if (st.t === 'write') for (let r = 0; r < M; r++) y[r] = sums[r][0];
+    }
+    return { y, sums };
+  }
+
+  // ---------- state ----------
+  let idx = -1, playing = false, timer = null;
+  const statusEl = $('status'), formulaEl = $('formula'), progEl = $('progress'), speedEl = $('speed');
+  const phases = [...document.querySelectorAll('.phase')];
+  const delay = () => 1500 - speedEl.value * 130;
+  const flyTime = () => Math.min(480, delay() * 0.72);
+
+  function render() {
+    const wipe = c => c.classList.remove('active','src','srcz','dst','dead','zero','written','result');
+    gA.forEach(r => r.forEach(wipe)); gX.forEach(wipe); gY.forEach(wipe); gLn.forEach(r => r.forEach(wipe));
+    rowLbl.forEach(l => l.classList.remove('on','done')); blkLbl.forEach(l => l.classList.remove('on','done'));
+    blkEl.forEach(b => b.classList.remove('on','done'));
+    phases.forEach(p => p.classList.remove('active'));
+
+    const st = simulate(idx), cur = idx >= 0 ? steps[idx] : null;
+    for (let r = 0; r < M; r++) for (let c = 0; c < N; c++) { gA[r][c].textContent = A[r][c]; gA[r][c].classList.add(A[r][c] ? 'active' : 'zero'); }
+    for (let c = 0; c < N; c++) { gX[c].textContent = X[c]; gX[c].classList.add('active'); }
+    for (let r = 0; r < M; r++) { gY[r].textContent = st.y[r] == null ? '·' : st.y[r]; if (st.y[r] != null) gY[r].classList.add('written'); }
+    for (let r = 0; r < M; r++) for (let l = 0; l < L; l++) gLn[r][l].textContent = st.sums ? st.sums[r][l] : '·';
+    blkArrow.forEach((a, r) => a.innerHTML = st.y[r] == null ? `→ y[${r}]` : `→ y[${r}] = <b>${st.y[r]}</b>`);
+
+    if (!cur) {
+      statusEl.innerHTML = 'Press <b style="color:var(--nv-green)">RUN</b> to launch the kernel';
+      formulaEl.innerHTML = `A is ${M}×${N} · <span class="a-val">${nnzAll()}</span> non-zeros · <span class="a-val">${M}</span> blocks × <span class="a-val">${L}</span> threads`;
+      progEl.style.width = '0%'; highlightCode(['ksig','launch']);
+      return;
+    }
+    const ph = phases.find(p => p.dataset.p === cur.t); if (ph) ph.classList.add('active');
+    const stepTag = `<span class="k">· step ${idx+1}/${steps.length}</span>`;
+    const prev = simulate(idx - 1);
+    rowLbl.forEach(l => l.classList.add(cur.t === 'write' ? 'done' : 'on'));
+    blkLbl.forEach(l => l.classList.add('on')); blkEl.forEach(b => b.classList.add('on'));
+
+    if (cur.t === 'init') {
+      for (let r = 0; r < M; r++) { for (let l = 0; l < L; l++) gLn[r][l].classList.add('dst'); for (let c = 0; c < N; c++) if (A[r][c]) gA[r][c].classList.add('src'); }
+      statusEl.innerHTML = `launch ${M} blocks · one per row · sum = 0 ${stepTag}`;
+      formulaEl.innerHTML = `<span class="c-name">block r</span> computes <span class="res">y[r]</span> = A[r] · x`;
+      highlightCode(['ksig','init','launch']);
+    } else if (cur.t === 'load') {
+      let nzc = 0, zc = 0;
+      for (let r = 0; r < M; r++) for (let l = 0; l < L; l++) {
+        const j = l + cur.k * L;
+        if (j < N) { gLn[r][l].classList.add('dst'); gX[j].classList.remove('active'); gX[j].classList.add('src'); if (A[r][j]) { gA[r][j].classList.add('src'); nzc++; } else { gA[r][j].classList.remove('zero'); gA[r][j].classList.add('srcz'); zc++; } }
+        else gLn[r][l].classList.add('dead');
+      }
+      const j0 = cur.k * L, a = A[0][j0], b = X[j0], p = a * b;
+      const lo = j0, hi = Math.min(N - 1, j0 + L - 1);
+      statusEl.innerHTML = `j = lane + ${j0} · columns ${lo}..${hi} ${stepTag}`;
+      formulaEl.innerHTML = `<span class="c-name">block 0, lane 0:</span> sum += <span class="${a ? 'a-val' : 'z-val'}">${a}</span> × <span class="b-val">${b}</span> → <span class="res">${st.sums[0][0]}</span> &nbsp;·&nbsp; <span class="z-val">${zc}</span> of ${nzc + zc} multiplies hit a zero`;
+      highlightCode(['loop','mac']);
+    } else if (cur.t === 'warp') {
+      for (let r = 0; r < M; r++) for (let l = 0; l < L; l++) { const c = gLn[r][l]; if (l < cur.off) c.classList.add('dst'); else if (l < cur.off*2) c.classList.add('src'); else c.classList.add('dead'); }
+      const a = prev.sums[0][0], b = prev.sums[0][cur.off], s = st.sums[0][0];
+      statusEl.innerHTML = `warp_reduce_sum · offset ${cur.off} ${stepTag}`;
+      formulaEl.innerHTML = `<span class="c-name">block 0, lane 0:</span> <span class="a-val">${a}</span> + <span class="b-val">${b}</span><sub style="font-size:.7em">lane ${cur.off}</sub> = <span class="res">${s}</span>`;
+      highlightCode(['warp','wfor','wshfl']);
+    } else if (cur.t === 'write') {
+      for (let r = 0; r < M; r++) { for (let l = 0; l < L; l++) gLn[r][l].classList.add(l === 0 ? 'result' : 'dead'); gY[r].classList.remove('written'); gY[r].classList.add('result'); blkEl[r].classList.remove('on'); blkEl[r].classList.add('done'); }
+      const wasted = M * N - nnzAll(), ok = st.y.every((v, r) => v === dot(r));
+      statusEl.innerHTML = `lane 0 writes y[blockIdx.x] · done ${ok ? '✓' : '✗'} ${stepTag}`;
+      formulaEl.innerHTML = `<span class="c-name">y</span> = [${st.y.map(v => `<span class="res">${v}</span>`).join(', ')}] &nbsp;·&nbsp; <span class="z-val">${wasted}</span> of ${M*N} multiplies were by zero`;
+      highlightCode(['write','wret']);
+    }
+    progEl.style.width = ((idx+1) / steps.length * 100) + '%';
+  }
+
+  // ---------- flying numbers ----------
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fly(fromEl, toEl, text, wait, zero) {
+    if (reduceMotion) return;
+    const f = fromEl.getBoundingClientRect(), t = toEl.getBoundingClientRect();
+    const el = document.createElement('div'); el.className = 'flyer' + (zero ? ' zero' : ''); el.textContent = text;
+    el.style.left = f.left + 'px'; el.style.top = f.top + 'px'; el.style.width = Math.max(f.width, 22) + 'px'; el.style.height = f.height + 'px';
+    el.style.transitionDuration = flyTime() + 'ms'; el.style.transitionDelay = (wait || 0) + 'ms';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.transform = `translate(${t.left - f.left}px, ${t.top - f.top}px) scale(.7)`; el.style.opacity = '0';
+    }));
+    setTimeout(() => el.remove(), flyTime() + (wait || 0) + 60);
+  }
+  function animateStep() {
+    const cur = steps[idx], prev = simulate(idx - 1);
+    if (cur.t === 'load') { for (let r = 0; r < M; r++) for (let l = 0; l < L; l++) { const j = l + cur.k * L; if (j < N) fly(gA[r][j], gLn[r][l], A[r][j] * X[j], l * 15, !A[r][j]); } }
+    else if (cur.t === 'warp') { for (let r = 0; r < M; r++) for (let l = 0; l < cur.off; l++) fly(gLn[r][l+cur.off], gLn[r][l], prev.sums[r][l+cur.off], l * 15); }
+    else if (cur.t === 'write') { for (let r = 0; r < M; r++) fly(gLn[r][0], gY[r], prev.sums[r][0], r * 60); }
+  }
+
+  // ---------- controls ----------
+  function step(dir, animate) {
+    const n = idx + dir; if (n < -1 || n >= steps.length) { if (n >= steps.length) stop(); return; }
+    idx = n; render(); if (animate && dir > 0 && idx >= 0) animateStep();
+  }
+  function tick() { if (idx >= steps.length - 1) { stop(); return; } step(1, true); if (idx >= steps.length - 1) stop(); }
+  function start() { playing = true; $('btnPlay').textContent = '❚❚ Pause'; if (idx >= steps.length - 1) { idx = -1; render(); } tick(); timer = setInterval(tick, delay()); }
+  function stop()  { playing = false; clearInterval(timer); $('btnPlay').textContent = '▶ Run'; }
+  function reset() { stop(); idx = -1; buildData(); buildGrids(); render(); }
+
+  $('btnPlay').onclick  = () => playing ? stop() : start();
+  $('btnStep').onclick  = () => { stop(); step(1, true); };
+  $('btnBack').onclick  = () => { stop(); step(-1, false); };
+  $('btnReset').onclick = reset;
+  $('selLanes').onchange = e => { L = +e.target.value; reset(); };
+  $('selM').onchange = e => { M = +e.target.value; reset(); };
+  $('selN').onchange = e => { N = +e.target.value; reset(); };
+  speedEl.oninput = () => { if (playing) { clearInterval(timer); timer = setInterval(tick, delay()); } };
+  $('btnCode').onclick = e => { const p = $('codePanel'); const on = p.style.display !== 'none'; p.style.display = on ? 'none' : ''; e.target.textContent = on ? 'Code: Off' : 'Code: On'; e.target.classList.toggle('toggled', !on); };
+  $('btnTheme').onclick = e => { const light = document.body.classList.toggle('light'); e.target.textContent = light ? '● Dark' : '○ Light'; };
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+    if (e.key === ' ') { e.preventDefault(); playing ? stop() : start(); }
+    else if (e.key === 'ArrowRight') { stop(); step(1, true); }
+    else if (e.key === 'ArrowLeft') { stop(); step(-1, false); }
+    else if (e.key.toLowerCase() === 'r') reset();
+  });
+
+  reset();
+})();
+</script>
+</body>
+</html>
