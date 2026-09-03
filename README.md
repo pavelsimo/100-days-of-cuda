@@ -653,3 +653,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - [the second](day46/sparse_matrix_vec_mult_2.cu) packs the non-zero values with their column indices, so we only multiply the non-zero values. the issue is that it uses tons of memory.
 
 - i want to optimize this one properly, so i'll give it another try alongside tomorrow's problem.
+
+### Day 47
+
+- solved the LeetGPU [INT8 KV-Cache Attention](day47/int8_kv_cache_attention.cu) problem. this one is just like the problem Grouped Query Attention from Day 38. exactly the same trick again: loop through the heads (on the host), move the pointers to the current matrices, and let the kernels deal with the remaining dimensions. the only new bit is dequantizing the INT8 keys and values with their scales before running regular attention.
+
+- i also revisited yesterday's Sparse Matrix-Vector Multiplication problem. i did a bit of research and learned there are three common ways to store sparse matrices to speed up matmul: CSR (Compressed Sparse Row), COO (Coordinate List), and CSC (Compressed Sparse Column). i'll save the details for another post, because it turns out none of them were needed here... :D
+
+- the input is a regular dense matrix, for sparse matmul to work its magic we would have to first convert the input matrix into a more "convenient" data structure. the problem is that this conversion has a cost, and for this particular problem, it dominates the runtime. in the end, a [simple warp reduction](day47/sparse_matrix_vec_mult_3.cu) is the way to go, with one warp per row, ran much faster. yes, it still multiplies all the zeros, but who cares? is faster... :) we can even ignore the `nnz` parameter completely! 
+
+  ![INT8 KV-Cache Attention](images/int8_kvcache_attention.png)
