@@ -663,3 +663,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - the input is a regular dense matrix, for sparse matmul to work its magic we would have to first convert the input matrix into a more "convenient" data structure. the problem is that this conversion has a cost, and for this particular problem, it dominates the runtime. in the end, a [simple warp reduction](day47/sparse_matrix_vec_mult_3.cu) is the way to go, with one warp per row, ran much faster. yes, it still multiplies all the zeros, but who cares? is faster... :) we can even ignore the `nnz` parameter completely! 
 
   ![INT8 KV-Cache Attention](images/int8_kvcache_attention.png)
+
+### Day 48
+
+- solved the LeetGPU [Causal Self-Attention](day48/causal_self_attention.cu) problem. this is pretty similar to the causal part of Day 37: each token can only attend to itself and the tokens before it, never to future tokens. that's what "causal" means here, no cheating... :) for more details, check out the paper [Attention Is All You Need](https://arxiv.org/abs/1706.03762).
+
+- so this problem is regular softmax attention with a small twist: set every score above the diagonal to `-INF`. when softmax applies `exp(x)`, those masked scores become `exp(-INF) = 0`, which means future tokens receive no attention at all... the image below makes the whole thing much easier to see.
+
+- for the CUDA kernel implementation i added a masking option to the [matmul](day48/causal_self_attention_2.cu). it uses a C++ template flag, so at compile time i get two versions: one with masking and one without. so the regular matmul doesn't pay for a masking check it never uses.
+
+  ![Causal Self-Attention](images/causal-self-attention.png)
