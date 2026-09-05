@@ -673,3 +673,23 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - for the CUDA kernel implementation i added a masking option to the [matmul](day48/causal_self_attention_2.cu). it uses a C++ template flag, so at compile time i get two versions: one with masking and one without. so the regular matmul doesn't pay for a masking check it never uses.
 
   ![Causal Self-Attention](images/causal-self-attention.png)
+
+### Day 49
+
+- solved the LeetGPU [Sliding Window Self-Attention](day49/sliding_window_self_attention.cu) problem. in Sliding Window Self-Attention each token only pays attention to itself and a few neighbors on either side. i added an image below to make it easier to picture. if you're curious about the details, check out the paper [Longformer: The Long-Document Transformer](https://arxiv.org/pdf/2004.05150).
+
+- with this one, my first thought was, well, it looks like a variation of yesterday's problem (see Day 48), just with a different mask, something like this:
+
+  ```c
+  C[i * N + j] = (j < i - window_size || j > i + window_size) ? -INF : sum;
+  ```
+
+- i wrote the [first solution](day49/sliding_window_self_attention.cu), and it worked, but... it took around 300 ms on the LeetGPU perf. test. out of all the Tesla T4 submissions, mine was the slowest. nice... :)
+
+- as usual, there must be a "trick". then i looked at the window size again: it was pretty small. to be exact, `MAX_WINDOW_SIZE` is 32. and here i was, allocating a whole `M x M` attention matrix for just for a few useful scores per token. so it was clear we could skip most of that work by only looking inside that smaller window.
+
+- so i wrote a [second version](day49/sliding_window_self_attention_2.cu) with one thread per token. each thread computes scores only inside its window, applies softmax, then combines the corresponding `V` vectors using those weights. no huge attention matrix, all in one kernel. megakernel? :D
+
+- anyway, much better perf. around 3ms for the perf. test. link to the code below.
+
+  ![Sliding Window Self-Attention](images/sliding_window_self_attention.png)

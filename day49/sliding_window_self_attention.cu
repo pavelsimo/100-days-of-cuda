@@ -1,39 +1,38 @@
 #include <cuda_runtime.h>
 #include <float.h>
 
-
 #define BLOCKSIZE 16
 
-template <bool TRANS_A = false, bool TRANS_B = false>
-__global__ void matmul(const float *A, const float *B, float *C, int M, int N, int K, float alpha) {
+template <bool TRANS_A = false, bool TRANS_B = false, bool MASK = false>
+__global__ void matmul(const float *A, const float *B, float *C, int M, int N, int K, float alpha, int window_size) {
     __shared__ float As[BLOCKSIZE][BLOCKSIZE + 1];
     __shared__ float Bs[BLOCKSIZE][BLOCKSIZE + 1];
 
     const int tx = threadIdx.x;
     const int ty = threadIdx.y;
-    const int rowB = blockIdx.y * BLOCKSIZE;
-    const int colB = blockIdx.x * BLOCKSIZE;
-    const int row = rowB + ty;
-    const int col = colB + tx;
+    const int iB = blockIdx.y * BLOCKSIZE;
+    const int jB = blockIdx.x * BLOCKSIZE;
+    const int i = iB + ty;
+    const int j = jB + tx;
 
     float sum = 0.0f;
     for (int t = 0; t < K; t += BLOCKSIZE) {
         if (TRANS_A) {
             const int k = t + ty;
-            const int r = rowB + tx;
+            const int r = iB + tx;
             As[tx][ty] = (k < K && r < M) ? A[k * M + r] : 0.0f;
         } else {
             const int k = t + tx;
-            As[ty][tx] = (row < M && k < K) ? A[row * K + k] : 0.0f;
+            As[ty][tx] = (i < M && k < K) ? A[i * K + k] : 0.0f;
         }
 
         if (TRANS_B) {
             const int k = t + tx;
-            const int c = colB + ty;
+            const int c = jB + ty;
             Bs[tx][ty] = (c < N && k < K) ? B[c * K + k] : 0.0f;
         } else {
             const int k = t + ty;
-            Bs[ty][tx] = (k < K && col < N) ? B[k * N + col] : 0.0f;
+            Bs[ty][tx] = (k < K && j < N) ? B[k * N + j] : 0.0f;
         }
         __syncthreads();
 
@@ -44,8 +43,8 @@ __global__ void matmul(const float *A, const float *B, float *C, int M, int N, i
         __syncthreads();
     }
 
-    if (row < M && col < N) {
-        C[row * N + col] = alpha * sum;
+    if (i < M && j < N) {
+        C[i * N + j] = MASK && (j < i - window_size || j > i + window_size) ? -FLT_MAX : alpha * sum;
     }
 }
 
@@ -95,49 +94,23 @@ __global__ void softmax(float* scores, int M, int N) {
     }
 }
 
-__global__ void apply_mask(float *scores, int M, int N) {
-    int i = blockDim.y * blockIdx.y + threadIdx.y;
-    int j = blockDim.x * blockIdx.x + threadIdx.x;
-    if (i < M && j < N) {
-        scores[i * N + j] = (j <= i) ? scores[i * N + j]: -FLT_MAX; 
-    }
-}
-
 // Q, K, V, output are device pointers
-extern "C" void solve(const float* Q, const float* K, const float* V, float* output, int M, int d) {
+extern "C" void solve(const float* Q, const float* K, const float* V, float* output, int M, int d,
+                      int window_size) {
     dim3 threads(BLOCKSIZE, BLOCKSIZE);
-
-    // Q - M x d
-    // K - M x d 
-    // K^T - d x M
-    // V - M x d
-    // S = Q @ K^T / sqrt(d) - M x M
-    // S_M = masked(S_M) - M x M
-    // P = softmax(S_M) - M x M
-    // P @ V - M x d 
-    dim3 grid1(
+    dim3 grid(
         (M + threads.x - 1) / threads.x,
-        (M + threads.y - 1) / threads.y
-    );
-    dim3 grid2(
-        (d + threads.x - 1) / threads.x,
         (M + threads.y - 1) / threads.y
     );
 
     float *S;
     float alpha = 1.0f / sqrt((float)d);
     cudaMalloc(&S, M * M * sizeof(float));
-    matmul<false, true><<<grid1, threads>>>(Q, K, S, M, M, d, alpha);
-    apply_mask<<<grid1, threads>>>(S, M, M);
-    softmax<<<M, BLOCKSIZE * BLOCKSIZE>>>(S, M, M);
-
-    // S - M x M
-    // V - M x d
-    // output - M x d
-    matmul<false, false><<<grid2, threads>>>(S, V, output, M, d, M, 1.0f);
+    // Q @ K^T / sqrt(d)
+    matmul<false, true, true><<<grid, threads>>>(Q, K, S, M, M, d, alpha, window_size);
+    // softmax the scores
+    softmax<<<M, BLOCKSIZE>>>(S, M, M);
+    // S @ V
+    matmul<false, false, false><<<grid, threads>>>(S, V, output, M, d, M, 1.0f, window_size);
     cudaFree(S);
 }
-
-
-
-
