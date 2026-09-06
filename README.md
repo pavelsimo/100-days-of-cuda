@@ -693,3 +693,19 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - anyway, much better perf. around 3ms for the perf. test. link to the code below.
 
   ![Sliding Window Self-Attention](images/sliding_window_self_attention.png)
+
+### Day 50
+
+- finally, day 50! it's been a long way to get here, and we're still only halfway through. i have learned a lot so far, and i can't wait to see the progress at the end of day 100. thank you to everyone following along and supporting me. it means a lot!
+
+- anyway... back to CUDA! today i solved the LeetGPU [Multi-Head Cross-Attention](day50/multihead_cross_attention.cu) problem. in the Multi-Head Cross-Attention the "cross" part means `Q` comes from one sequence and `K` and `V` come from another. think of a decoder looking at the encoder's output to decide what to generate next. each head can pay attention to different relationships, then we combine the results. this multi-head version was introduced in the paper [Attention Is All You Need](https://arxiv.org/abs/1706.03762).
+
+  ![Multi-Head Cross-Attention](images/multi_head_cross_attention.png)
+
+- this problem is really similar to [INT8 KV-Cache Attention from Day 47](day47/int8_kv_cache_attention.cu). ignoring the int8 part, the main difference is how the input data is organized in memory. for that problem, the order is `(H, M, D)`: all `M` tokens for head 0, then head 1, and so on. quite convenient: just jump to `h * (M * D)` to pick a head.
+
+- for the Multi-Head Cross-Attention problem, the heads are in the middle, `(M, H, D)`: all heads for token 0, then token 1, and so on... so a head starts at `h * D`, but its next token is `H * D` elements away. we need to make sure the matmul uses that stride so we get the correct results. the diagram below may help to visualize:
+
+  ![Attention Heads in Memory](images/attention_heads_in_memory.png)
+
+
