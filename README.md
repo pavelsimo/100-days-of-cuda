@@ -708,4 +708,10 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
   ![Attention Heads in Memory](images/attention_heads_in_memory.png)
 
+### Day 51
 
+- solved the LeetGPU [INT8 Quantized MatMul](day51/int8_quantized_matmul_2.cu) problem. at first glance, the formula looks pretty scary, but when you look a little closer and it's just a matmul with scaling, round, and clamp. nothing too crazy... :)
+
+- if you're not familiar with clamp, it takes three values, `x`, `lo`, and `hi`, and keeps `x` within `[lo, hi]`. anything below `lo` becomes `lo`, anything above `hi` becomes `hi`, and the rest stays as is. here, the INT8 range is `[-128, 127]`.
+
+- i spent a bit of time debugging a rounding error. i was doing `(sum * scale_A * scale_B) / scale_C`, and the floating-point intermediates were enough to change the final rounded result. the fix was to calculate `scale_B / scale_C` first, multiply by `scale_A`, then apply that scale to `sum`. this avoids the larger intermediate product i had before. this is one of those situations math on paper is fine, different results depending how you operate your floating points.
