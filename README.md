@@ -715,3 +715,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - if you're not familiar with clamp, it takes three values, `x`, `lo`, and `hi`, and keeps `x` within `[lo, hi]`. anything below `lo` becomes `lo`, anything above `hi` becomes `hi`, and the rest stays as is. here, the INT8 range is `[-128, 127]`.
 
 - i spent a bit of time debugging a rounding error. i was doing `(sum * scale_A * scale_B) / scale_C`, and the floating-point intermediates were changing my final rounded result. at the end the fix was to calculate `scale_B / scale_C` first, multiply by `scale_A`, then apply that scale to sum. this avoids the larger intermediate values i had before. this is one of those situations math on paper is fine, but you get different results depending on how you operate your floating points values.
+
+### Day 52
+
+- solved the LeetGPU [Sparse Matrix-Dense Matrix Multiplication](day52/sparse_matrix_dense_matmul_3.cu) problem. this one felt a bit like cheating... the problem says "sparse", but regular dense matmul turned out to be faster. zeros included... :)
+
+- same lesson as [Day 47](#day-47): the input comes in a dense format, so before taking advantage of sparsity, we have to scan the whole matrix and pack the non-zero values into a sparse format. that conversion has a cost, and here it can eat up the savings from skipping zeros.
+
+- a bit of a shame. maybe LeetGPU should rework this problem and provide the matrix in a sparse format from the start, so we actually get to focus on sparse matmul.
