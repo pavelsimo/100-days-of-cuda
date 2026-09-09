@@ -726,7 +726,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 53
 
-- solved the LeetGPU [INT4 Weight-Only Quantized MatMul](day53/int4_weight_only_quantized_matmul.cu) problem. we're asked to implement a W4A16 matmul. in case you're wondering what the h*ll that means, it's just shorthand for 4-bit weights and 16-bit activations. the weights come packed in INT4, the activations are FP16, and the calculation looks like this:
+- solved the LeetGPU [INT4 Weight-Only Quantized MatMul](day53/int4_weight_only_quantized_matmul.cu) problem. this one is about building a W4A16 matmul. in case you're wondering what the h*ll that means, it's just shorthand for 4-bit weights and 16-bit activations. the weights come packed in INT4, the activations are FP16, and the calculation looks like this:
 
   ```c
   y = x @ dequantize(w, scales)^T
