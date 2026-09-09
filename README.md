@@ -735,12 +735,12 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   w - INT4
   ```
 
-- if you want to learn more, check out NVIDIA's [explanation of weight-only quantization](https://nvidia.github.io/TensorRT-LLM/reference/precision.html#int4-and-int8-weight-only-w4a16-and-w8a16).
+- if you want to learn more, check out NVIDIA [explanation of weight-only quantization](https://nvidia.github.io/TensorRT-LLM/reference/precision.html#int4-and-int8-weight-only-w4a16-and-w8a16).
 
-- we've seen similar problems on [Day 47](#day-47) and [Day 51](#day-51), where we stored data in a "smaller" type to save memory. then, we convert the weights back to floats when it's time to do the math. we unpack the weights and apply their scales to get back something close to the original values. that's dequantization. after that, we multiply by the activations (`x`) as usual.
+- we've seen similar problems on [Day 47](#day-47) and [Day 51](#day-51), where we stored data in a "smaller" type to save memory. then, we convert the weights back to floats when it's time to do the math. we unpack the weights and apply their scales to get back something close to the original values. that's dequantization. after that, we multiply as usual.
 
 - the problem explains this process with a new matrix `W`, but we don't need to build that matrix... we can convert the weights on the fly as we multiply, so there's no need to materialize `W` in gpu memory (yay!).
 
-- btw, a nibble is 4 bits, or half a byte. each byte has two nibbles, so we can pack two INT4 weights into one byte.
+- btw, in case you're wondering a nibble is 4 bits (half a byte). each byte has two nibbles, so we can pack two INT4 weights into one byte.
 
   ![W4A16](images/w4a16.png)
