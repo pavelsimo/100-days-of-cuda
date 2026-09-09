@@ -723,3 +723,24 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - same lesson as [Day 47](#day-47): the input comes in a dense format, so before taking advantage of sparsity, we have to scan the whole matrix and pack the non-zero values into a sparse format. that conversion has a cost, and here it can eat up the savings from skipping zeros.
 
 - a bit of a shame. maybe LeetGPU should rework this problem and provide the matrix in a sparse format from the start, so we actually get to focus on sparse matmul.
+
+### Day 53
+
+- solved the LeetGPU [INT4 Weight-Only Quantized MatMul](day53/int4_weight_only_quantized_matmul.cu) problem. we're asked to implement a W4A16 matmul. in case you're wondering what the h*ll that means, it's just shorthand for 4-bit weights and 16-bit activations. the weights come packed in INT4, the activations are FP16, and the calculation looks like this:
+
+  ```c
+  y = x @ dequantize(w, scales)^T
+
+  x - FP16
+  w - INT4
+  ```
+
+- if you want to learn more, check out NVIDIA's [explanation of weight-only quantization](https://nvidia.github.io/TensorRT-LLM/reference/precision.html#int4-and-int8-weight-only-w4a16-and-w8a16).
+
+- we've seen similar problems on [Day 47](#day-47) and [Day 51](#day-51), where we stored data in a "smaller" type to save memory. then, we convert the weights back to floats when it's time to do the math. we unpack the weights and apply their scales to get back something close to the original values. that's dequantization. after that, we multiply by the activations (`x`) as usual.
+
+- the problem explains this process with a new matrix `W`, but we don't need to build that matrix... we can convert the weights on the fly as we multiply, so there's no need to materialize `W` in gpu memory (yay!).
+
+- btw, a nibble is 4 bits, or half a byte. each byte has two nibbles, so we can pack two INT4 weights into one byte.
+
+  ![W4A16](images/w4a16.png)
