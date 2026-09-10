@@ -744,3 +744,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - btw, in case you're wondering a nibble is 4 bits (half a byte). each byte has two nibbles, so we can pack two INT4 weights into one byte.
 
   ![W4A16](images/w4a16.png)
+
+### Day 54
+
+- solved the LeetGPU [Group Normalization](day54/group_normalization.cu) problem. this one was tough for me. i had to read the description several times to decode the math. i'm not sure how this is a medium problem... this is a hard for sure!
+
+- Group Normalization is a normalization technique for neural networks that helps keep activations on a consistent scale during training. for each sample, we split the channels into groups, then normalize each group using its own mean and variance. those statistics come from within each image, so they don't depend on how many other samples (images, etc) are in the batch. if you're curious, here is the original paper: [Group Normalization](https://arxiv.org/abs/1803.08494).
+
+- this problem is really similar to [Layer Normalization from Day 41](#day-41). back then we needed a mean and variance for each row, now we need them for each group. with `N` samples and `G` groups per sample, we end up with two `N x G` matrices: one for the means and one for the variances. then, for each group, we just use the corresponding mean and variance to normalize its values.
+
+  ![Group Normalization](images/group_norm.png)
