@@ -754,3 +754,23 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - this problem is really similar to [Layer Normalization from Day 41](#day-41). back then we needed a mean and variance for each row, now we need them for each group. with `N` samples and `G` groups per sample, we end up with two `N x G` matrices: one for the means and one for the variances. then, for each group, we just use the corresponding mean and variance to normalize its values.
 
   ![Group Normalization](images/group_norm.png)
+
+### Day 55
+
+- solved the LeetGPU [BFS Shortest Path](day55/bfs.cu) problem. this was a fun one! i've solved many BFS problems in the past, but never a parallel one. 
+
+- my version goes level by level. at each depth, i launch `N x M` threads, one per grid cell. each thread checks whether its cell is at the current depth (a.k.a. "frontier"). if it is, it visits the unvisited neighbors, otherwise, it just returns. so even though i launch threads for the whole grid, only the current "frontier" has any work to do:
+
+  ```text
+  depth 0: launch N*M threads → only the start cell does useful work
+  depth 1: launch N*M threads → only the frontier at depth 1 works
+  depth 2: launch N*M threads → only the frontier at depth 2 works
+  depth 3: launch N*M threads → only the frontier at depth 3 works
+  ...
+  ```
+  
+- pretty simple, but we're checking the whole grid at every level. that means `O(V x L)` total work, where `V = N x M` and `L` is the number of depth levels (L) processed. lots of threads showing up just to find out they have nothing to do...
+
+- now comes the "funny" part... normal BFS (the one that runs in CPU land) has complexity `O(V + E)`. since each cell has at most 4 neighbors, `E <= 4`, so the complexity simplifies to `O(V)`, `E` (edges) is just too small to care. that means it might be faster to copy the grid from the device to the host, run BFS there, and then copy the result back to the device. i felt a bit too lazy to try that, though, so i kept my super duper slow kernel solution instead. maybe another day :)
+
+
