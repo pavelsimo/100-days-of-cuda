@@ -773,4 +773,14 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - now comes the "funny" part... normal BFS (the one that runs in CPU land) has complexity `O(V + E)`. since each cell has at most 4 neighbors, `E <= 4`, so the complexity simplifies to `O(V)`, `E` (edges) is just too small to care. that means it might be faster to copy the grid from the device to the host, run BFS there, and then copy the result back to the device. i felt a bit too lazy to try that, though, so i kept my super duper slow kernel solution instead. maybe another day :)
 
+### Day 56
 
+- solved the LeetGPU [Nearest Neighbor](day56/nearest_neighbor_3.cu) problem. i wrote three versions, starting with the dumbest solution i could think of and optimizing from there.
+
+- i started with [one thread per point](day56/nearest_neighbor.cu). each thread checks all the other points and keeps the closest one. on paper that's `O(N^2)`, plenty of repeated work. but here's the thing i didn't notice at first: all `N` threads run at the same time, so the GPU is basically waiting for a single thread to finish its `N` iterations. the time actually ends up closer to `O(N)`. the catch is that this only works while all the threads fit on the GPU in one go. the input sizes in LeetGPU's perf. test are well below that limit, so the naive approach did fine, taking about 1.09 ms.
+
+- next, i tried casting the points to `float3` in the [second version](day56/nearest_neighbor_2.cu), so i could read the three coordinates together and keep my own point in registers instead of re-reading it every iteration. that alone brought it down to 0.71 ms, about 35% faster for a couple of lines changed.
+
+- for the [third version](day56/nearest_neighbor_3.cu), i added tiles (just like in tiled matmul). each block loads a chunk of points into shared memory, and all its threads reuse those points before loading the next chunk. we're still checking every point, but we save a lot of repeated reads from global memory. this one took 0.37 ms on the perf. test, about 48% less time than the second version and 66% less than the first. it ranked #3 on the H100 leaderboard!
+
+- one thing that keeps working well: start simple, then win smaller battles until the perf. is where you want it. here, adding tiles to the naive approach was enough to get really good results. no fancy algorithm needed... just give those threads some fast shared memory :)
