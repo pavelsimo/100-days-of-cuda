@@ -786,3 +786,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - for the [third version](day56/nearest_neighbor_3.cu), i added tiles (just like in tiled matmul). each block loads a chunk of points into shared memory, and all its threads reuse those points before loading the next chunk. we're still checking every point, but we save a lot of repeated reads from global memory. this one took 0.37 ms on the perf. test, about 48% less time than the second version and 66% less than the first. it ranked #3 on the H100 leaderboard!
 
 - one thing that keeps working well: start simple, then win smaller battles until the perf. is where you want it. here, adding tiles to the naive approach was enough to get really good results. no fancy algorithm needed... just give those threads some fast shared memory :)
+
+### Day 57
+
+- solved the LeetGPU [All-Pairs Shortest Paths](day57/all_pairs_shortest_paths.cu) problem. in this one we use the [Floyd-Warshall algorithm](https://www.geeksforgeeks.org/dsa/floyd-warshall-algorithm-dp-16/) to find the shortest distances between every pair of vertices in a graph. the idea is pretty simple. for each intermediate vertex `k`, check whether going from `i` to `j` through `k` is cheaper than the best route we already know (the one at dist[i][j]):
+
+  ```c
+  dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
+  ```
+
+- basically, "can i get there faster with a stop along the way?" repeat that for every `k`, and we have all the shortest distances. the usual CPU version has three nested loops, `O(N^3)`. for the CUDA kernel, i parallelize the two inner loops: each thread handles one `(i, j)` pair, so many pairs get updated at the same time. we're still doing `O(N^3)` total work, but the GPU divides that work across its threads.
+
+- unfortunately we can't just parallelize all three loops and call it a day... each round of `k` depends on the distances from the previous round. if one block moves on to `k + 1` while another is still updating `k`, it can read unfinished results.
+
+- which is why we keep the `k` loop on the host and run the kernels one after another, one for each `k`, where `k <= N`.
