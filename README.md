@@ -800,3 +800,21 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - unfortunately we can't just parallelize all three loops and call it a day... each round of `k` depends on the distances from the previous round. if one block moves on to `k + 1` while another is still updating `k`, it can read unfinished results.
 
 - which is why we keep the `k` loop on the host and run the kernels one after another, one for each `k`, where `k <= N`.
+
+### Day 58
+
+- solved the LeetGPU [Max Subarray Sum](day58/max_subarray_sum_3.cu) problem. for this problem we need to find the largest sum of `window_size` consecutive elements. i wrote four different versions for this one.
+
+- i started with the [naive version](day58/max_subarray_sum.cu): each thread handles a starting index `i` and loops from `i` to `i + window_size - 1`, adding up the values to get that subarray's sum. then it uses `atomicMax` to keep the largest sum across all windows. neighboring windows overlap, but each thread calculates its sum from scratch... that's `O(window_size)` work per window, with lots of repeated additions. this one took 2.55 ms.
+
+- next, i used [prefix sums](day58/max_subarray_sum_2.cu), where each entry stores the sum so far. for a window starting at `i`, its last index is `j = i + window_size - 1`, and its sum is:
+
+  ```c
+  sum = prefix_sum[j] - (i > 0 ? prefix_sum[i - 1] : 0);
+  ```
+
+- this is `O(1)` per window once the prefix sums are ready. less work in theory, but this one took 4.79 ms, slower than the naive version! building the prefix sums with a single thread dominated the runtime... :)
+
+- so in the [third version](day58/max_subarray_sum_3.cu), i made the prefix sum parallel too. each block computes its own prefix sums, then we add the sum of all elements in the blocks before it. the window calculation stays the same, but properly parallelizing the prefix sum brought the time down to just 0.65 ms.
+
+- then i wondered if we could run even faster by reducing the number of `atomicMax` calls. for the [fourth version](day58/max_subarray_sum_4.cu), i tried the idea of privatization. so each warp finds its maximum and stores it in shared memory, then we reduce those values to one maximum per block. now each block makes just one `atomicMax` call to update the final answer. i ran my own tests and it does help for larger `N`, but on LeetGPU perf. test, this one took 0.97 ms, slower than version three... :(
