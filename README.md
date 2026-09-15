@@ -805,7 +805,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [Max Subarray Sum](day58/max_subarray_sum_3.cu) problem. for this problem we need to find the largest sum of `window_size` consecutive elements. i wrote four different versions for this one.
 
-- i started with the [naive version](day58/max_subarray_sum.cu): each thread handles a starting index `i` and loops from `i` to `i + window_size - 1`, adding up the values to get that subarray's sum. then it uses `atomicMax` to keep the largest sum across all windows. neighboring windows overlap, but each thread calculates its sum from scratch... that's `O(window_size)` work per window, with lots of repeated additions. this one took 2.55 ms.
+- i started with the [naive version](day58/max_subarray_sum.cu): each thread handles a starting index `i` and loops from `i` to `i + window_size - 1`, adding up the values to get that subarray's sum. then it uses `atomicMax` to keep the largest sum for all windows. even when neighboring windows overlap, each thread calculates its sum from scratch... that's `O(window_size)` work per window, with lots of repeated additions. this one took 2.55 ms.
 
 - next, i used [prefix sums](day58/max_subarray_sum_2.cu), where each entry stores the sum so far. for a window starting at `i`, its last index is `j = i + window_size - 1`, and its sum is:
 
@@ -817,4 +817,16 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - so in the [third version](day58/max_subarray_sum_3.cu), i made the prefix sum parallel too. each block computes its own prefix sums, then we add the sum of all elements in the blocks before it. the window calculation stays the same, but properly parallelizing the prefix sum brought the time down to just 0.65 ms.
 
-- then i wondered if we could run even faster by reducing the number of `atomicMax` calls. for the [fourth version](day58/max_subarray_sum_4.cu), i tried the idea of privatization. so each warp finds its maximum and stores it in shared memory, then we reduce those values to one maximum per block. now each block makes just one `atomicMax` call to update the final answer. i ran my own tests and it does help for larger `N`, but on LeetGPU perf. test, this one took 0.97 ms, slower than version three... :(
+- then i wondered if we could run even faster by reducing the number of `atomicMax` calls. for the [fourth version](day58/max_subarray_sum_4.cu), i tried the idea of privatization. so each warp finds its maximum and stores it in shared memory, then we reduce those values to one maximum per block. now each block makes just one `atomicMax` call to update the final answer. i ran my own tests and it does help for large values of `N`, but on LeetGPU perf. test this one took 0.97 ms, slower than version three... :(
+
+### Day 59
+
+- solved the LeetGPU [Token Embedding Layer](day59/token_embedding_layer.cu) problem. this is the input embedding layer used in transformer models like BERT: https://arxiv.org/pdf/1810.04805.
+
+- for each token, we look up its token and position embeddings, add them together, and apply layer normalization. see image below:
+
+  ![Token Embedding Layer](images/token_embedding_layer.png)
+
+- this one is extremely similar to [Group Normalization from Day 54](#day-54). we already did the mean, variance, and normalization part there, including the scale and shift at the end. this time we do it for each token's embedding vector instead of each group of channels. so once we add the token and position embeddings, we already know how to do the rest.
+
+- group normalization was difficult for me back on day 54, but what i learned then made this problem feel easier this time around. that's what i like about doing this every day. what you learn from one problem helps you solve the next, and little by little, you build a solid foundation to take on harder problems.
