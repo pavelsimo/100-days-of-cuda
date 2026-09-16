@@ -830,3 +830,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - this one is extremely similar to [Group Normalization from Day 54](#day-54). we already did the mean, variance, and normalization part there, including the scale and shift at the end. this time we do it for each token's embedding vector instead of each group of channels. so once we add the token and position embeddings, we already know how to do the rest.
 
 - group normalization was difficult for me back on day 54, but what i learned then made this problem feel easier this time around. that's what i like about doing this every day. what you learn from one problem helps you solve the next, and little by little, you build a solid foundation to take on harder problems.
+
+### Day 60
+
+- solved the LeetGPU [PPO Clipped Surrogate Loss](day60/ppo_clipped_surrogate_loss.cu) problem. PPO stands for Proximal Policy Optimization, from the paper [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347). 
+
+- this is the first of several reinforcement learning problems that i'll like to solve from the LeetGPU challenges.
+
+- in the "real world", PPO can be used to train robots through trial and error. for example, [OpenAI used it to teach a robotic hand to manipulate objects](https://arxiv.org/pdf/1808.00177), training in simulation before transferring what it learned to a physical robot.
+
+- this problem is mostly following the formula: we calculate the probability ratio between the current and old policies, clip it (or clamp it, same thing), multiply both versions by the advantage, and take the smaller value. the loss is the negative mean over all tokens. see the image below for the steps.
+
+  ![PPO Clipped Surrogate Loss](images/ppo_clipped_surrogate_loss.png)
+
+- one important part is the mean calculation. we've seen how to implement that several times before, like in [Group Normalization on Day 54](#day-54) and [Token Embedding Layer on Day 59](#day-59), which we did yesterday. the only difference here is that we add all the PPO "stuff" before summing everything up.
