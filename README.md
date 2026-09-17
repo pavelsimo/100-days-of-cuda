@@ -855,7 +855,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - this one is really similar to [the PPO problem from yesterday](#day-60): follow the formula, do some arithmetic, and calculate the mean. we've done this a few times already, so nothing too crazy.
 
-- there was one gotcha, though: softplus. i started with the naive `logf(1.0f + expf(z))` and ran into numerical stability issues. after a bit of research, i found this more stable way to calculate it: https://stackoverflow.com/questions/44230635/avoid-overflow-with-softplus-function-in-python
+- there was one gotcha, though: softplus. i started with a naive version `logf(1.0f + expf(z))` and ran into numerical stability issues. after a bit of research, i found this more stable way to calculate it: https://stackoverflow.com/questions/44230635/avoid-overflow-with-softplus-function-in-python
 
   ```c
   fmaxf(x, 0.0f) + log1pf(expf(-fabsf(x)))
