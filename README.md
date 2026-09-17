@@ -844,3 +844,19 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ![PPO Clipped Surrogate Loss](images/ppo_clipped_surrogate_loss.png)
 
 - one important part is the mean calculation. we've seen how to implement that several times before, like in [Group Normalization on Day 54](#day-54) and [Token Embedding Layer on Day 59](#day-59), which we did yesterday. the only difference here is that we add all the PPO "stuff" before summing everything up.
+
+### Day 61
+
+- solved the LeetGPU [DPO Sequence Loss](day61/dpo_sequence_loss.cu) problem. DPO stands for Direct Preference Optimization. if you're curious, check out the paper [Direct Preference Optimization: Your Language Model is Secretly a Reward Model](https://arxiv.org/abs/2305.18290).
+
+  ![DPO Sequence Loss](images/dpo_sequence_loss.png)
+
+- in the "real world", DPO can be used to fine-tune a chatbot using human preferences. imagine two answers to the same question: one is clear and helpful, the other is confusing. we label the first as preferred and the second as rejected, then train the model to favor the preferred answer. basically, learning from examples.
+
+- this one is really similar to [the PPO problem from yesterday](#day-60): follow the formula, do some arithmetic, and calculate the mean. we've done this a few times already, so nothing too crazy.
+
+- there was one gotcha, though: softplus. i started with the naive `logf(1.0f + expf(z))` and ran into numerical stability issues. after a bit of research, i found this more stable way to calculate it: https://stackoverflow.com/questions/44230635/avoid-overflow-with-softplus-function-in-python
+
+  ```c
+  fmaxf(x, 0.0f) + log1pf(expf(-fabsf(x)))
+  ```
