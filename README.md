@@ -865,7 +865,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [GRPO Surrogate Loss](day62/grpo_surrogate_loss.cu) problem. we continue with the RL problems as planned. 
 
-- GRPO stands for Group Relative Policy Optimization, introduced by the DeepSeek team in [DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models, Shao et al. (2024)](https://arxiv.org/abs/2402.03300).
+- GRPO stands for Group Relative Policy Optimization, introduced by the DeepSeek team in [DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models](https://arxiv.org/abs/2402.03300).
 
 - in the "real world", GRPO can be used to train language models to solve math problems, like DeepSeek did with DeepSeekMath. imagine asking the model the same question several times and scoring each answer. we compare the reward for each answer against the rest of the group, then train the model to favor the better ones. that's where the "group relative" part comes from.
 
