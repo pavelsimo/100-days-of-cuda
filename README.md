@@ -860,3 +860,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ```c
   fmaxf(x, 0.0f) + log1pf(expf(-fabsf(x)))
   ```
+
+### Day 62
+
+- solved the LeetGPU [GRPO Surrogate Loss](day62/grpo_surrogate_loss.cu) problem. we continue with the RL problems as planned. 
+
+- GRPO stands for Group Relative Policy Optimization, introduced by the DeepSeek team in [DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models, Shao et al. (2024)](https://arxiv.org/abs/2402.03300).
+
+- in the "real world", GRPO can be used to train language models to solve math problems, like DeepSeek did with DeepSeekMath. imagine asking the model the same question several times and scoring each answer. we compare the reward for each answer against the rest of the group, then train the model to favor the better ones. that's where the "group relative" part comes from.
+
+- this problem is a bit more difficult than [the DPO problem from yesterday](#day-61), but the same ideas apply: follow the formula, do some arithmetic, and calculate the mean. there are some simililarities with [PPO from Day 60](#day-60), for instance the clipping (clamp) part. see the image below for a step-by-step explanation.
+
+  ![GRPO Surrogate Loss](images/grpo_surrogate_loss.png)
+
+- just in case you don't know, a "surrogate" is just a fancy word for a substitute, something you use in place of the real thing. here the "real thing" is the expected reward (how good the answers from the model are on average), which you can't take a gradient through directly, so you optimize a substitute that moves in the same direction. so for example, you can't directly measure how happy a customer is, so you measure instead if they come back. repeat visits are not happiness, but they kind of move in the same direction. 
