@@ -867,7 +867,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - GRPO stands for Group Relative Policy Optimization, introduced by the DeepSeek team in [DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models](https://arxiv.org/abs/2402.03300).
 
-- in the "real world", GRPO can be used to train language models to solve math problems, like DeepSeek did with DeepSeekMath. imagine asking the model the same question several times and scoring each answer. we compare the reward for each answer against the rest of the group, then train the model to favor the better ones. that's where the "group relative" part comes from.
+- GRPO can be used to train language models to solve math problems, like DeepSeek did with DeepSeekMath. imagine asking the model the same question several times and scoring each answer. we compare the reward for each answer against the rest of the group, then train the model to favor the better ones. that's where the "group relative" part comes from.
 
 - this problem is a bit more difficult than [the DPO problem from yesterday](#day-61), but the same ideas apply: follow the formula, do some arithmetic, and calculate the mean. there are some simililarities with [PPO from Day 60](#day-60), for instance the clipping (clamp) part. see the image below for the steps.
 
