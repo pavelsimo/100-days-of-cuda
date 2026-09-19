@@ -885,7 +885,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - GAE looks at later rewards to help judge earlier actions. think of a robot taking a step, staying balanced, and earning rewards (points, btc?) as it keeps walking. if that works, the earlier step gets some credit as well.
 
-- the code starts by calculating all the temporal-difference errors (`delta`) in parallel, one thread per step. each `delta[t]` only needs the reward and the values at `t` and `t + 1`, we get this from the input so not dependecies there.
+- the code starts by calculating all the temporal-difference errors (`delta`) in parallel, one thread per step. each `delta[t]` only needs the reward and the values at `t` and `t + 1`, we get this from the input so not dependencies there.
 
 - once the `delta` values are ready, we combine them into advantages each one sums the current error and the discounted errors after it.
 
