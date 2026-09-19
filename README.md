@@ -874,3 +874,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ![GRPO Surrogate Loss](images/grpo_surrogate_loss.png)
 
 - just in case you don't know, a "surrogate" is just a fancy word for a substitute, something you use in place of the real thing. here the "real thing" is the expected reward (how good the answers from the model are on average), which you can't take a gradient through directly, so you optimize a substitute that moves in the same direction. so for example, you can't directly measure how happy a customer is, so you measure instead if they come back. repeat visits are not happiness, but they kind of move in the same direction. 
+
+### Day 63
+
+- solved the LeetGPU [Parallel Reverse Scan (GAE)](day63/parallel_reverse_scan.cu) problem. continuing with the RL theme! this one took me a while... i struggled a bit to translate the math into something i could actually implement. anyway, it happens...
+
+- GAE stands for Generalized Advantage Estimation, from the paper [High-Dimensional Continuous Control Using Generalized Advantage Estimation](https://arxiv.org/abs/1506.02438). remember the advantage we used in [PPO on Day 60](#day-60)? GAE is one way to calculate it.
+
+- GAE looks at later rewards to help judge earlier actions. think of a robot taking a step, staying balanced, and earning rewards (points, btc?) as it keeps walking. if that works, the earlier step gets some credit as well.
+
+- so to solve it, we first calculate all the temporal-difference errors (`delta`) in parallel, one thread per step. each `delta[t]` only needs the reward and the values at `t` and `t + 1`, we get this from the input so not dependecies there. 
+
+- once the `delta` values are ready, we combine them into advantages each one sums the current error and the discounted errors after it.
+
+  ![Parallel Reverse Scan (GAE)](images/parallel_reverse_scan_gae.png)
