@@ -877,13 +877,15 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 63
 
-- solved the LeetGPU [Parallel Reverse Scan (GAE)](day63/parallel_reverse_scan.cu) problem. continuing with the RL theme! this one took me a while... i struggled a bit to translate the math into something i could actually implement. anyway, it happens...
+- solved the LeetGPU [Parallel Reverse Scan (GAE)](day63/parallel_reverse_scan.cu) problem. continuing with the RL theme! 
 
-- GAE stands for Generalized Advantage Estimation, from the paper [High-Dimensional Continuous Control Using Generalized Advantage Estimation](https://arxiv.org/abs/1506.02438). remember the advantage we used in [PPO on Day 60](#day-60)? GAE is one way to calculate it.
+- this one took me a while... i struggled a bit to translate the math into something i could actually implement. anyway, it happens...
+
+- so GAE stands for Generalized Advantage Estimation, from the paper [High-Dimensional Continuous Control Using Generalized Advantage Estimation](https://arxiv.org/abs/1506.02438). remember the advantage we used in [PPO on Day 60](#day-60)? GAE is one way to calculate it.
 
 - GAE looks at later rewards to help judge earlier actions. think of a robot taking a step, staying balanced, and earning rewards (points, btc?) as it keeps walking. if that works, the earlier step gets some credit as well.
 
-- so to solve it, we first calculate all the temporal-difference errors (`delta`) in parallel, one thread per step. each `delta[t]` only needs the reward and the values at `t` and `t + 1`, we get this from the input so not dependecies there. 
+- the code starts by calculating all the temporal-difference errors (`delta`) in parallel, one thread per step. each `delta[t]` only needs the reward and the values at `t` and `t + 1`, we get this from the input so not dependecies there.
 
 - once the `delta` values are ready, we combine them into advantages each one sums the current error and the discounted errors after it.
 
