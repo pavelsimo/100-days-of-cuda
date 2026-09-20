@@ -899,16 +899,16 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - here, we start with the expression:
 
   ```c
-  h[t] = a[t] * h[t - 1] + x[t];
+  h[t] = a[t] * h[t - 1] + x[t]
   ```
 
 - expanding the first few steps makes it easier to see what's happening:
 
   ```c
-  h[0] = x[0];
-  h[1] = x[1] + a[1] * x[0];
-  h[2] = x[2] + a[2] * x[1] + a[2] * a[1] * x[0];
-  h[3] = x[3] + a[3] * x[2] + a[3] * a[2] * x[1] + a[3] * a[2] * a[1] * x[0];
+  h[0] = x[0]
+  h[1] = x[1] + a[1] * x[0]
+  h[2] = x[2] + a[2] * x[1] + a[2] * a[1] * x[0]
+  h[3] = x[3] + a[3] * x[2] + a[3] * a[2] * x[1] + a[3] * a[2] * a[1] * x[0]
   ```
 
 - each result includes the current input plus earlier inputs multiplied by the coefficients along the way. so we don't need to calculate all those products separately, though. the previous result already contains the work we've done so far.
