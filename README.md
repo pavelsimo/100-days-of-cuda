@@ -890,3 +890,29 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - once the `delta` values are ready, we combine them into advantages each one sums the current error and the discounted errors after it.
 
   ![Parallel Reverse Scan (GAE)](images/parallel_reverse_scan_gae.png)
+
+
+### Day 64
+
+- solved the LeetGPU [Linear Recurrence](day64/linear_recurrence.cu) problem. this kind of recurrence is a core building block of State Space Models (SSMs) such as Mamba, S4, and H3. if you're curious, check out the paper [Mamba: Linear-Time Sequence Modeling with Selective State Spaces](https://arxiv.org/abs/2312.00752). 
+
+- here, we start with the expression:
+
+  ```c
+  h[t] = a[t] * h[t - 1] + x[t];
+  ```
+
+- expanding the first few steps makes it easier to see what's happening:
+
+  ```c
+  h[0] = x[0];
+  h[1] = x[1] + a[1] * x[0];
+  h[2] = x[2] + a[2] * x[1] + a[2] * a[1] * x[0];
+  h[3] = x[3] + a[3] * x[2] + a[3] * a[2] * x[1] + a[3] * a[2] * a[1] * x[0];
+  ```
+
+- each result includes the current input plus earlier inputs multiplied by the coefficients along the way. so we don't need to calculate all those products separately, though. the previous result already contains the work we've done so far.
+
+- for the kernel implementation, each sequence in the batch runs on its own thread. `B` is the batch size, or number of sequences. each thread processes its sequence in order, since each step needs the previous result. a good thing is the sequences are independent of one another, so they can run in parallel.
+
+
