@@ -915,4 +915,12 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - for the kernel implementation, each sequence in the batch runs on its own thread. `B` is the batch size, or number of sequences. each thread processes its sequence in order, since each step needs the previous result. a good thing is the sequences are independent of one another, so they can run in parallel.
 
+### Day 65
 
+- solved the LeetGPU [Vision Transformer Patch Embedding](day65/vision_transformer_patch_embedding.cu) problem. this is a new problem on LeetGPU, and at the time of writing this post, i'm the only one who has solved it. pretty cool :)
+
+- patch embedding is the step that turns an image into a sequence of tokens for a Vision Transformer (ViT). we split the image into patches, flatten each patch and project it into an embedding, put a learned `cls_token` at the beginning, and add position embeddings. if you're curious, check out the original paper [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/abs/2010.11929).
+
+- this one was a real indexing nightmare... i struggled to translate the math in the description into code. which pixel do i read from this patch, and where does the result go? the n + 1 thing, etc... anyway, getting those indices right took a while. 
+
+- in case you don't know, `cls_token` means classification token. think of it as a place to collect information about the whole image. we put it before the patches, and later the transformer fills it with information that helps the model decide what the image shows, like a cat or a dog.
