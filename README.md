@@ -924,3 +924,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - this one was a real index nightmare... i struggled to translate the math in the description into code. which pixel do i read from this patch, and where does the result go? the n + 1 thing, etc... anyway, getting those indices right took a while. 
 
 - in case you don't know, `cls_token` means classification token. think of it as a place to collect information about the whole image. we put it before the patches, and later the transformer fills it with information that helps the model decide what the image shows, like a cat or a dog.
+
+### Day 66
+
+- solved the LeetGPU [Multi-Head Latent Attention Decode](day66/multi_head_latent_attention_decode.cu) problem. this is the attention variant used in DeepSeek-V2/V3. if you're curious, check out the paper [DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model](https://arxiv.org/abs/2405.04434).
+
+- so the idea is to compress the keys and values into one latent vector per position that all heads share, along with a small rotary key. that's a lot less to keep in the KV cache during inference:
+
+  ![Multi-Head Latent Attention compared with MHA, GQA, and MQA](images/multi_head_latent_attention.png)
+
+- as usual the implementation had a lot of math. luckily, the problem breaks it down into steps. also it helps we learned how to handle the pointer arithmetic for multiple heads back in [on Day 34](#day-34), there was a lot of that in this problem.
+
+- another thing i hadn't seen in a problem before: the input vectors were concatenated. each row of `q` contains `q_nope` followed by `q_pe`, and each row of `kv_cache` contains `c` followed by `k_pe`. we need to read the right slice of each row, with the proper stride. as you probably know, more offsets, more chances to mess up. i struggled with this one because of that :)
+
+- ah one more thing... i claimed in the past that i had solved all attention problems on LeetGPU. this one was added recently, and there are only two submissions so far, including mine.
