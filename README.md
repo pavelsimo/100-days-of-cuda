@@ -938,3 +938,15 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - another thing i hadn't seen in a problem before: the input vectors were concatenated. each row of `q` contains `q_nope` followed by `q_pe`, and each row of `kv_cache` contains `c` followed by `k_pe`. we need to read the right slice of each row, with the proper stride. as you probably know, more offsets, more chances to mess up. i struggled with this one because of that :)
 
 - ah one more thing... i claimed in the past that i had solved all attention problems on LeetGPU. this one was added recently, and there are only two submissions so far, including mine.
+
+### Day 67
+
+- solved the LeetGPU [MoE Top-K Gating](day67/moe_top_k_gating.cu) problem. for those who don't know, MoE stands for Mixture of Experts, and top-k gating is how many of these models pick which experts handle each token. each MoE layer has a small learned router, usually just a single linear layer, that multiplies the tokens hidden state by a weight matrix to get one score (logit) per expert. top-k gating then picks the `k` experts with the highest scores. if you're curious, check out the paper [Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer](https://arxiv.org/abs/1701.06538).
+
+- i was short on time today, so i went with a naive solution. the constraints are quite low, `E <= 256` and `k <= E`, so i figured a simple approach should do just fine for now.
+
+- for the top-k part, each thread handles one token. it scans the experts to find the largest logit, saves its value and index, then repeats until it has all `k`. once that's done, a separate softmax kernel turns those top values into weights.
+
+- i'll revisit this one. i have an idea to parallelize the top-k selection with a block reduction, but it will take some time to get the implementation right... leaving that for another day :)
+
+  ![MoE Top Gating](images/moe_top_gating.png)
