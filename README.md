@@ -950,3 +950,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - i'll revisit this one. i have an idea to parallelize the top-k selection with a block reduction, but it will take some time to get the implementation right... leaving that for another day :)
 
   ![MoE Top Gating](images/moe_top_gating.png)
+
+### Day 68
+
+- solved the LeetGPU [Top-p Sampling](day68/top_p_sampling.cu) problem. top-p (or nucleus) sampling is one way a language model picks its next token. if you're curious, check out the paper [The Curious Case of Neural Text Degeneration](https://arxiv.org/abs/1904.09751).
+
+- getting the random part right took a while... according to my research LeetGPU judge uses [PyTorch's sampler](https://github.com/pytorch/pytorch/blob/main/aten/src/ATen/native/Distributions.cpp), which calls `exponential_()` with Philox on CUDA. so i thought well why not cuRAND? sadly external libraries aren't allowed, so after some rand function hunting, i ended up with matching implementation of `philox_uniform`.
+
+- once the randomness was sorted out, the rest was just following the steps: softmax, sort, keep the nucleus, renormalize, and sample.
+
+  ![Top-p Sampling](images/top_p_sampling.png)
