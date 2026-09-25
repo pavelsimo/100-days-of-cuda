@@ -960,3 +960,15 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - once the randomness was sorted out, the rest was just following the steps: softmax, sort, keep the nucleus, renormalize, and sample.
 
   ![Top-p Sampling](images/top_p_sampling.png)
+
+### Day 69
+
+- solved the LeetGPU [Top K Selection](day69/top_k_selection_2.cu) problem. there are many dimensions to this one.
+
+- every time we encounter a problem with precise step by step instructions, we should ask ourselves: should we do exactly what the statement is telling us to do, or is there "more" to this? usually, following the steps blindly is the way to go, but for some problems, the really interesting gains come from noticing some underlying characteristic of the data and doing something a bit more clever.
+
+- what do i mean by this? today i just sorted the elements and took the top `k`. that's fine, as long as the sorting algorithm is fast enough. i initially tried [rank sort](day69/top_k_selection.cu). i was in a bit of a rush and didn't read the constraints: since `N <= 100,000,000`. an `O(N^2)` algorithm would do up to `10^16` comparisons, or 10 quadrillion... probably too slow :) next, i implemented bitonic sort, with `O(N log^2 N)` total work, and that was enough to pass the LeetGPU perf. tests.
+
+- but can we do better? yes, because the problem isn't asking us to sort all the numbers; it's ONLY asking for the top `k`. so if we can figure out how to find those elements without doing a full sort, we can cut out unnecessary work and get better performance. one hint is how perf. is measured for this problem: `N = 50,000,000`, `k = 100`. note how small `k` is. this is the key.
+
+- that said, i have another problem to revisit...
