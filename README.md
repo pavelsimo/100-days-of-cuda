@@ -972,3 +972,19 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - but can we do better? yes, because the problem isn't asking us to sort all the numbers; it's ONLY asking for the top `k`. so if we can figure out how to find those elements without doing a full sort, we can cut out unnecessary work and get better performance. one hint is how perf. is measured for this problem: `N = 50,000,000`, `k = 100`. note how small `k` is. this is the key.
 
 - that said, i have another problem to revisit...
+
+### Day 70
+
+- solved the LeetGPU [Multi-Agent Simulation](day70/multi_agent_simulation_3.cu) problem. i think this one should be a medium, not a hard. 
+
+- for this problem, each agent has a position and a velocity, and we update the movement based on the average velocity of nearby neighbors.
+
+- today i want to do something a bit different: walk through the three solutions and each optimization along the way. i think seeing how we get there is more useful than just presenting the most optimized version.
+
+- let's start with the [first solution](day70/multi_agent_simulation.cu). each thread handles one agent `i` and loops over all the other agents (`i != j`). it checks which ones are close enough, averages the velocities of those neighbors, and updates the velocity and position of agent `i`. if there are no neighbors, the velocity stays the same. this solution took around 0.88 ms on the perf. test, this is the baseline, it does not get slower than this. 
+
+- now, we're checking every agent against every other agent, so that's still `O(N^2)` total work. but remember those threads can run in parallel! if they could all run at the same time, we'd only have to wait for one `O(N)` loop to finish. of course, the GPU can only run so many threads at once... as `N` grows, some have to wait.
+
+- the [second solution](day70/multi_agent_simulation_2.cu) is almost the same, but uses `float4` to load the four values for each agent (`x`, `y`, `vx`, `vy`) together instead of four separate scalar reads. we also write the result as a `float4`. same calculations, just changing how we move the data. this brought the time down to 0.60 ms, about 47% faster than the first solution.
+
+- the [third solution](day70/multi_agent_simulation_3.cu) was really nice because we already used this idea on [Day 56](#day-56): shared memory! each block loads a tile of 256 agents into shared memory, waits until the data is ready, and then all threads in the block reuse that tile to check for neighbors. before loading the next tile, we synchronize again so nobody overwrites data another thread is still using. we're still checking every other agent. each block loads a chunk of agents into shared memory once, then all threads in the block reuse that data. that brought the time down to 0.29 ms, about 107% faster than the second version. compared with the original 0.88 ms, that is roughly a 3x speedup. 
