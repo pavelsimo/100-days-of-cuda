@@ -991,17 +991,15 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 71
 
-- solved the LeetGPU [GPT-2 Transformer Block](day71/transformer_block.cu) problem. this one is not a problem, it's a complete project :D
+- solved the LeetGPU [GPT-2 Transformer Block](day71/transformer_block.cu) problem. this one is not a problem, it's a complete project :D just to give you an idea of the size, the implementation ended up at 344 lines, 7 kernels and 2 device functions...
 
 - we have to implement the forward pass of a GPT-2 transformer block. no ready made layers to call here... layer norm, GELU, matrix multiplications, softmax, residual additions, we have to put all of it together ourselves.
 
-- this was a nice way to bring together what we've learned so far. we've already solved most of these pieces as separate problems, and all that practice came in handy here. i can imagine trying this when i first started the CUDA journey... probably would have been way too overwhelming. now it's still a lot of work, but at least i recognize the pieces.
+- this was a nice way to apply what we've learned so far. we've already solved most of these pieces as separate problems, and all that practice came in handy here. i can imagine trying this when i first started the CUDA journey... probably would have been way too overwhelming. now it's still a lot of work, but at least i recognize the pieces.
 
 - the most challenging part was multi-head attention. in previous problems, the head data was already laid out nicely for us to use. here, we first calculate `Q`, `K`, and `V` together in one big projection, then have to figure out where each head starts and how far to jump to reach the next token. getting the offsets and strides right took some work.
 
 - the GEMM work from [Day 14](#day-14) and [Day 15](#day-15) was useful here too. there are a lot of matrix multiplications followed by a bias vector addition, so having a GEMM kernel that can do both saves us from calling an addition kernel.
-
-- the code ended up with 344 lines... 7 kernels and 2 device functions. way more than the usual daily problem!
 
 - i allocated a lot of intermediate buffers. there's probably plenty of room to combine operations, reuse memory, and avoid writing some of those intermediate results (avoid materialization). but this problem was already long "enough", so today i focused on getting the whole thing working. this one as well would be cool to revisit for optimization at some point... the list keeps growing :)
 
