@@ -8,7 +8,7 @@ __global__ void simulate(const float* __restrict__ agents, float* __restrict__ a
     const float alpha = 0.05f;
     const float neighbor_sqr_dist = 25.0f;
     __shared__ float4 tile[TILE_SIZE];
-    float4* __restrict__  agents4 = reinterpret_cast<float4*>(const_cast<float*>(agents));
+    const float4* __restrict__  agents4 = reinterpret_cast<const float4*>(agents);
     float4* __restrict__ agents4_next = reinterpret_cast<float4*>(agents_next);
     float4 a = ok ? agents4[idx] : make_float4(0.0f, 0.0f, 0.0f, 0.0f);
     float x = a.x;

@@ -4,7 +4,7 @@ __global__ void simulate(const float* agents, float* agents_next, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     const float alpha = 0.05f;
     const float neighbor_sqr_dist = 25.0f;
-    float4* agents4 = reinterpret_cast<float4*>(const_cast<float*>(agents));
+    const float4* agents4 = reinterpret_cast<const float4*>(agents);
     float4* agents4_next = reinterpret_cast<float4*>(agents_next);
     if (idx < N) {
         float4 a = agents4[idx];
