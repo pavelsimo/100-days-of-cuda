@@ -1021,3 +1021,5 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - i really liked seeing a simplified transformer from start to end, one of my favorite problems in LeetGPU so far. highly recommended :)
 
 - so this time i only parallelized across the examples in the batch, one thread per prompt. each thread loops through the decode steps, runs the transformer on the current sequence, and picks the token with the highest logit (`argmax`). then append that token to the sequence and repeat, so each step builds on the previous one.
+
+  ![Adder Transformer](images/adder_transformer.png)
