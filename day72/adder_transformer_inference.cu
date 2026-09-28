@@ -87,16 +87,16 @@ __global__ void adder_kernel(const int* prompts, float* output, const float* wei
     if (batch >= batch_size) {
         return;
     }
-    
+
     const int max_len = prompt_len + decode_steps;
     int tokens[max_len];
     for (int p = 0; p < prompt_len; ++p) {
         tokens[p] = prompts[batch * prompt_len + p];
     }
 
-    for (int i = 0; i < decode_steps; ++i) {
-        const int seq_len = prompt_len + i;
-        const int i_q = seq_len - 1;
+    for (int step = 0; step < decode_steps; ++step) {
+        const int seq_len = prompt_len + step;
+        const int i = seq_len - 1;
 
         // step 1: encode the tokens
         float h[max_len * hidden_dim];
@@ -142,7 +142,7 @@ __global__ void adder_kernel(const int* prompts, float* output, const float* wei
         }
 
         // step 6: dot product attention
-        const float* q = &Q[i_q * hidden_dim];
+        const float* q = &Q[i * hidden_dim];
         float scores[max_len];
         for (int j = 0; j < seq_len; ++j) {
             scores[j] = dot(q, &K[j * hidden_dim], head_dim) * att_scale;
@@ -150,7 +150,7 @@ __global__ void adder_kernel(const int* prompts, float* output, const float* wei
 
         // step 7: causal mask
         for (int j = 0; j < seq_len; ++j) {
-            if (j > i_q) {
+            if (j > i) {
                 scores[j] = -INFINITY;
             }
         }
@@ -167,7 +167,7 @@ __global__ void adder_kernel(const int* prompts, float* output, const float* wei
         attn[0] = 0.0f;
 
         // step 11: residual conn.
-        float* h_q = &h[i_q * hidden_dim];
+        float* h_q = &h[i * hidden_dim];
         h_q[1] += attn[1];
 
         // step 12: RMSNorm after residual connection
@@ -196,7 +196,7 @@ __global__ void adder_kernel(const int* prompts, float* output, const float* wei
         for (int d = 0; d < vocab_size; ++d) {
             float e[hidden_dim] = { w0 - w1 * d * d, -d };
             logits[d] = dot(out, e, hidden_dim);
-            output[(batch * decode_steps + i) * vocab_size + d] = logits[d];
+            output[(batch * decode_steps + step) * vocab_size + d] = logits[d];
         }
 
         // step 17: choose next digit
