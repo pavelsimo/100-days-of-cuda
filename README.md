@@ -1016,7 +1016,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [Adder Transformer Inference](day72/adder_transformer_inference.cu) problem. a transformer to add two numbers... yeah, you heard that right, like `3 + 5 = 8`. here's a [sample PyTorch implementation](https://gist.github.com/Lokimorty/d54e5c61997e00fb922b6692739a0f6c) if you're curious.
 
-- i struggled with this one... barely finished an unoptimized version in time. to make my life easier, i used a single kernel with all the operations in device functions. there's more work we could parallelize, but with so much going on, this was the quickest way to get it working.
+- i struggled with this one... barely finished an unoptimized version in time. to make my life easier, i used a single kernel with all the operations as device functions. there's more work we could parallelize, but with so much going on, this was the quickest way to get it working.
 
 - i really liked seeing a simplified transformer from start to end, one of my favorite problems in LeetGPU so far. highly recommended :)
 
