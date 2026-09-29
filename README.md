@@ -1023,3 +1023,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - so this time i only parallelized across the examples in the batch, one thread per prompt. each thread loops through the decode steps, runs the transformer on the current sequence, and picks the token with the highest logit (`argmax`). then append that token to the sequence and repeat, so each step builds on the previous one.
 
   ![Adder Transformer](images/adder_transformer.png)
+
+### Day 73
+
+- solved the LeetGPU [Sorting](day73/sorting.cu) problem. the constraints were high enough that an `O(N^2)` sort would definitely time out, so i used bitonic sort, which is `O(N log^2 N)`. i also explored library implementations and wrote alternatives using [Thrust](day73/sorting_2.cu) and [CUB radix sort](day73/sorting_3.cu).
+
+- i have time to revisited [Adder Transformer Inference](day73/adder_transformer_inference_2.cu) and added a KV cache. the time went from 18.5 ms to 2.50 ms, a 7.4x speedup.
+
+- each prompt in the batch now goes through two phases: prefill and decode. during prefill, i calculate `Q`, `K`, and `V` for the input tokens once and store them. then decode generates one token at a time, calculates the values for the new token, and extends the cache (by adding the new token to the cache). in yesterday version we recalculated everything for the whole sequence at every step... now i only calculate what changes and reuse the rest.
