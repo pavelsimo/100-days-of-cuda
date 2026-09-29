@@ -75,7 +75,6 @@ __global__ void adder_kernel(const int* prompts, float* output, const float* wei
     const int vocab_size = 10;
     const int hidden_dim = 2;
     const int head_dim = 2;
-    const int num_heads = 1;
     const int prompt_len = 31;
     const int decode_steps = 11;
     const float eps = 1e-6f;
@@ -148,33 +147,26 @@ __global__ void adder_kernel(const int* prompts, float* output, const float* wei
             scores[j] = dot(q, &K[j * hidden_dim], head_dim) * att_scale;
         }
 
-        // step 7: causal mask
-        for (int j = 0; j < seq_len; ++j) {
-            if (j > i) {
-                scores[j] = -INFINITY;
-            }
-        }
-
-        // step 8: softmax over the attention scores
+        // step 7: softmax over the attention scores
         softmax(scores, seq_len);
 
-        // step 9: score @ V
+        // step 8: score @ V
         float attn[head_dim];
         matmul(scores, V, attn, 1, seq_len, hidden_dim);
 
-        // step 10: attn. projection
+        // step 9: attn. projection
         attn[1] = attn[0];
         attn[0] = 0.0f;
 
-        // step 11: residual conn.
+        // step 10: residual conn.
         float* h_q = &h[i * hidden_dim];
         h_q[1] += attn[1];
 
-        // step 12: RMSNorm after residual connection
+        // step 11: RMSNorm after residual connection
         float x_q[hidden_dim] = { h_q[0], h_q[1] };
         rmsnorm(x_q, hidden_dim, eps);
 
-        // step 13: MLP
+        // step 12: MLP
         float g0 = x_q[0] * a + x_q[1] * c;
         float g1 = x_q[0] * (a - c / 1000.0f) + x_q[1] * c;
         float base = x_q[0];
@@ -182,16 +174,16 @@ __global__ void adder_kernel(const int* prompts, float* output, const float* wei
         float mix1 = silu(g1) * base;
         float mlp_out[hidden_dim] = { 0.0f, carry * (mix1 - mix0) };
 
-        // step 14: MLP residual
+        // step 13: MLP residual
         h_q[1] += mlp_out[1];
 
-        // step 15: again RSNorm
+        // step 14: again RSNorm
         float out[hidden_dim] = { h_q[0], h_q[1] };
         rmsnorm(out, hidden_dim, eps);
         out[0] *= n0;
         out[1] *= n1;
 
-        // step 16: logits
+        // step 15: logits
         float logits[vocab_size];
         for (int d = 0; d < vocab_size; ++d) {
             float e[hidden_dim] = { w0 - w1 * d * d, -d };
@@ -199,7 +191,7 @@ __global__ void adder_kernel(const int* prompts, float* output, const float* wei
             output[(batch * decode_steps + step) * vocab_size + d] = logits[d];
         }
 
-        // step 17: choose next digit
+        // step 16: choose next digit
         int next_digit = 0;
         for (int d = 1; d < vocab_size; ++d) {
             if (logits[d] > logits[next_digit]) {
