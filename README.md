@@ -1031,3 +1031,19 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - i have time to revisited [Adder Transformer Inference](day73/adder_transformer_inference_2.cu) and added a KV cache. the time went from 18.5 ms to 2.50 ms, a 7.4x speedup.
 
 - each prompt in the batch now goes through two phases: prefill and decode. during prefill, i calculate `Q`, `K`, and `V` for the input tokens once and store them. then decode generates one token at a time, calculates the values for the new token, and extends the cache (by adding the new token to the cache). in yesterday version we recalculated everything for the whole sequence at every step... now i only calculate what changes and reuse the rest.
+
+### Day 74
+
+- solved the LeetGPU [Variable-Length Causal Attention](day74/variable_length_causal_attention.cu) problem. this is a new one, and at the time of writing, we're the only ones who have solved it :)
+
+- according to the problem statement, inference engines such as vLLM use this idea to handle prompts of different lengths together. instead of adding empty slots to make every prompt the same length, we pack them one after another. `cu_seqlens` tells us where each prompt starts and ends. this avoids wasted work on padding. it also reduces the overhead of launching new kernels, since several prompts can be bundled together.
+
+- the mask blocks future tokens and tokens from other sequences. we set their scores to `-INFINITY`, so they get zero weight after softmax.
+
+  ```c
+      int seq_start = cu_seqlens[seq];
+      int seq_end   = cu_seqlens[seq + 1];
+      C[i * N + j] = j >= seq_start && j <  seq_end && j <= i ? value : -INFINITY;
+  ```
+
+  ![Variable-Length Causal Attention](images/varlen_causal_attention.png)
