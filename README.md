@@ -1047,3 +1047,5 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ```
 
   ![Variable-Length Causal Attention](images/varlen_causal_attention.png)
+
+- i have to revisit this problem at some point, pretty sure materializing the complete matrix is not the way to go... 
