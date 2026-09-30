@@ -1038,12 +1038,12 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - according to the problem statement, inference engines such as vLLM use this idea to handle prompts of different lengths together. instead of adding empty slots to make every prompt the same length, we pack them one after another. `cu_seqlens` tells us where each prompt starts and ends. this avoids wasted work on padding. it also reduces the overhead of launching new kernels, since several prompts can be bundled together.
 
-- the mask blocks future tokens and tokens from other sequences. we set their scores to `-INFINITY`, so they get zero weight after softmax.
+- the mask blocks future tokens and tokens from other sequences. we set their scores to `-INF`, so they get zero weight after softmax, see image below.
 
   ```c
-      int seq_start = cu_seqlens[seq];
-      int seq_end   = cu_seqlens[seq + 1];
-      C[i * N + j] = j >= seq_start && j <  seq_end && j <= i ? value : -INFINITY;
+  int seq_start = cu_seqlens[seq];
+  int seq_end   = cu_seqlens[seq + 1];
+  C[i * N + j] = j >= seq_start && j <  seq_end && j <= i ? value : -INFINITY;
   ```
 
   ![Variable-Length Causal Attention](images/varlen_causal_attention.png)
