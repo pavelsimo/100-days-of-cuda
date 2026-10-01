@@ -1049,3 +1049,15 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ![Variable-Length Causal Attention](images/varlen_causal_attention.png)
 
 - i have to revisit this problem at some point. pretty sure materializing the complete attention matrix just to mask out a bunch of cells (mark them as `-INF`) is not the way to go...
+
+### Day 75
+
+- solved the LeetGPU [Min-P Sampling](day75/min_p_sampling.cu) problem. according to the problem statment this is a logit-filtering primitive used in modern LLM inference tools such as vLLM, Hugging Face TGI, and llama.cpp to filter out unlikely tokens before sampling.
+
+- for this one, i just followed the steps: apply softmax and set `p = 0` wherever `p < min_p`. then renormalize what is left. the image below shows how it works.
+
+- btw... remember our [top-p sampling on Day 68](#day-68)? both do a similar thing: filter out unlikely tokens before sampling. our top-p solution needed sorting, but min-p doesn't, so it's simpler and easier to parallelize :)
+
+- if you want to learn more, check out the paper [Turning Up the Heat: Min-p Sampling for Creative and Coherent LLM Outputs](https://arxiv.org/pdf/2407.01082).
+
+  ![Min-P Sampling](images/min_p_sampling.png)
