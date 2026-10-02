@@ -1061,3 +1061,26 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - if you want to learn more, check out the paper [Turning Up the Heat: Min-p Sampling for Creative and Coherent LLM Outputs](https://arxiv.org/pdf/2407.01082).
 
   ![Min-P Sampling](images/min_p_sampling.png)
+
+### Day 76
+
+- solved the LeetGPU [SSM Selective Scan](day76/ssm_selective_scan.cu) problem. SSM stands for State Space Model, and selective scan is the core operation in Mamba-style sequence models.
+
+- remember the [Linear Recurrence from Day 64](#day-64)? same basic idea here. we go through the sequence while keeping a small memory of what we've seen so far. at each step, we take the previous state, `h[t - 1]` (our old memory), and mix some of it with the current input to get the new state, `h[t]`. the "selective" part means the input can influence what gets remembered or forgotten.
+
+  ```cpp
+  // how much old memory to keep
+  float A_hat = expf(delta[btd] * A[dn]);
+
+  // how much new input to add
+  float B_hat = delta[btd] * B[btn];
+
+  // mix old memory with the current input
+  h = A_hat * h + B_hat * u[btd];
+  ```
+
+- following the formula was enough to get this one working, but i'm not happy with my implementation yet. every time i have to use `atomicAdd`, i feel like i'm missing some warp shuffle magic somewhere :) adding this one to the list of problems to revisit...
+
+- if you want to learn more, check out the paper [Mamba: Linear-Time Sequence Modeling with Selective State Spaces](https://arxiv.org/abs/2312.00752).
+
+  ![SSM Selective Scan](images/ssm_selective_scan.png)
