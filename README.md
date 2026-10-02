@@ -1054,7 +1054,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [Min-P Sampling](day75/min_p_sampling.cu) problem. according to the problem statment this is a logit-filtering primitive used in modern LLM inference tools such as vLLM, Hugging Face TGI, and llama.cpp to filter out unlikely tokens before sampling.
 
-- for this one, i just followed the steps: apply softmax and set `p = 0` wherever `p < min_p`. then renormalize what is left. the image below shows how it works.
+- i used a single kernel for this one. i started with softmax, filtered out the tokens below the threshold, then added an extra step to renormalize what's left. the image below shows the steps.
 
 - btw... remember our [top-p sampling on Day 68](#day-68)? both do a similar thing: filter out unlikely tokens before sampling. our top-p solution needed sorting, but min-p doesn't, so it's simpler and easier to parallelize :)
 
