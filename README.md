@@ -1087,7 +1087,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 77
 
-- solved the LeetGPU [Fused QKV Projection with RoPE and KV Cache Update](day77/fused_qkv_rope.cu) problem. not the best name... basically, we have to prepare tokens for attention. our task is to calculate Q, K, and V for each new token. the goal is to apply RoPE to Q and K and update the KV cache with the updated values.
+- solved the LeetGPU [Fused QKV Projection with RoPE and KV Cache Update](day77/fused_qkv_rope.cu) problem. not the best name... basically, we have to prepare new tokens for attention and update the KV cache while "roping" as we go.
 
 - this one was really difficult for me... we already did [RoPE on Day 28](#day-28), but i struggled with all the offsets and getting the data into the shape it needed to be in. i haven't done this much pointer arithmetic in a while. i added an image below so you can get a sense of what i mean.
 
@@ -1106,3 +1106,5 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - i think getting comfortable with these sorts of problems takes a lot of practice implementing papers and going from math to code. sometimes i think the world would be a better place if papers just wrote C code instead of math... but that's a discussion for another day :)
 
 - the problem recommends two papers if you want to learn more: [RoFormer: Enhanced Transformer with Rotary Position Embedding](https://arxiv.org/abs/2104.09864) for RoPE and [GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints](https://arxiv.org/abs/2305.13245) for reducing the number of KV heads.
+
+![Fused QKV + RoPE + KV Cache](images/fused_qkv_rope_kv_cache.png)
