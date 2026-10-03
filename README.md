@@ -1084,3 +1084,25 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - if you want to learn more, check out the paper [Mamba: Linear-Time Sequence Modeling with Selective State Spaces](https://arxiv.org/abs/2312.00752).
 
   ![SSM Selective Scan](images/ssm_selective_scan.png)
+
+### Day 77
+
+- solved the LeetGPU [Fused QKV Projection with RoPE and KV Cache Update](day77/fused_qkv_rope.cu) problem. not the best name... basically, we have to prepare tokens for attention. our task is to calculate Q, K, and V for each new token. the goal is to apply RoPE to Q and K and update the KV cache with the updated values.
+
+- this one was really difficult for me... we already did [RoPE on Day 28](#day-28), but i struggled with all the offsets and getting the data into the shape it needed to be in. i haven't done this much pointer arithmetic in a while. i added an image below so you can get a sense of what i mean.
+
+- then there's the output... three places to write to, each with different pointer offsets. Q goes into `Q_out` after RoPE, while K and V go into `K_cache` and `V_cache`. K gets RoPE too... but V is copied as is.
+
+- for the kernel, i split the RoPE and cache update in a 2D grid of `(batch, head)`. each block handles one sequence and either a Q head or a K/V head. the threads work on pairs of elements, `j` and `j + D/2`. it looks something like this:
+
+  ```c
+  thread 0  → RoPE (0, 64)
+  thread 1  → RoPE (1, 65)
+  thread 2  → RoPE (2, 66)
+  ...
+  thread 63 → RoPE (63, 127)
+  ```
+
+- i think getting comfortable with these sorts of problems takes a lot of practice implementing papers and going from math to code. sometimes i think the world would be a better place if papers just wrote C code instead of math... but that's a discussion for another day :)
+
+- the problem recommends two papers if you want to learn more: [RoFormer: Enhanced Transformer with Rotary Position Embedding](https://arxiv.org/abs/2104.09864) for RoPE and [GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints](https://arxiv.org/abs/2305.13245) for reducing the number of KV heads.
