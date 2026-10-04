@@ -1108,3 +1108,29 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - the problem recommends two papers if you want to learn more: [RoFormer: Enhanced Transformer with Rotary Position Embedding](https://arxiv.org/abs/2104.09864) for RoPE and [GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints](https://arxiv.org/abs/2305.13245) for reducing the number of KV heads.
 
 ![Fused QKV + RoPE + KV Cache](images/fused_qkv_rope_kv_cache.png)
+
+### Day 78
+
+- solved the LeetGPU [K-Means Clustering](day78/k_means.cu) problem. this one was a bit easier than the last few days...
+
+- the k-means algorithm helps to finds groups in unlabeled data by clustering points around one or more centroids. it's useful for data segmentation in general: image compression or just finding patterns in a bunch of raw data.
+
+- my solution loops for `max_iterations`. in each step runs three kernels as follow:
+
+  ```c
+  for (int step = 0; step < max_iterations; ++step) {
+
+      // assign each point to its nearest centroid
+      assign_labels<<<blocks_1, threads>>>(...);
+
+      // sum the coordinates and count the points in each cluster
+      accumulate<<<blocks_1, threads>>>(...);
+
+      // update each centroid using the sums and counts
+      update_centroids<<<blocks_2, threads>>>(...);
+  }
+  ```
+
+- please refer to the image below so you can see how all fits together.
+
+  ![K-Means Clustering](images/k_means_clustering.png)
