@@ -1134,3 +1134,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - please refer to the image below so you can see how all fits together.
 
   ![K-Means Clustering](images/k_means_clustering.png)
+
+### Day 79
+
+- solved [Beam Search Step](day79/beam_search_step_2.cu) on LeetGPU. The goal of the beam search algorithm is to keep the `k` best unfinished sequences, called beams (crazy name...), as it generates text. each beam has a total score from adding up the token log-probabilities (the higher the better). this problem focus in one step, for each batch item: try all `V` next tokens for each beam, add the beam and token scores, and keep the best `k` of those `k * V` candidates.
+
+- i implemented two solutions. the [first one](day79/beam_search_step.cu) used rank sort for simplicity, but with vocabulary size `V <= 100,000`, comparing all `k * V` candidates against each other was too slow... it timed out. another downside is that it needs several temp. buffers, then extra copies to move the top `k` results from the sorted buffers into the output.
+
+- in the [second solution](day79/beam_search_step_2.cu), i turned rank sort into top-k by stopping early. as soon as a thread finds `k` candidates it stops. that one ran within the time constraints. also we got rid of all the temp. buffers.
+
+- it's still too slow... i want to learn a bit more on how to do top-k efficiently. we already did [Top K Selection on Day 69](#day-69), where i tried both rank sort and bitonic sort. i'll revisit both problems. 
