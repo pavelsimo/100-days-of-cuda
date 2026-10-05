@@ -1137,7 +1137,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 79
 
-- solved [Beam Search Step](day79/beam_search_step_2.cu) on LeetGPU. The goal of the beam search algorithm is to keep the `k` best unfinished sequences, called beams (crazy name...), as it generates text. each beam has a total score from adding up the token log-probabilities (the higher the better). this problem focus in one step, for each batch item: try all `V` next tokens for each beam, add the beam and token scores, and keep the best `k` of those `k * V` candidates.
+- solved the LeetGPU [Beam Search Step](day79/beam_search_step_2.cu) problem. The goal of the beam search algorithm is to keep the `k` best unfinished sequences, called beams (crazy name...), as it generates text. each beam has a total score from adding up the token log-probabilities (the higher the better). this problem focus in one step, for each batch item: try all `V` next tokens for each beam, add the beam and token scores, and keep the best `k` of those `k * V` candidates.
 
 - i implemented two solutions. the [first one](day79/beam_search_step.cu) used rank sort for simplicity, but with vocabulary size `V <= 100,000`, comparing all `k * V` candidates against each other was too slow... it timed out. another downside is that it needs several temp. buffers, then extra copies to move the top `k` results from the sorted buffers into the output.
 
