@@ -1144,3 +1144,5 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - in the [second solution](day79/beam_search_step_2.cu), i turned rank sort into top-k by stopping early. as soon as a thread finds `k` candidates it stops. that one ran within the time constraints. also we got rid of all the temp. buffers.
 
 - it's still too slow... i want to learn a bit more on how to do top-k efficiently. we already did [Top K Selection on Day 69](#day-69), where i tried both rank sort and bitonic sort. i'll revisit both problems. 
+
+  ![Beam Search Step](images/beam_search.png)
