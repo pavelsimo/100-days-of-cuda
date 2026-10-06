@@ -1149,11 +1149,11 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 80
 
-- solved the LeetGPU [Ordinary Least Squares](day80/ordinary_least_squares.cu) problem. the idea is to find the coefficient vector `beta` so that `X @ beta` is as close as possible to the target values `y`, basically minimizing the sum of squared errors.
+- solved the LeetGPU [Ordinary Least Squares](day80/ordinary_least_squares.cu) problem. the goal is to find the coefficient vector `beta` so that `X @ beta` is as close as possible to the target values `y`, basically minimizing the sum of squared errors.
 
 - i ended up using gaussian elimination for this one. i found a cpu reference implementation and turned it into three kernels. once you realize the problem is "just" solving a system of linear equations, we now only need to ensure the algorithm is right.
 
-- the closed-form solution usually has a matrix inverse in it. computing matrix inverse is a bit problematic, and if not careful is easy to introduce numerical errors, so I tried to avoid doing it that. what is the alternative? so if we assume X^T @ X is invertible, we can multiply both sides by X^T @ X and get rid of the inverse:
+- the closed-form solution usually has a matrix inverse in it. computing matrix inverse is a bit problematic, and if not careful is easy to introduce numerical errors, so i tried to avoid doing it that. what is the alternative then? if we assume X^T @ X is invertible, we can multiply both sides by X^T @ X and get rid of the inverse:
 
   ```text
   beta = (X^T @ X)^(-1) @ X^T @ y
