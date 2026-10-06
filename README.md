@@ -1146,3 +1146,33 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - my current solution it's still too slow... i want to learn a bit more on how to do top-k efficiently. we already did [Top K Selection on Day 69](#day-69), where i tried both rank sort and bitonic sort. i'll revisit both problems. 
 
   ![Beam Search Step](images/beam_search.png)
+
+### Day 80
+
+- solved the LeetGPU [Ordinary Least Squares](day80/ordinary_least_squares.cu) problem. the idea is to find the coefficient vector `beta` so that `X @ beta` is as close as possible to the target values `y`, basically minimizing the sum of squared errors.
+
+- i ended up using gaussian elimination for this one. i found a cpu reference implementation and turned it into three kernels. once you realize the problem is "just" solving a system of linear equations, we now only need to ensure the algorithm is right.
+
+- the closed-form solution usually has a matrix inverse in it. computing matrix inverse is a bit problematic, and if not careful is easy to introduce numerical errors, so I tried to avoid doing it that. what is the alternative? so if we assume X^T @ X is invertible, we can multiply both sides by X^T @ X and get rid of the inverse:
+
+  ```text
+  beta = (X^T @ X)^(-1) @ X^T @ y
+  (X^T @ X) @ beta = (X^T @ X) @ (X^T @ X)^(-1) @ X^T @ y
+  (X^T @ X) @ beta = X^T @ y
+  A @ beta = b, where A = X^T @ X and b = X^T @ y
+  ```
+
+- so now the problem becomes solving for `beta` in `A @ beta = b`, and this can be done with gaussian elimination. here are the three kernel calls in the implementation:
+
+  ```cpp
+  // build the augmented matrix [X^T @ X | X^T @ y]
+  build_matrix<<<blocks, threads>>>(X, y, M, n_samples, n_features);
+
+  // swap pivot rows and eliminate entries below the diagonal
+  forward_elimination<<<1, 256>>>(M, n_features);
+
+  // solve for beta from the last row up, substituting the coefficients already found
+  back_substitution<<<1, 1>>>(M, beta, n_features);
+  ```
+
+![Ordinary Least Squares](images/ordinary_least_squares.png)
