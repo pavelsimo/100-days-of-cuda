@@ -1176,3 +1176,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ```
 
 ![Ordinary Least Squares](images/ordinary_least_squares.png)
+
+### Day 81
+
+- solved the LeetGPU [Speculative Decoding Verification](day81/speculative_decoding_verification.cu) problem. "medium"... i don't think so. i struggled with this one, there is tons of math to decode, and the algorithm is not trivial to implement (at least not for me...)
+
+- the goal of speculative decoding verification is to generate tokens faster. to keep it short, a small model guesses tokens, and a bigger model checks those guesses. we keep tokens up to the first rejection. if there is a rejection... we pick a replacement. if every guess passes, we append a "bonus" token.
+
+- my solution uses two kernels, `acceptance_prob` finds the first rejection. `resample` copies accepted tokens, samples a replacement or bonus token, and zeros the remaining slots. see the image below.
+
+- worth mention, a CDF (cumulative distribution function) is just a running sum of probabilities. we pick the first token where that sum reaches a random value between 0 and 1. probabilities `[0.2, 0.3, 0.5]` become `[0.2, 0.5, 1.0]`, so `0.4` picks token 1.
+
+- if you want to learn more, check out the paper [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192).
+
+  ![Speculative Decoding Verification](images/spectulative_decoding_verification.png)
