@@ -1179,7 +1179,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 81
 
-- solved the LeetGPU [Speculative Decoding Verification](day81/speculative_decoding_verification.cu) problem. "medium"... i don't think so. i struggled with this one, there is tons of math to decode, and the algorithm is not trivial to implement (at least not for me...)
+- solved the LeetGPU [Speculative Decoding Verification](day81/speculative_decoding_verification.cu) problem. medium difficulty... i don't think so. i struggled with this one, there is tons of math to decode, and the algorithm is not trivial to implement (at least not for me...)
 
 - the goal of speculative decoding verification is to generate tokens faster. it goes like this, a small model guesses tokens, and a bigger model checks those guesses. we keep tokens up to the first rejection. if there is a rejection... we pick a replacement. if every guess passes, we append a "bonus" token.
 
