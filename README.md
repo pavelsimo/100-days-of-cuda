@@ -1201,4 +1201,4 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - currently there's still a lot of room to optimize the [second solution](day82/logistic_regression_2.cu). i used super dumb kernels with just 1 block and 1 thread to build the newton system and update `beta`. definitely another problem i want to revisit...
 
-![Logistic Regression](images/logistic_regression.png)
+  ![Logistic Regression](images/logistic_regression.png)
