@@ -1190,3 +1190,15 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - if you want to learn more, check out the paper [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192).
 
   ![Speculative Decoding Verification](images/spectulative_decoding_verification.png)
+
+### Day 82
+
+- solved the LeetGPU [Logistic Regression](day82/logistic_regression_2.cu) problem. logistic regression is basically a yes/no classifier. for each sample we compute a score `z = X @ beta`, and then use a sigmoid function to convert into probabilities `[0, 1]`. what we're looking for is a `beta` that gets those probabilities as close as possible to the labels `y`.
+
+- my first attempt was using [gradient descent](day82/logistic_regression.cu), but even after 1M iterations it was not converging to the expected answer of the LeetGPU judge. the updates got so tiny that they basically couldn't change beta due to float precision limits, and doing more iterations didn't really help.
+
+- after a bit of research, i learned about the newton method. instead of using a fixed learning rate, it uses the curvature (how fast the gradient changes) to choose the step size in each direction, so it converges in less iterations. each step solves a system of linear equations, and it has the exact same `A @ beta = b` shape from [Day 80](#day-80), so we can reuse the same gaussian elimination kernels to solve for `delta` :)
+
+- currently there's still a lot of room to optimize the [second solution](day82/logistic_regression_2.cu). i used super dumb kernels with just 1 block and 1 thread to build the newton system and update `beta`. definitely another problem i want to revisit...
+
+![Logistic Regression](images/logistic_regression.png)
