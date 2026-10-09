@@ -1202,3 +1202,42 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - currently there's still a lot of room to optimize the [second solution](day82/logistic_regression_2.cu). i used super dumb kernels with just 1 block and 1 thread to build the newton system and update `beta`. definitely another problem i want to revisit...
 
   ![Logistic Regression](images/logistic_regression.png)
+
+### Day 83
+
+- solved the LeetGPU [Block-Sparse KV Selection Attention](day83/block_sparse_kv_attention.cu) problem. according to the problem statement, this technique is used in sparse attention inference kernels such as NSA and Quest. this problem is really hard... it's just notation nightmare. the whole block thing was so confusing...
+
+- the idea here is that reading the whole KV cache gets expensive as the context grows. so is better to split it into blocks and only consider the most relevant to the current query. less data to read, less to do...
+
+- i split the work into a few steps. here's is the sequence of kernel calls. 
+
+  ```cpp
+  // score each block using Q and the average of its keys
+  compute_scores<<<grid_1, threads>>>(...);
+
+  // keep the highest-scoring blocks for each head
+  select_top_blocks<<<num_heads, 1>>>(...);
+
+  // compute Q @ K^T / sqrt(head_dim), one call per head
+  for (int h = 0; h < num_heads; ++h) {
+      matmul<<<grid_2, tile>>>(...);
+  }
+
+  // set scores outside the selected blocks to -INF
+  mask_skipped_blocks<<<grid_1, threads>>>(...);
+
+  // turn scores into probabilities. masked positions become zero
+  softmax<<<num_heads, threads, threads * sizeof(float)>>>(...);
+
+  // compute the weighted sum of V, one call per head
+  for (int h = 0; h < num_heads; ++h) {
+      matmul<<<grid_3, tile>>>(...);
+  }
+  ```
+
+- my implementation still computes all the QK scores (so much for sparse...) before masking, and the final matmul still reads all of V. so there's room to optimize... i probably can use the list of top blocks to skip the ones i don't need, using indices, but i ran out of energy before doing that... more to revisit :)
+
+
+- if you want to learn more, check out the paper [Quest: Query-Aware Sparsity for Efficient Long-Context LLM Inference](https://arxiv.org/abs/2406.10774).
+
+  ![Block-Sparse KV Selection Attention](images/block-sparse_kv_selection_attention.png)
