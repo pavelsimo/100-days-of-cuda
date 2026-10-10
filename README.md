@@ -1246,7 +1246,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [Non-Maximum Suppression](day84/non_maximum_supression.cu) problem. finally a "hard" problem that is actually a medium... :)
 
-- you can think of NMS as a sort of post-processing step that many YOLO implementations use to remove duplicate boxes around the same object. YOLO here means "You Only Look Once"... not to be confused with "You Only Live Once" (i have to admit i prefer the latter).
+- you can think of NMS as a sort of post-processing step that many YOLO implementations use to remove duplicate boxes around the same object. YOLO here means "You Only Look Once"... not to be confused with "You Only Live Once" (i prefer the latter).
 
 - i'm really glad i encountered this one. i played with YOLO models before, so it's nice to understand this step. from what i read, some newer models like [YOLOv10](https://arxiv.org/abs/2405.14458) are moving away from NMS, learning to produce one prediction per object without this cleanup step.
 
