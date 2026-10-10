@@ -1269,7 +1269,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   }
   ```
 
-- just in case you're wondering... why write a kernel just to fill an array with 1s? `cudaMemset` fills bytes, so it works for `0` and `-1` in our 32-bit integer array:
+- just in case you're wondering... why write a kernel just to fill an array with 1s? `cudaMemset` fills bytes, so it works fine for `0` and `-1` in our 32-bit integer array:
 
   ```text
   0x00000000 gives 0
