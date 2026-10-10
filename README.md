@@ -1241,3 +1241,41 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - if you want to learn more, check out the paper [Quest: Query-Aware Sparsity for Efficient Long-Context LLM Inference](https://arxiv.org/abs/2406.10774).
 
   ![Block-Sparse KV Selection Attention](images/block-sparse_kv_selection_attention.png)
+
+### Day 84
+
+- solved the LeetGPU [Non-Maximum Suppression](day84/non_maximum_supression.cu) problem. finally a "hard" problem that is actually a medium... :)
+
+- you can think of NMS as a sort of post-processing step that many YOLO implementations use to remove duplicate boxes around the same object. YOLO here means "You Only Look Once"... not to be confused with "You Only Live Once" (i have to admit i prefer the latter).
+
+- i'm really glad i encountered this one. i played with YOLO models before, so it's nice to understand this step. from what i read, some newer models like [YOLOv10](https://arxiv.org/abs/2405.14458) are moving away from NMS, learning to produce one prediction per object without this cleanup step.
+
+- for this one, we just need to follow the algorithm described in the problem statement. see the image below for more details.
+
+- i used three kernels: one to sort the scores, one to initialize the `keep` array, and one to suppress overlapping boxes. here's the sequence:
+
+  ```cpp
+  // sort scores in descending order, keeping their original indices
+  rank_sort<<<blocks, threads>>>(...);
+
+  // initialize every keep flag to 1
+  fill<<<blocks, threads>>>(keep, 1, N);
+
+  // visit boxes in descending score order, skipping suppressed ones
+  for (int i = 0; i < N; ++i) {
+      // ...
+      // suppress boxes according to the rules
+      supress_boxes<<<blocks, threads>>>(...);
+  }
+  ```
+
+- just in case you’re wondering... why write a kernel just to fill an array with 1s? `cudaMemset` fills bytes, so it works for `0` and `-1` in our 32-bit integer array:
+
+  ```text
+  0x00000000 gives 0
+  0xFFFFFFFF gives -1
+  ```
+
+- passing `1` fills each byte with `0x01`, giving us `0x01010101`. that is `16843009`, not `1`. so, the fill kernel writes an actual `1`.
+
+  ![Non-Maximum Suppression](images/non_maximum_supression.png)
