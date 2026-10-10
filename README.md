@@ -1276,6 +1276,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   0xFFFFFFFF gives -1
   ```
 
-- passing `1` fills each byte with `0x01`, giving us `0x01010101`. that is `16843009`, not `1`. so, the fill kernel writes an actual `1`.
+- passing `1` fills each byte with `0x01`, giving us `0x01010101`. that is `16843009`, a "bit" more than `1`! so, the fill kernel writes an actual `1`.
 
   ![Non-Maximum Suppression](images/non_maximum_supression.png)
