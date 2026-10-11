@@ -1279,3 +1279,23 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - passing `1` fills each byte with `0x01`, giving us `0x01010101`. that is `16843009`, a "bit" more than `1`! so, the fill kernel writes an actual `1`.
 
   ![Non-Maximum Suppression](images/non_maximum_supression.png)
+
+### Day 85
+
+- it's been a long journey to this point, and there are still 15 days left... for these last few days, i want to try a few different things.
+
+- so far we've solved 100 problems on LeetGPU in this series, and we're now in LeetGPU top 6. not that the ranking means much, but 84 days ago i couldn't even write a hello CUDA kernel. i'm happy with the progress :)
+
+- now i feel comfortable writing simple kernels, but to get to the next level i need to spend more time profiling and optimizing. you know, all that fancy arithmetic intensity analysis, SOL (speed of light), comparing against cuBLAS... the stuff we all love.
+
+- today i spent some time putting together a CUDA bench with the help of claude, just some code to help me to easily messure and plots some graphs. i have something running that checks both test correctness and measures basic performance metrics. i'll keep adding to it as i go, and once i'm happy with it i'll publish the repo.
+
+- so i went back to one of the first problem we solved in this series: matrix transpose (Day 2), and tested four versions on my RTX 5090. the first one, the [baseline](day85/matrix_transpose/v0_baseline.cu), took 237.8 µs.
+
+- then [tiling with shared memory](day85/matrix_transpose/v1_tiled.cu) got me down to 206.5 µs, about 1.15x faster.
+
+- i also tried [padding](day85/matrix_transpose/v2_tiled_pad.cu) (204.0 µs) and [XOR swizzling](day85/matrix_transpose/v3_xor_swizzled.cu) (204.1 µs) to avoid bank conflicts. padding was a touch ahead, about 1.17x faster and ~90% of copy bandwidth.
+
+- all three tiled versions were within 3%... basically tied :)
+
+  ![Matrix transpose profiling results on an RTX 5090: baseline, tiled, padded, and XOR-swizzled kernels compared with a copy reference](images/profile_matrix_transpose.png)

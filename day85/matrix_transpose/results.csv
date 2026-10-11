@@ -1,0 +1,5 @@
+variant,shape,latency_us,gbps,check,out_hash,runs_same,copy_us,flops,ref_us
+v0_baseline,leetgpu,237.79,1413.0,ok,181115697db1f196,yes,183.17,0,
+v1_tiled,leetgpu,206.46,1627.4,ok,181115697db1f196,yes,183.30,0,
+v2_tiled_pad,leetgpu,204.03,1646.8,ok,181115697db1f196,yes,183.49,0,
+v3_xor_swizzled,leetgpu,204.13,1646.0,ok,181115697db1f196,yes,183.55,0,
