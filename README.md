@@ -1288,7 +1288,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - now i feel comfortable writing simple kernels, but to get to the next level i need to spend more time profiling and optimizing. you know, all that fancy arithmetic intensity analysis, SOL (speed of light), comparing against cuBLAS... the stuff we all love.
 
-- today i spent some time putting together a CUDA bench with the help of claude, just some code to help me to easily messure and plots some graphs. i have something running that checks both test correctness and measures basic performance metrics. i'll keep adding to it as i go, and once i'm happy with it i'll publish the repo.
+- today i spent some time putting together a CUDA bench with the help of claude, just some code to help me easily measure performance and plot some graphs. i have something running that checks correctness and measures basic performance metrics. i'll keep adding to it as i go, and once i'm happy with it i'll publish the repo.
 
 - so i went back to one of the first problem we solved in this series: matrix transpose (Day 2), and tested four versions on my RTX 5090. the first one, the [baseline](day85/matrix_transpose/v0_baseline.cu), took 237.8 µs.
 
