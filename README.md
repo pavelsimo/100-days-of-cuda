@@ -1312,8 +1312,8 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - why was the baseline faster? it came down to how we split the work across blocks, or CTAs (Cooperative Thread Arrays), if you're fancy... :)
 
-- my baseline solution (the stupid one) spreads work across many blocks, while v1 single-kernel and v2 online softmax launch just one. a block runs on one SM (Streaming Multiprocessor), leaving the other SMs with no work in those versions. so that extra parallelism paid off... the baseline even beat v3 cuDNN on the big input!
+- my baseline solution (the stupid one) spreads work across many blocks, while [v1 single-kernel](day86/softmax/v1_singlekernel.cu) and [v2 online softmax](day86/softmax/v2_online.cu) launch just one. a block runs on one SM (Streaming Multiprocessor), leaving the other SMs with no work in those versions. so that extra parallelism paid off... the baseline even beat [v3 cuDNN](day86/softmax/v3_cudnn.cu) on the big input!
 
-- at this point, it should be clear we have to keep the GPU doing brrr. so i gave those idle SMs some work to do... i created a new version, v4 online partials, which uses one kernel to compute partial max and sums, then another to merge those results and normalize the input across blocks. with more of the GPU working, it finally beats the baseline :)
+- at this point, it should be clear we have to keep the GPU doing brrr. so i gave those idle SMs some work to do... i created a new version, [v4 online partials](day86/softmax/v4_online_partials.cu), which uses one kernel to compute partial max and sums, then another to merge those results and normalize the input across blocks. with more of the GPU working, it finally beats the baseline :)
 
 - since you made it this far... have you realized that with CUDA (or parallel programming in general), you can take any problem that appears simple and make it infinitely more complicated? the fun never ends...
