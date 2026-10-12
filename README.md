@@ -1299,3 +1299,21 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - all three tiled versions were within 3%... basically tied :)
 
   ![Matrix transpose profiling results on an RTX 5090: baseline, tiled, padded, and XOR-swizzled kernels compared with a copy reference](images/profile_matrix_transpose.png)
+
+### Day 86
+
+- same as yesterday, we're focusing on optimization. today i revisited the [softmax problem from Day 9](#day-09), and the results were a bit counterintuitive...
+
+- the [baseline, v0](day86/softmax/v0_baseline.cu), is the first softmax implementation i wrote. probably the ugliest implementation you can think of :) three kernels: find the maximum, sum `exp(x - max)`, then normalize. global atomics, many allocations and frees, reading the whole input three times, computing the exponentials twice... plenty to improve.
+
+- here is the twist... it was actually quite fast for long inputs! roughly **6x faster** than my single-kernel and softmax online versions at the LeetGPU benchmark tests, with an even bigger gap at `N=32M`. the chart below has the full results.
+
+  ![Softmax Profiling](images/profile_softmax.png)r
+
+- well... it came down to blocks, or CTAs (Cooperative Thread Arrays), if you're fancy :)
+
+- my baseline solutin (the stupid one) spreads work across many blocks, while v1 single-kernel and v2 online softmax launch just one. a block runs on one SM (Streaming Multiprocessor), leaving the others idle in those versions. that extra parallelism paid off... the baseline even beat v3 cuDNN on the big input!
+
+- so how to fix? simply by giving online softmax more blocks. v4 online partials uses one kernel to compute partial max and sums, then another to merge those results and normalize the input across blocks. with more of the GPU working, it finally beats the baseline :)
+
+- since you made it this far... have you realized that with CUDA (or parallel programming in general), you can take any problem that appears simple and make it infinitely more complicated? the fun never ends...
