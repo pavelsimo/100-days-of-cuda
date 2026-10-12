@@ -1304,16 +1304,16 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - same as yesterday, we're focusing on optimization. today i revisited the [softmax problem from Day 9](#day-09), and the results were a bit counterintuitive...
 
-- the [baseline, v0](day86/softmax/v0_baseline.cu), is the first softmax implementation i wrote. probably the ugliest implementation you can think of :) three kernels: find the maximum, sum `exp(x - max)`, then normalize. global atomics, many allocations and frees, reading the whole input three times, computing the exponentials twice... plenty to improve.
+- the [baseline, v0](day86/softmax/v0_baseline.cu), is the first softmax implementation i wrote. probably the ugliest implementation you can think of :) three kernels: find the maximum, sum `exp(x - max)`, then normalize. global atomics, many allocations, reading the whole input three times, computing the exponentials twice... plenty to improve.
 
-- here is the twist... it was actually quite fast for long inputs! roughly **6x faster** than my single-kernel and softmax online versions at the LeetGPU benchmark tests, with an even bigger gap at `N=32M`. the chart below has the full results.
+- well, here is the twist... it was actually quite fast for long inputs! roughly **6x faster** than my online softmax version in the LeetGPU performance tests, with an even bigger gap at `N=32M`. see the full results in the chart below.
 
-  ![Softmax Profiling](images/profile_softmax.png)r
+  ![Softmax Profiling](images/profile_softmax.png)
 
-- well... it came down to blocks, or CTAs (Cooperative Thread Arrays), if you're fancy :)
+- so... it came down to how we split the work across blocks, or CTAs (Cooperative Thread Arrays), if you're fancy :)
 
-- my baseline solutin (the stupid one) spreads work across many blocks, while v1 single-kernel and v2 online softmax launch just one. a block runs on one SM (Streaming Multiprocessor), leaving the others idle in those versions. that extra parallelism paid off... the baseline even beat v3 cuDNN on the big input!
+- my baseline solution (the stupid one) spreads work across many blocks, while v1 single-kernel and v2 online softmax launch just one. a block runs on one SM (Streaming Multiprocessor), leaving the other SMs with no work in those versions. that extra parallelism paid off... the baseline even beat v3 cuDNN on the big input!
 
-- so how to fix? simply by giving online softmax more blocks. v4 online partials uses one kernel to compute partial max and sums, then another to merge those results and normalize the input across blocks. with more of the GPU working, it finally beats the baseline :)
+- at this point, it should be clear we have to keep the GPU doing brrr. so i gave those idle SMs some work to do... i created a new version, v4 online partials, which uses one kernel to compute partial max and sums, then another to merge those results and normalize the input across blocks. with more of the GPU working, it finally beats the baseline :)
 
 - since you made it this far... have you realized that with CUDA (or parallel programming in general), you can take any problem that appears simple and make it infinitely more complicated? the fun never ends...
