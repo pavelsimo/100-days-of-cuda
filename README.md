@@ -1317,3 +1317,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - at this point, it should be clear we have to keep the GPU doing brrr. so i gave those idle SMs some work to do... i created a new version, [v4 online partials](day86/softmax/v4_online_partials.cu), which uses one kernel to compute partial max and sums, then another to merge those results and normalize the input across blocks. with more of the GPU working, it finally beats the baseline :)
 
 - since you made it this far... have you realized that with CUDA (or parallel programming in general), you can take any problem that appears simple and make it infinitely more complicated? the fun never ends...
+
+### Day 87
+
+- today i revisited [2D convolution from Day 11](#day-11). in the [baseline, v0](day87/2d_convolution/v0_baseline.cu) (the dumb one). each thread computes one output by reading the input and kernel filter weights from global memory (yeah, you heard that right!). simple... but nearby threads read many of the same values over and over.
+
+- for [v1](day87/2d_convolution/v1_constmem.cu), i moved input tiles into shared memory so threads can reuse them, and put the kernel filter weights in constant memory so threads can share those reads too. this got me roughly **1.8x faster** on the LeetGPU perf. test.
+
+- for [v2](day87/2d_convolution/v2_unroll.cu), i kept that setup and added C++ templates for kernel filter sizes (rows and cols) we already know, since the problem constraints say that kernel rows and cols must be <= 33. this helps the compiler unroll the loops and simplify the index math. it was roughly **1.9x faster** than the baseline, basically tied with v1 on the main benchmark. it only helps when the exact configuration of kernel rows and cols is known and the input is large enough for the unrolling to help.
+
+  ![2D Convolution Benchmark](images/profile_conv2d_1.png)
+
+  ![2D Convolution Kernel Profile](images/profile_conv2d_2.png)
+
+- i was working on v3, which uses thread coarsening, but couldn't finish it in time. the idea is to reduce the number of memory reads by loading groups of values into registers and then writing them back in groups. for example, instead of each thread outputting one value, it outputs four.
