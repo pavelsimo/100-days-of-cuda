@@ -1320,14 +1320,30 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 87
 
-- today i revisited [2D convolution from Day 11](#day-11). in the [baseline, v0](day87/2d_convolution/v0_baseline.cu) (the dumb one). each thread computes one output by reading the input and kernel filter weights from global memory (yeah, you heard that right!). simple... but nearby threads read many of the same values over and over.
+- today i revisited [2D convolution from Day 11](#day-11). so, in my [original](day87/2d_convolution/v0_baseline.cu) solution (the baseline, a.k.a. the dumb one), each thread computes one output by reading the input and kernel filter weights from global memory (yeah, you heard that right!). simple... but nearby threads read many of the same values over and over.
 
 - for [v1](day87/2d_convolution/v1_constmem.cu), i moved input tiles into shared memory so threads can reuse them, and put the kernel filter weights in constant memory so threads can share those reads too. this got me roughly **1.8x faster** on the LeetGPU perf. test.
 
-- for [v2](day87/2d_convolution/v2_unroll.cu), i kept that setup and added C++ templates for kernel filter sizes (rows and cols) we already know, since the problem constraints say that kernel rows and cols must be <= 33. this helps the compiler unroll the loops and simplify the index math. it was roughly **1.9x faster** than the baseline, basically tied with v1 on the main benchmark. it only helps when the exact configuration of kernel rows and cols is known and the input is large enough for the unrolling to help.
+- for [v2](day87/2d_convolution/v2_unroll.cu), i kept that setup and added C++ templates for the kernel filter sizes (rows and cols) we already know, since the problem constraints say that kernel rows and cols must be <= 33. this helps the compiler unroll the loops and simplify the index math. it was roughly **1.9x faster** than the baseline, basically tied with v1 on the LeetGPU perf. test. actually, it only really helps when the exact configuration of kernel rows and cols is known and the input is large enough for loop unrolling to work its magic.
 
   ![2D Convolution Benchmark](images/profile_conv2d_1.png)
 
   ![2D Convolution Kernel Profile](images/profile_conv2d_2.png)
 
-- i was working on v3, which uses thread coarsening, but couldn't finish it in time. the idea is to reduce the number of memory reads by loading groups of values into registers and then writing them back in groups. for example, instead of each thread outputting one value, it outputs four.
+- i was working on v3 with thread coarsening, but couldn't finish it in time. the idea is for each thread to compute several outputs instead of one. for example, a thread could compute four outputs and reuse data for those those calculations.
+
+### Day 88
+
+- today i revisited [dot product from Day 9](#day-09). the [baseline, v0](day88/dot_product/v0_baseline.cu) is the classic reduction in the books. we store the products `A[i] * B[i]` in shared memory, then sum them, keeping threads in sync with `__syncthreads()`. thread 0 adds the sum from each block with `atomicAdd`.
+
+- [v1](day88/dot_product/v1_warpreduce.cu) is pretty similar to the previous solution, but uses `__shfl_down_sync` to pass values between threads in a warp and sum them in registers. less shared memory loads and fewer synchronizations... but only about **1.03x faster** at the LeetGPU perf. test. basically tied :)
+
+- for [v2](day88/dot_product/v2_float4.cu), i added vectorize loads `float4` so i can read four values at a time. sadly not much difference basically a tied, with about **1.02x** at `N=1M`. 
+
+- i also tried [v3 cuBLAS](day88/dot_product/v3_cublas.cu) to have a reference point of what good should look like. it was not much difference, it was slower on the smaller inputs and roughly the same for `N=16M`.
+
+- hmm so no big speedup today... the profile points to reading data as the main bottleneck on the large input, so optimizing the reduction work didn't help much. 
+
+  ![Dot Product Benchmark](images/profile_dot_product.png)
+
+  ![Dot Product Kernel Profile](images/profile_dot_product_2.png)
