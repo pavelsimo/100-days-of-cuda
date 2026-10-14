@@ -1334,13 +1334,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 88
 
-- today i revisited [dot product from Day 9](#day-09). the [baseline, v0](day88/dot_product/v0_baseline.cu) is the classic reduction in the books. we store the products `A[i] * B[i]` in shared memory, then sum them, keeping threads in sync with `__syncthreads()`. thread 0 adds the sum from each block with `atomicAdd`.
+- today i revisited [dot product from Day 9](#day-09). the [baseline (v0)](day88/dot_product/v0_baseline.cu) is the classic reduction in the books. we store the products `A[i] * B[i]` in shared memory, then sum them, keeping threads in sync with `__syncthreads()`. thread 0 adds the sum from each block with `atomicAdd`.
 
-- [v1](day88/dot_product/v1_warpreduce.cu) is pretty similar to the previous solution, but uses `__shfl_down_sync` to pass values between threads in a warp and sum them in registers. less shared memory loads and fewer synchronizations... but only about **1.03x faster** at the LeetGPU perf. test. basically tied :)
+- [v1](day88/dot_product/v1_warpreduce.cu) is pretty similar to the previous solution, but uses `__shfl_down_sync` to pass values between threads in a warp and sum them in registers. fewer shared memory loads and fewer synchronizations... but the difference from the baseline was within **3%**, so tied :)
 
-- for [v2](day88/dot_product/v2_float4.cu), i added vectorize loads `float4` so i can read four values at a time. sadly not much difference basically a tied, with about **1.02x** at `N=1M`. 
+- for [v2](day88/dot_product/v2_float4.cu), i added vectorized `float4` loads to read four values at a time. also within **3%** of the baseline... another tie.
 
-- i also tried [v3 cuBLAS](day88/dot_product/v3_cublas.cu) to have a reference point of what good should look like. it was not much difference, it was slower on the smaller inputs and roughly the same for `N=16M`.
+- i also tried [v3 cuBLAS](day88/dot_product/v3_cublas.cu) to have a reference point of what good should look like. it was slower on the smaller inputs and tied with the others at `N=16M`.
 
 - hmm so no big speedup today... the profile points to reading data as the main bottleneck on the large input, so optimizing the reduction work didn't help much. 
 
