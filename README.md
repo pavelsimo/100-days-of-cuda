@@ -1347,3 +1347,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ![Dot Product Benchmark](images/profile_dot_product.png)
 
   ![Dot Product Kernel Profile](images/profile_dot_product_2.png)
+
+### Day 89
+
+- i wanted to continue profilemaxxing today, but i didn't have time... life happened. so instead, i solved a problem (like we used to).
+
+- today solved the LeetGPU [Row-wise Argmax](day89/row_wise_argmax.cu) problem. the task is given a `B x V` matrix of logits, we need to find the index of the largest value in each row.
+
+- we have seen this sort of reduction pattern in so many problems already... is like old movie by now...:) some examples: [Layer Normalization on Day 41](#day-41), [Group Normalization on Day 54](#day-54), etc. the idea is simple each thread computes a partial result, then we combine those results across all blocks.
+
+- the twist here is that `warp_reduce_max` needs to keep track of both the maximum value and its index. so we use `__shfl_down_sync` twice at each step, once for the values and once for the indexes. and whenever another thread has a larger value, we take both. see image below for more details.
+
+- since you've made it this far, here is a nugget of "wisdom": when do you know you understand an algorithm? for me, it's simple... when you can modify it as you like. this means you've internalized the underlying abstraction, and the new algorithm becomes a superpower for solving even more problems. let's take BFS as an example. you can use it to solve graph problems; that's the obvious use case (anyone can see that). but you can also use it to calculate the minimum number of moves a knight needs to reach a target cell. once you've learned the algorithm, you see it everywhere. your mind connects the dots, and you become neo looking at the matrix.
+
+  ![Row-wise Argmax](images/row_wise_argmax.png)
