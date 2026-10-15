@@ -1350,9 +1350,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 89
 
-- i wanted to continue profilemaxxing today, but i didn't have time... life happened. so instead, i solved a problem (like we used to).
-
-- today solved the LeetGPU [Row-wise Argmax](day89/row_wise_argmax.cu) problem. the task is given a `B x V` matrix of logits, we need to find the index of the largest value in each row.
+- i wanted to continue profilemaxxing, but i didn't have time... life happened. so instead, i solved the LeetGPU [Row-wise Argmax](day89/row_wise_argmax.cu) problem. the task is given a B x V matrix of logits, we need to find the index of the largest value in each row.
 
 - we have seen this sort of reduction pattern in so many problems already... is like old movie by now...:) some examples: [Layer Normalization on Day 41](#day-41), [Group Normalization on Day 54](#day-54), etc. the idea is simple each thread computes a partial result, then we combine those results across all blocks.
 
