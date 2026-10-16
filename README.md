@@ -1359,3 +1359,17 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - since you've made it this far, here is a nugget of "wisdom": when do you know you understand an algorithm? for me, it's simple... when you can modify it as you like. this means you've internalized the underlying abstraction, and the new algorithm becomes a superpower for solving even more problems. let's take BFS as an example. you can use it to solve graph problems; that's the obvious use case (anyone can see that). but you can also use it to calculate the minimum number of moves a knight needs to reach a target cell. once you've learned the algorithm, you see it everywhere. your mind connects the dots, and you become neo looking at the matrix.
 
   ![Row-wise Argmax](images/row_wise_argmax.png)
+
+### Day 90
+
+- solved the LeetGPU [Fused AdamW](day90/fused_adamw.cu) problem. this problem is misclassified... it's definitely an easy task.
+
+- AdamW is the optimizer behind many modern LLM training runs (GPT, LLaMA, and friends). if you're wondering what an optimizer does... it uses gradients to decide how to update model parameters during training. 
+
+- so not much to say here... just follow the formula. if you want to learn more, check out the paper [Decoupled Weight Decay Regularization](https://arxiv.org/abs/1711.05101).
+
+- oh, almost forgot... `__restrict__` makes a lot of sense here. we update `params[n]`, write to `m[n]` and `v[n]`, then use `params[n]` again. since we know for sure the buffers don't overlap, but the poor compiler can't assume that. so `__restrict__` tells the compiler: "hey compiler, it's fine to keep the values in a register instead of loading them again".
+
+- i'm still doing some profiling for the next post. turns out this takes more time than i expected...
+
+![Fused AdamW](images/fused_adamw.png)
