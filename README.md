@@ -1378,7 +1378,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [Scatter Add](day91/scatter_add.cu) problem. according to the problem statement, this is the operation behind [torch.index_add_](https://docs.pytorch.org/docs/2.14/generated/torch.Tensor.index_add_.html), used to combine MoE outputs and aggregate messages in neural networks.
 
-- this one looked scary at first... a more detailed example would have helped. but once you decode the sum, the kernel is pretty simple. here's the idea:
+- this one looked scary at first... a more detailed example would have helped. but once you decode the sum notation, the kernel is pretty simple. here's the idea:
 
   ```c
   for each (i, d), where 0 <= i < N and 0 <= d < D:
