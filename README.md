@@ -1389,3 +1389,19 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - we use one thread per `(i, d)` pair. `atomicAdd` is needed because multiple threads can update the same output element at the same time. see image below for more details.
 
   ![Scatter Add](images/scatter_add.png)
+
+### Day 92
+
+- solved the LeetGPU [Grouped GEMM](day92/grouped_gemm/v1_singlelaunch.cu) problem. the idea is to bundle several independent matrix multiplications into one grouped GEMM call. grouped GEMM is a core building block of Mixture-of-Experts (MoE) inference. see the image below for an explanation of how it works.
+
+  ![Grouped GEMM](images/grouped_gemm.png)
+
+- i tried three solutions and benchmarked them. the [baseline (v0)](day92/grouped_gemm/v0_baseline.cu) copies the group offsets from device to host memory, then launches a tiled matmul for each group, one after another. pointer offsets select the inputs and output for each group, just like on [Day 38](#day-38) and [Day 47](#day-47). simple enough... but many groups mean many kernel launches, which is not good.
+
+- for [v1 single launch](day92/grouped_gemm/v1_singlelaunch.cu), i used `blockIdx.z` to pick the current group. in this solution, one kernel launch handles all groups.
+
+- for [v2 streams](day92/grouped_gemm/v2_streams.cu), i kept one matmul launch per group of the baseline, but spread them across eight CUDA streams. since the groups are independent, we can run those matmuls in parallel, so we don't wait for the previous group to finish.
+
+- on the LeetGPU perf. test, all three were within **3%**... basically tied :) on the larger cases, streams were roughly **10% faster** than the baseline, while the single launch version got slower as the number of groups grew, likely because it launches many blocks that exit without doing any work.
+
+  ![Grouped GEMM Benchmark](images/profile_grouped_gemm.png)
