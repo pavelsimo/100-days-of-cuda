@@ -1392,7 +1392,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 92
 
-- solved the LeetGPU [Grouped GEMM](day92/grouped_gemm/v1_singlelaunch.cu) problem. the idea is to bundle several independent matrix multiplications into one grouped GEMM call. grouped GEMM is a core building block of Mixture-of-Experts (MoE) inference. see the image below for an explanation of how it works.
+- solved the LeetGPU [Grouped GEMM](day92/grouped_gemm/v1_singlelaunch.cu) problem. for this one the idea is to bundle several independent matrix multiplications into one grouped GEMM call. grouped GEMM is a core building block of Mixture-of-Experts (MoE) inference. see the image below for an explanation of how it works.
 
   ![Grouped GEMM](images/grouped_gemm.png)
 
