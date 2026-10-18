@@ -1,4 +1,5 @@
 #include <cuda_runtime.h>
+#include <stdlib.h>
 
 #define BLOCKSIZE 16
 
@@ -34,7 +35,7 @@ extern "C" void solve(const float* A, const float* B, const int* group_offsets, 
                       int M_total, int K, int N) {
     
     dim3 threads(BLOCKSIZE, BLOCKSIZE);
-    int *h_group_offsets = new int[G + 1];
+    int *h_group_offsets = (int *) malloc((G + 1) * sizeof(int));
     cudaMemcpy(h_group_offsets, group_offsets, (G + 1) * sizeof(int), cudaMemcpyDeviceToHost);
     for (int i = 0; i < G; ++i) {
         int group_start = h_group_offsets[i];
@@ -62,5 +63,5 @@ extern "C" void solve(const float* A, const float* B, const int* group_offsets, 
         matmul<<<blocks, threads>>>(a, b, c, group_size, N, K);
     }
 
-    delete[] h_group_offsets;
+    free(h_group_offsets);
 }
