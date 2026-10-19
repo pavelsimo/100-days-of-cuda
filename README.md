@@ -1413,7 +1413,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - according to my research, this technique appeared for the first time in the blog post [Flash-Decoding](https://pytorch.org/blog/flash-decoding/). this problem is about the final reduction part.
 
-- so i didn't have time to optimize this properly, so i went with the first thing that came to mind :) follow your instinics, this is the way!
+- so i didn't have time to optimize this properly, so i went with the first thing that came to mind :) follow your instincts, this is the way!
 
 - my solution is just three simple kernels: find the maximum log-sum-exp per head (using the same reduction pattern as [LayerNorm on Day 41](#day-41)), compute weights, then calculate the weighted average. see image below for more details.
 
