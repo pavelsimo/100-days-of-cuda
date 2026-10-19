@@ -1411,7 +1411,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [Split-KV Attention Reduction](day93/split_kv_attention_reduction.cu) problem. to provide a bit of context... when an llm generates text one token at a time during decoding, it has to compute attention over a long KV cache. the problem is that this can be slow if the work can't be distributed across SMs. Split-KV helps solve that by breaking the cache into chunks, so multiple blocks can compute attention in parallel across more SMs. after that, we merge the partial attention outputs using log-sum-exp. by spreading the work across more of the GPU, decoding becomes faster.
 
-- according to my research this technique appear for the first time in the blog post [Flash-Decoding](https://pytorch.org/blog/flash-decoding/). this problem is about the final reduction part.
+- according to my research, this technique appeared for the first time in the blog post [Flash-Decoding](https://pytorch.org/blog/flash-decoding/). this problem is about the final reduction part.
 
 - so i didn't have time to optimize this properly, so i went with the first thing that came to mind :) follow your instinics, this is the way!
 
