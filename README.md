@@ -1405,3 +1405,18 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - on the LeetGPU perf. test, all three were within **3%**... basically tied :) on the larger cases, streams were roughly **10% faster** than the baseline, while the single launch version got slower as the number of groups grew, likely because it launches many blocks that exit without doing any work.
 
   ![Grouped GEMM Benchmark](images/profile_grouped_gemm.png)
+
+
+### Day 93
+
+- solved the LeetGPU [Split-KV Attention Reduction](day93/split_kv_attention_reduction.cu) problem. to provide a bit of context... when an llm generates text one token at a time during decoding, it has to compute attention over a long KV cache. the problem is that this can be slow if the work can't be distributed across SMs. Split-KV helps solve that by breaking the cache into chunks, so multiple blocks can compute attention in parallel across more SMs. after that, we merge the partial attention outputs using log-sum-exp. by spreading the work across more of the GPU, decoding becomes faster.
+
+- according to my research this technique appear for the first time in the blog post [Flash-Decoding](https://pytorch.org/blog/flash-decoding/). this problem is about the final reduction part.
+
+- so i didn't have time to optimize this properly, so i went with the first thing that came to mind :) follow your instinics, this is the way!
+
+- my solution is just three simple kernels: find the maximum log-sum-exp per head (using the same reduction pattern as [LayerNorm on Day 41](#day-41)), compute weights, then calculate the weighted average. see image below for more details.
+
+- anyway, i have a feeling this can be done in a single kernel without extra allocations. i'll revisit this one another day.
+
+  ![Split-KV Attention Reduction](images/split_kv_attention_reduction.png)
