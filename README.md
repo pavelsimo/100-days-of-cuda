@@ -1420,3 +1420,14 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - anyway, i have a feeling this can be done in a single kernel without extra allocations. i'll revisit this one another day.
 
   ![Split-KV Attention Reduction](images/split_kv_attention_reduction.png)
+
+
+### Day 94
+
+- solved the LeetGPU [Fused Residual Add and LayerNorm with Saved Statistics](day94/fused_residual_add_layernorm.cu) problem. this one is labeled "hard" but is actually a "medium"... we just need to add a residual and then apply the same layer normalization we used on [Day 41](#day-41).
+
+- the "saved statistics" part means we have to return four outputs: the residual sum, the row means, the row reciprocal standard deviations (rstd), and the final normalized values. as usual, we kept it simple and created a kernel for each of those. see image below for a small example of the whole flow.
+
+- one obvious thing to try next is to combine these steps into a single kernel... the word "fused" in the title gave it away :) i'll revisit this one some other time.
+
+  ![Fused Residual Add LayerNorm](images/fused_residual_add_layernorm.png)
