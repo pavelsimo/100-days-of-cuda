@@ -1431,3 +1431,26 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - one obvious thing to try next is to combine these steps into a single kernel... the word "fused" in the title gave it away :) i'll revisit this one some other time.
 
   ![Fused Residual Add LayerNorm](images/fused_residual_add_layernorm.png)
+
+### Day 95
+
+- solved the LeetGPU [Integral Image](day95/integral_image.cu) problem. this one is basically a 2D prefix sum... each output cell stores the sum of the rectangle from the top-left corner to that cell, including the cell itself.
+
+- not much time today, so kept it simple... one kernel computes cumulative sums across the rows, then another does the same down the columns. see image below for a small example of the two passes.
+
+- one more thing... if you look at the code `scan_cols` is fine because the threads read values that sit next to each other in memory. but `scan_rows` gives each thread a different row, so their reads are W floats apart at each step. that's not great for memory coalescing... we need to revisit this one.
+
+  ![Integral Image](images/integral_image.png)
+
+
+### Day 96
+
+- solved the LeetGPU [RMS Norm Backward](day96/rms_norm_backward.cu) problem. with this one, i experienced one of the greatest joys a programmer can feel while writing code by hand...the solution passes all the tests on the first try. considering this was a relatively long problem, that felt especially good, man AI is taking that away from us... 
+
+- so this is the backward pass of RMS Normalization, which we first solved on [Day 20](#day-20). given the gradient `dy`, we need to compute the gradients for the input (`dx`) and the weights (`dweight`).
+
+- not much to explain here... follow the formulas and keep track of which dimension you're reducing. i added an image below to make the steps easier to follow.
+
+- we've seen these reductions plenty of times by now... if you would like a bit more of practice, check out problems: [Batch Normalization on Day 39](#day-39) and [Layer Normalization on Day 41](#day-41)
+
+  ![RMS Norm Backward](images/rms_norm_backward.png)
