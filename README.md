@@ -1451,6 +1451,6 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - not much to explain here... follow the formulas and keep track of which dimension you're reducing. i added an image below to make the steps easier to follow.
 
-- we've seen these reductions plenty of times by now... if you would like a bit more of practice, check out problems: [Batch Normalization on Day 39](#day-39) and [Layer Normalization on Day 41](#day-41)
+- we've seen these kind of reductions plenty of times by now... if you would like a bit more of practice, check out problems: [Batch Normalization on Day 39](#day-39) and [Layer Normalization on Day 41](#day-41)
 
   ![RMS Norm Backward](images/rms_norm_backward.png)
