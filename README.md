@@ -1454,3 +1454,23 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - we've seen these kind of reductions plenty of times by now... if you would like a bit more of practice, check out problems: [Batch Normalization on Day 39](#day-39) and [Layer Normalization on Day 41](#day-41)
 
   ![RMS Norm Backward](images/rms_norm_backward.png)
+
+### Day 97
+
+- solved the LeetGPU [Multi-LoRA Batched Linear](day97/multi_lora_batch_linear_4.cu) problem. we have seen LoRA (Low-Rank Adaptation) before on [Day 32](#day-32). this time around each token can use a different LoRA "adapter".
+
+- so what exactly are those "adapters"? think of an adapter as a plugin that helps the model to specialize in a different topic, while the original model weights stay the same. for example we could have a LoRA adapters for python, cat memes, etc.
+
+- this problem looked a bit "innocent" at first, but the constraints made it difficult to pass the perf. test with a naive solution. since i had some time, i tried four different versions: the first two timed out, the third passed but was really slow, and the fourth probably is what i should have been doing since the beginning... :)
+
+- the [first solution](day97/multi_lora_batch_linear_1.cu) copies all the adapter ids to cpu memory, then launches separate matmuls for each token. simple enough... but that's a lot of kernel launches, timeout!
+
+- for the [second solution](day97/multi_lora_batch_linear_2.cu), i moved everything into one kernel, with one thread per token, and used a bunch of cpu-fashion __device__ functions. fewer launches, but since each thread computes all the dot products with serial loops... too much work for one thread, timeout!
+
+- the [third solution](day97/multi_lora_batch_linear_3.cu) computes `xW` for the whole batch in one tiled matmul, then handles the LoRA part for each token separately. better, but that CPU loop launching kernels per token is still there, this solution pass all the perf. test in around 235 ms.
+
+- the [fourth solution](day97/multi_lora_batch_linear_4.cu) uses three kernels for the whole batch. `lora_down`, `matmul`, and `lora_up`. everything stays on the gpu, with no memory copies back to the cpu. this one ran in 49 ms on the perf. test. see the image below for how it works.
+
+- if you want to learn more about LoRA, check out [Punica: Multi-Tenant LoRA Serving](https://arxiv.org/abs/2310.18547), [S-LoRA: Serving Thousands of Concurrent LoRA Adapters](https://arxiv.org/abs/2311.03285), and the original paper: [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685).
+
+  ![Multi-LoRA Batched Linear](images/multi_lora_batched_linear.png)
