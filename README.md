@@ -1478,7 +1478,7 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 ### Day 98
 
-- solved the LeetGPU [Gated Attention](day98/gated_attention.cu) problem. LeetGPU recently added many new attention problems. these are a lot of fun... you can focus on implementing algorithm first, then read the paper with a head start. much less scary that way... :)
+- solved the LeetGPU [Gated Attention](day98/gated_attention.cu) problem. LeetGPU recently added many new attention problems. these are a lot of fun... you can focus on implementing algorithm first, then read the paper with a head start. less scary that way. :)
 
 - gated attention adds a learned "gate" to attention. you can think of a gate as a matrix of values between 0 and 1 that controls how much of each attention output element we keep. a gate value of `0.8` means we keep 80% of the corresponding output value, so the model can say "less of this, please..., more of that instead...".
 
