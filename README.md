@@ -1474,3 +1474,16 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - if you want to learn more about LoRA, check out [Punica: Multi-Tenant LoRA Serving](https://arxiv.org/abs/2310.18547), [S-LoRA: Serving Thousands of Concurrent LoRA Adapters](https://arxiv.org/abs/2311.03285), and the original paper: [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685).
 
   ![Multi-LoRA Batched Linear](images/multi_lora_batched_linear.png)
+
+
+### Day 98
+
+- solved the LeetGPU [Gated Attention](day98/gated_attention.cu) problem. LeetGPU recently added many new attention problems. these are a lot of fun... you can focus on implementing algorithm first, then read the paper with a head start. much less scary that way... :)
+
+- gated attention adds a learned "gate" to attention. you can think of a gate as a matrix of values between 0 and 1 that controls how much of each attention output element we keep. a gate value of `0.8` means we keep 80% of the corresponding output value, so the model can say "less of this, please..., more of that instead...".
+
+- for the implementation, i reused the pointer trick from [Day 38](#day-38) and [Day 50](#day-50). move the pointers to the current head, and then the kernels can work with ordinary matrices. the rest is just a few pretty standard kernels: tiled matmul, row-wise softmax, sigmoid, and an elementwise matmul. see the image below for the full flow.
+
+- if you want to learn more, check out the paper [Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free](https://arxiv.org/abs/2505.06708).
+
+  ![Gated Attention](images/gated_attention.png)
