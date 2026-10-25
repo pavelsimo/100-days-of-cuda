@@ -1487,3 +1487,13 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - if you want to learn more, check out the paper [Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free](https://arxiv.org/abs/2505.06708).
 
   ![Gated Attention](images/gated_attention.png)
+
+### Day 99
+
+- solved the LeetGPU [LayerNorm Backward](day99/layer_norm_backward.cu) problem. this is the backward pass of the Layer Normalization we solved on [Day 41](#day-41).
+
+- pretty similar to [RMS Norm Backward on Day 96](#day-96), just a bit more work because the formulas are a little more complicated. i split the computation into separate kernels, so each step maps directly to the formulas. see the image below for the details.
+
+- we can optimize this further by merging some of these kernels... i'll leave that as an exercise for the reader... haha kidding, i will revisit this one as well. :)
+
+  ![LayerNorm Backward](images/layernorm_backward.png)
