@@ -1492,8 +1492,10 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 
 - solved the LeetGPU [LayerNorm Backward](day99/layer_norm_backward.cu) problem. this is the backward pass of the Layer Normalization we solved on [Day 41](#day-41).
 
-- pretty similar to [RMS Norm Backward on Day 96](#day-96), just a bit more work because the formulas are a little more complicated. i split the computation into separate kernels, so each step maps directly to the formulas. see the image below for the details.
+- this one is pretty similar to [RMS Norm Backward on Day 96](#day-96), just a bit more work because the formulas are a little bit more complicated... i kept the computation into separate kernels, so each step maps directly to the formulas.
 
-- we can optimize this further by merging some of these kernels... i'll leave that as an exercise for the reader... haha kidding, i will revisit this one as well. :)
+- a nugget of "wisdom": start with simple kernels and get a working version first... then you'll have a better idea of which kernels to merge and which to keep separate. or, to put it another way: "premature kernel merging is the root of all evil."
+
+- clearly, we can optimize this even more by merging some of these kernels, for example we can calculate dgamma and dbeta in one pass. i'll leave that as an exercise for the reader... haha kidding, i will revisit this one as well at some point, stay around! :)
 
   ![LayerNorm Backward](images/layernorm_backward.png)
