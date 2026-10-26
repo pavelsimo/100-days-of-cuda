@@ -1522,5 +1522,3 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
   ![Paged KV Cache Attention](images/paged_kv_cache_attention.png)
 
 - if you want to learn more, check out the paper [Efficient Memory Management for Large Language Model Serving with PagedAttention](https://arxiv.org/abs/2309.06180).
-
-- 100 days!! thank you all... tomorrow, i'll make a short post about some of the things i've learned and what's next. stick around :)
