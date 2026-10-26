@@ -1499,3 +1499,28 @@ x <= 2^32-1, y <= 65535, z <= 65535, if you do the math that is about 18.9 sexti
 - clearly, we can optimize this even more by merging some of these kernels, for example we can calculate dgamma and dbeta in one pass. i'll leave that as an exercise for the reader... haha kidding, i will revisit this one as well at some point, stay around! :)
 
   ![LayerNorm Backward](images/layernorm_backward.png)
+
+### Day 100
+
+- solved the LeetGPU [Paged KV-Cache Attention](day100/paged_kv_cache_attention.cu) problem. the idea of paged attention is to store the keys and values from previous tokens in fixed-size blocks instead of one big continuous chunk of memory. by doing this, we waste less GPU memory and can serve more sequences (users) at once. 
+
+- we use a block table to find the keys and values for each token... is just a bit of index "pain", stay with me... :)
+
+  ```text
+  blk_logical  = t / block_size
+  blk_slot     = t % block_size
+  blk_physical = block_table[s * max_blocks_per_seq + blk_logical]
+  blk_offset   = blk_physical * (block_size * num_heads * head_dim)
+               + blk_slot * (num_heads * head_dim) + h * head_dim
+
+  k = K_cache + blk_offset
+  v = V_cache + blk_offset
+  ```
+
+- once you find the relevant blocks, it's the attention we have seen before... compute the scores, apply softmax, then use those weights to combine the values. see the image below for a small example of how it works.
+
+  ![Paged KV Cache Attention](images/paged_kv_cache_attention.png)
+
+- if you want to learn more, check out the paper [Efficient Memory Management for Large Language Model Serving with PagedAttention](https://arxiv.org/abs/2309.06180).
+
+- 100 days!! thank you all... tomorrow, i'll make a short post about some of the things i've learned and what's next. stick around :)
